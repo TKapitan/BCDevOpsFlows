@@ -1,4 +1,4 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "ALtomation.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
 
 #
@@ -9,7 +9,7 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = $ENV:BUILD_SO
     $params = @{ "ExportTelemetryFunctions" = $true }
     $repoSettingsPath = Join-Path $baseFolder $repoSettingsFile
 
-    # Default BcContainerHelper Version is hardcoded in ALtomation.Setup.ps1
+    # Default BcContainerHelper Version is hardcoded in BCDevOpsFlows.Setup.ps1
     $bcContainerHelperVersion = $defaultBcContainerHelperVersion
     if (Test-Path $repoSettingsPath) {
         # Read Repository Settings file (without applying organization variables or repository variables settings files)

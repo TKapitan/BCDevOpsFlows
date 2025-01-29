@@ -13,7 +13,7 @@ Param(
     [string] $skipAppsInPreview = $false
 )
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\ALtomation.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
@@ -40,7 +40,7 @@ try {
     $runAlPipelineParams = @{
         "sourceRepositoryUrl" = "$ENV:BUILD_REPOSITORY_URI"
         "sourceCommit"        = $ENV:BUILD_SOURCEVERSION
-        "buildBy"             = "ALtomation"
+        "buildBy"             = "BCDevOpsFlows"
     }
     $baseFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
     if ($bcContainerHelperConfig.useVolumes -and $bcContainerHelperConfig.hostHelperFolder -eq "HostHelperFolder") {
