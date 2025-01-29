@@ -1,0 +1,192 @@
+function Get-AppJsonFile {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string] $sourceAppJsonFilePath
+    ) 
+
+    ## Find app.json
+    $appFile = '';
+    $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+    foreach ($appFilePath in $sourceAppJsonFilePath) {
+        if (Test-Path -Path $appFilePath -PathType Leaf) {
+            Write-Host "Trying to load json file:" $appFilePath
+            $appFile = (Get-Content $appFilePath | ConvertFrom-Json);
+            break;
+        }
+    }
+    if ($appFile -eq '') {
+        Write-Error "App.json file was not found for $($sourceAppJsonFilePath).";
+    }
+    else {
+        Write-Host "App.json found for $($appFilePath)"
+    }
+    return $appFile;
+}
+function Get-BCDependencies {
+    Param (
+        $appFile,
+        [string] $appArtifactSharedFolder
+    )
+
+    ## Lookup dependencies
+    $dependencies = $appFile.dependencies;
+    if ($dependencies) {
+        $listOfDependencies = '';
+        foreach ($dependency in $dependencies) {
+            if ($listOfDependencies -ne '') {
+                $listOfDependencies += ',';
+            }
+            $listOfDependencies += $appArtifactSharedFolder + $dependency.id + '_' + $dependency.version + '.app';        
+        }
+    }
+    Write-Host "List of dependencies = $listOfDependencies"
+}
+function Get-AppSourceFileLocation {
+    Param (
+        $appFile
+    )
+
+    return (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output") + '/' + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
+}
+function Get-AppFileName {
+    Param (
+        [string]$publisher,
+        [string]$name,
+        [string]$version
+    )
+
+    return $publisher + '_' + $name + '_' + $version + '.app';
+}
+function Get-AppTargetFilePath {
+    Param (
+        [string] $appArtifactSharedFolder,
+        [string] $extensionID,
+        [string] $extensionVersion,
+        [switch] $includeAppsInPreview,
+        [string] $findExisting = $true
+    )
+
+    $releaseTypeSubfolder = 'public'
+    if ($skipAppsInPreview -eq $true) {
+        [version]$latestPreviewVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -releaseType 'preview'
+        [version]$latestPublicVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -releaseType 'public'
+        $latestExistingVersion = $latestPublicVersion
+        if ($latestPreviewVersion -gt $latestPublicVersion) {
+            $skipAppsInPreview = $false
+            $releaseTypeSubfolder = 'preview'
+            $latestExistingVersion = $latestPreviewVersion
+        }
+    }
+
+    if ($findExisting -ne 'true') {
+        $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID\$extensionVersion\"
+        Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
+        return $targetFilePath
+    }
+        
+    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID") -PathType Container)) {
+        # if no extension found found, use the previous file structure, throw error if not found in that function
+        return Get-AppTargetFilePathWithoutReleaseType -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -extensionVersion $extensionVersion
+    }
+
+    if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
+        Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
+    }
+    Write-Host "Using version $latestExistingVersion for extension $extensionID";
+    return "$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID\$latestExistingVersion\";
+}
+
+function Get-LatestVersion {
+    Param (
+        [string] $appArtifactSharedFolder,
+        [string] $extensionID,
+        [string] $releaseType
+    )
+    
+    Write-Host "Searching for latest version of $extensionID in $releaseType folder";
+    $minVersion = '0.0.0.0';
+    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseType\$extensionID") -PathType Container)) {
+        Write-Host "Can not find $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
+        return $minVersion
+    }
+
+    Write-Host "Scanning $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
+    $sourceDirectoryContent = Get-ChildItem ("$appArtifactSharedFolder\apps\$releaseType\$extensionID\") -Directory
+    foreach ($currDir in $sourceDirectoryContent) {
+        [string]$folderAppVersion = $currDir
+        if ([version]$folderAppVersion -gt [version]$minVersion) {
+            $minVersion = $folderAppVersion
+        }
+    }
+    Write-Host "Latest preview version of" $extensionID "is" $minVersion;
+    return $minVersion;
+}
+
+# FOR LEGACY REASON ONLY ->
+function Get-AppTargetFilePathWithoutReleaseType {
+    Param (
+        [string] $appArtifactSharedFolder,
+        [string] $extensionID,
+        [string] $extensionVersion
+    )
+
+    Write-Warning 'Using obsoleted Get-AppTargetFilePathWithoutReleaseType as the app was not found in the preview/public folder'
+
+    if (-not (Test-Path -Path ($appArtifactSharedFolder + "\apps\" + $extensionID) -PathType Container)) {
+        Write-Error $appArtifactSharedFolder + "\apps\" + $extensionID + " does not exists."
+    }
+
+    $latestExistingVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -releaseType ''
+    if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
+        Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
+    }
+    Write-Host "Using version $latestExistingVersion for extension $extensionID";
+    return "$appArtifactSharedFolder\apps\$extensionID\$latestExistingVersion\";
+}
+
+# FOR LEGACY REASON ONLY <-
+
+function Get-AllBCDependencies {
+    Param (
+        [string] $appArtifactSharedFolder,
+        [string] $excludeExtensionID = "",
+        [switch] $includeAppsInPreview,
+        $appFile
+    )
+
+    $listOfDependencies = ''
+    foreach ($dependency in $appFile.dependencies) {
+        if ($dependency.publisher -ne 'Microsoft') {
+            Write-Host "Searching for dependencies for app $($dependency.name) ($($dependency.id))"
+            if ($excludeExtensionID -ne '' -and $excludeExtensionID -ne $null) {
+                Write-Host "Verifying the dependency is not to be excluded ($excludeExtensionID)"
+            }
+            if ($dependency.id -eq $excludeExtensionID) {
+                Write-Host "Skipping dependency $($dependency.name) ($($dependency.id))"
+            }
+            else {
+                Write-Host "Path:" $appArtifactSharedFolder ", id:" $dependency.id ", name: " $dependency.name ", version:" $dependency.version
+                $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -includeAppsInPreview $includeAppsInPreview
+                $dependencyAppContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
+                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -includeAppsInPreview $includeAppsInPreview
+                
+                if ($otherDependencies -ne '') {
+                    if ($listOfDependencies.IndexOf($otherDependencies) -eq -1) {
+                        if ($listOfDependencies -ne '') {
+                            $listOfDependencies += ','
+                        }
+                        $listOfDependencies += $otherDependencies
+                    }
+                }
+                $dependencyAppFileLocation = $appsLocation + (Get-AppFileName -publisher $dependencyAppContent.publisher -name $dependencyAppContent.name -version $dependencyAppContent.version);
+                if ($listOfDependencies.IndexOf($dependencyAppFileLocation) -eq -1) {
+                    if ($listOfDependencies -ne '') {
+                        $listOfDependencies += ','
+                    }
+                    $listOfDependencies += ($dependencyAppFileLocation)
+                }
+            }
+        }
+    }
+    return $listOfDependencies;
+}
