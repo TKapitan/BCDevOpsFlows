@@ -5,7 +5,7 @@
 # Download and import the BcContainerHelper module based on repository settings
 # baseFolder is the repository baseFolder
 #
-function DownloadAndImportBcContainerHelper([string] $baseFolder = $ENV:BUILD_SOURCESDIRECTORY) {
+function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App")) {
     $params = @{ "ExportTelemetryFunctions" = $true }
     $repoSettingsPath = Join-Path $baseFolder $repoSettingsFile
 

@@ -9,7 +9,7 @@
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
     Param(
-        [string] $baseFolder = "$ENV:BUILD_SOURCESDIRECTORY",
+        [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
         [string] $pipelineName = "$ENV:BUILD_DEFINITIONNAME",
