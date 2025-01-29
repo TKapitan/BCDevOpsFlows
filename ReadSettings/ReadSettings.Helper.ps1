@@ -1,15 +1,15 @@
-.(Join-Path -Path $PSScriptRoot -ChildPath "..\ALtomation.Setup.ps1" -Resolve)
+.(Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
-# - ALtomationProjectSettings (Azure DevOps Variable)       = Project settings variable
-# - .azure-pipelines/ALtomation-Settings.json               = Repository Settings file
-# - ALtomationRepoSettings (Azure DevOps Variable)          = Repository settings variable
+# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)       = Project settings variable
+# - .azure-pipelines/BCDevOpsFlows-Settings.json               = Repository Settings file
+# - BCDevOpsFlowsRepoSettings (Azure DevOps Variable)          = Repository settings variable
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
     Param(
-        [string] $baseFolder = "$ENV:BUILD_SOURCESDIRECTORY",
+        [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
         [string] $pipelineName = "$ENV:BUILD_DEFINITIONNAME",
@@ -171,7 +171,7 @@ function ReadSettings {
         $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
         $settingsObjects += @($userSettingsObject)
     }
-    $ALtomationSettingExists = $false
+    $BCDevOpsFlowsSettingExists = $false
     foreach ($settingsJson in $settingsObjects) {
         if ($settingsJson) {
             MergeCustomObjectIntoOrderedDictionary -dst $settings -src $settingsJson
@@ -207,12 +207,12 @@ function ReadSettings {
                     }
                 }
             }
-            $ALtomationSettingExists = $true
+            $BCDevOpsFlowsSettingExists = $true
         }
     }
 
-    if ($ALtomationSettingExists -eq $false) {
-        Write-Error "No ALtomation settings found. Please check that the repository is correctly configured and follows ALtomation rules."
+    if ($BCDevOpsFlowsSettingExists -eq $false) {
+        Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
     }
     if ($settings.buildRunner -eq "") {
         $settings.buildRunner = "windows-latest"

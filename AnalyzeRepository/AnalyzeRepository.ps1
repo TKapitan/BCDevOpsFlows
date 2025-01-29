@@ -5,7 +5,7 @@
 function AnalyzeRepo {
     Param(
         [hashTable] $settings,
-        [string] $baseFolder = $ENV:BUILD_SOURCESDIRECTORY,
+        [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
         [string[]] $includeOnlyAppIds,
