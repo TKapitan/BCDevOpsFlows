@@ -197,10 +197,17 @@ function Get-AllBCDependencies {
                 Write-Host "Skipping dependency $($dependency.name) ($($dependency.id))"
             }
             else {
+                $appTargetFilePathParam = @{}
+                $allBCDependencies = @{}
+                if ($includeAppsInPreview -eq $true) {
+                    $appTargetFilePathParam = @{ "includeAppsInPreview" = $true }
+                    $allBCDependencies = @{ "includeAppsInPreview" = $true }
+                }
+
                 Write-Host "Path:" $appArtifactSharedFolder ", id:" $dependency.id ", name: " $dependency.name ", version:" $dependency.version
-                $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
+                $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
                 $dependencyAppContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
+                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
                 
                 if ($otherDependencies -ne '') {
                     if ($listOfDependencies.IndexOf($otherDependencies) -eq -1) {
