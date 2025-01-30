@@ -9,7 +9,7 @@ function AnalyzeRepo {
         [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
         [switch] $skipAppsInPreview,
-        [version] $minBcVersion = '0.0.0.0'
+        [version] $minBcVersion = [Version]'0.0.0.0'
     )
 
     $settings = $settings | Copy-HashTable
