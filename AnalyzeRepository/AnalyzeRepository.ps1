@@ -3,13 +3,13 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.ps1" -Resolve)
 
 function AnalyzeRepo {
+    [CmdletBinding()]
     Param(
         [hashTable] $settings,
-        [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
-        [version] $minBcVersion = '0.0.0.0',
-        [switch] $skipAppsInPreview
+        [switch] $skipAppsInPreview,
+        [version] $minBcVersion = '0.0.0.0'
     )
 
     $settings = $settings | Copy-HashTable
@@ -38,10 +38,7 @@ function AnalyzeRepo {
             $settings.Add('enableAppSourceCop', $true)
         }
         if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
-            # Do not Write-Error an error if we only read the Repo Settings file
-            if (Test-Path (Join-Path $baseFolder $repoSettingsFile)) {
-                Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
-            }
+            Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
     }
     else {
@@ -75,8 +72,8 @@ function AnalyzeRepo {
 
         $folders | ForEach-Object {
             $folderName = $_
-            Write-Host "Analyzing dependencies for '$folderName'"
-            $folder = Join-Path $baseFolder $folderName
+            $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
+            Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
             $appJsonFile = Join-Path $folder "app.json"
             $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
             $enumerate = $true
