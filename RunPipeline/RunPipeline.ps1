@@ -92,8 +92,13 @@ try {
             }
         }
     }
+    if ($skipAppsInPreview) {
+        $analyzeRepoParams += @{
+            "skipAppsInPreview" = $true
+        }
+    }
 
-    $settings = AnalyzeRepo -settings $settings -skipAppsInPreview $skipAppsInPreview 
+    $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
 
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         Write-Error "Repository is empty (no app or test folders found)"
