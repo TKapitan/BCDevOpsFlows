@@ -105,7 +105,7 @@ function Get-LatestVersion {
         [string] $releaseType
     )
     
-    Write-Host "Searching for latest version of $extensionID in $releaseType folder";
+    Write-Host "Searching for latest version of $extensionID in '$releaseType' folder";
     $minVersion = '0.0.0.0';
     if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseType\$extensionID") -PathType Container)) {
         Write-Host "Can not find $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
