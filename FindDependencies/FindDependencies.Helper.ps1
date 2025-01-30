@@ -105,7 +105,6 @@ function Get-AppTargetFilePath {
 function Get-ReleaseTypeFolderName {
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory)]
         [switch] $isPreview
     )
 
