@@ -88,6 +88,7 @@ try {
     if (!$ENV:SETTINGS) {
         Write-Error "ENV:SETTINGS not found. The Read-Settings step must be run before this step."
     }
+    $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted) {
         if ($artifact) {
             Write-Host "Changing settings to use artifact = $artifact"
@@ -97,7 +98,6 @@ try {
     }
     else {
         Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:SETTINGS"
-        $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     }
 
     $appBuild = $settings.appBuild
