@@ -22,7 +22,11 @@ function Get-AppDependencies {
             $appFileContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
             
             # Get all dependencies for specific extension
-            $dependencies = $(Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFileContent -excludeExtensionID $excludeExtensionID -includeAppsInPreview $includeAppsInPreview -minBcVersion $minBcVersion)
+            $allBCDependenciesParam = @{}
+            if ($includeAppsInPreview -eq $true) {
+                $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
+            }
+            $dependencies = $(Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @$allBCDependenciesParam)
             Write-Host "App dependencies: $dependencies"
 
             return $dependencies
