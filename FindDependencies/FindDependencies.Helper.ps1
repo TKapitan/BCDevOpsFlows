@@ -180,7 +180,7 @@ function Get-AllBCDependencies {
                 Write-Host "Path:" $appArtifactSharedFolder ", id:" $dependency.id ", name: " $dependency.name ", version:" $dependency.version
                 $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
                 $dependencyAppContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -includeAppsInPreview $includeAppsInPreview
+                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
                 
                 if ($otherDependencies -ne '') {
                     if ($listOfDependencies.IndexOf($otherDependencies) -eq -1) {
