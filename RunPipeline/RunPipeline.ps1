@@ -90,7 +90,8 @@ try {
     }
     if (!$settings.analyzeRepoCompleted) {
         if ($artifact) {
-            $settings.artifact = $artifact
+            Write-Host "Changing settings to use artifact = $artifact"
+            $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
         $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
     }

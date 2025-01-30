@@ -204,6 +204,7 @@ function AnalyzeRepo {
         if (!$doNotIssueWarnings) { OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" }
     }
 
-    $settings.analyzeRepoCompleted = $true
+    Write-Host "Analyzing repository completed"
+    $settings | Add-Member -NotePropertyName analyzeRepoCompleted -NotePropertyValue $true -Force
     return $settings
 }
