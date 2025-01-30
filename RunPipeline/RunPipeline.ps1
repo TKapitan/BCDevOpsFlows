@@ -91,7 +91,7 @@ try {
     $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted) {
         if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact"
+            Write-Host "Changing settings to use artifact = $artifact from $settings.artifact"
             $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
         $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
