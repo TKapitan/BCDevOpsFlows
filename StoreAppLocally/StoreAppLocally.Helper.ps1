@@ -4,7 +4,7 @@ function Save-AppLocally {
     Param(
         [string] $appArtifactSharedFolder,
         [string] $appJsonFilePath,
-        [version] $minBcVersion,
+        [version] $forBcVersion,
         [switch] $isPreview
     )
 
@@ -13,7 +13,7 @@ function Save-AppLocally {
 
     # Find app.json & target path
     $appFile = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
-    $targetPath = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $appFile.id -extensionVersion $appFile.version -minBcVersion $minBcVersion -includeAppsInPreview $isPreview -findExisting $false
+    $targetPath = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $appFile.id -extensionVersion $appFile.version -minBcVersion $forBcVersion -includeAppsInPreview $isPreview -findExisting $false
 
     # Copy application file & app.json file to our shared folder
     $newAppFileLocation = $targetPath + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
