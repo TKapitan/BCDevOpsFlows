@@ -43,7 +43,7 @@ try {
 
     $apps = @()
     $dependencies = @()
-    $appToDeployFolderPath = Get-AppTargetFilePath -appArtifactSharedFolder $settings.appArtifactSharedFolder -extensionID $appToDeploySettings.id -extensionVersion $appToDeploySettings.version -includeAppsInPreview $includeAppsInPreview
+    $appToDeployFolderPath = Get-AppTargetFilePath -appArtifactSharedFolder $settings.appArtifactSharedFolder -extensionID $appToDeploySettings.id -extensionVersion $appToDeploySettings.version -minBcVersion $appToDeploySettings.minBcVersion -includeAppsInPreview $includeAppsInPreview
     if (!$appToDeployFolderPath) {
         throw "There are no apps specified and ready to be deployed."
     }
@@ -56,7 +56,7 @@ try {
     }
 
     if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-        $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath (Join-Path -Path $appToDeployFolderPath -ChildPath 'app.json') -includeAppsInPreview $includeAppsInPreview
+        $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath (Join-Path -Path $appToDeployFolderPath -ChildPath 'app.json') -minBcVersion $appToDeploySettings.minBcVersion -includeAppsInPreview $includeAppsInPreview
         if ($dependenciesToDeploy) {
             $dependencies += $dependenciesToDeploy
         }

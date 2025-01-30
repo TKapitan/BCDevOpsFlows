@@ -3,15 +3,13 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.ps1" -Resolve)
 
 function AnalyzeRepo {
+    [CmdletBinding()]
     Param(
         [hashTable] $settings,
-        [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
-        [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
-        [string[]] $includeOnlyAppIds,
-        [switch] $skipAppsInPreview
+        [switch] $skipAppsInPreview,
+        [version] $minBcVersion = [version]'0.0.0.0'
     )
-
     $settings = $settings | Copy-HashTable
 
     if (!$runningLocal) {
@@ -38,10 +36,7 @@ function AnalyzeRepo {
             $settings.Add('enableAppSourceCop', $true)
         }
         if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
-            # Do not Write-Error an error if we only read the Repo Settings file
-            if (Test-Path (Join-Path $baseFolder $repoSettingsFile)) {
-                Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
-            }
+            Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
     }
     else {
@@ -75,8 +70,8 @@ function AnalyzeRepo {
 
         $folders | ForEach-Object {
             $folderName = $_
-            Write-Host "Analyzing dependencies for '$folderName'"
-            $folder = Join-Path $baseFolder $folderName
+            $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
+            Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
             $appJsonFile = Join-Path $folder "app.json"
             $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
             $enumerate = $true
@@ -135,14 +130,14 @@ function AnalyzeRepo {
                             $settings.appJsonVersion = $appJson.version
                         }
 
-                        $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -includeAppsInPreview !$skipAppsInPreview
+                        $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
                         if ($foundAppDependencies) {
                             $settings.appDependencies += $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
-                        $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -includeAppsInPreview !$skipAppsInPreview
+                        $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
                         if ($foundTestDependencies) {
                             $settings.testDependencies += $foundTestDependencies
                         }
@@ -150,7 +145,11 @@ function AnalyzeRepo {
                     }
                 }
                 catch {
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. Error is $($_.Exception.Message)."
+                    Write-Host $_.Exception -ForegroundColor Red
+                    Write-Host $_.ScriptStackTrace
+                    Write-Host $_.PSMessageDetails
+
+                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
         }
@@ -158,24 +157,8 @@ function AnalyzeRepo {
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
 
-    if ($includeOnlyAppIds) {
-        $i = 0
-        while ($i -lt $includeOnlyAppIds.Count) {
-            $id = $includeOnlyAppIds[$i]
-            if ($appIdFolders.Contains($id)) {
-                $dependencies."$($appIdFolders."$id")" | ForEach-Object {
-                    $includeOnlyAppIds += @($_.Id)
-                }
-            }
-            $i++
-        }
-
-        $settings.appFolders = @(ExcludeUnneededApps -folders $settings.appFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-        $settings.testFolders = @(ExcludeUnneededApps -folders $settings.testFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-        $settings.bcptTestFolders = @(ExcludeUnneededApps -folders $settings.bcptTestFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-    }
-
-    if (!$doNotCheckArtifactSetting) {
+    # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
+    if ($settings.artifact -notlike "https://*") {
         $artifactUrl = DetermineArtifactUrl -settings $settings -doNotIssueWarnings:$doNotIssueWarnings
         $version = $artifactUrl.Split('/')[4]
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
@@ -221,5 +204,7 @@ function AnalyzeRepo {
         if (!$doNotIssueWarnings) { OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" }
     }
 
+    Write-Host "Analyzing repository completed"
+    $settings | Add-Member -NotePropertyName analyzeRepoCompleted -NotePropertyValue $true -Force
     return $settings
 }
