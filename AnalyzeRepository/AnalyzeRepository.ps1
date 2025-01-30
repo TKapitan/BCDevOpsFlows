@@ -150,7 +150,11 @@ function AnalyzeRepo {
                     }
                 }
                 catch {
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. Error is $($_.Exception.Message)."
+                    Write-Host $_.Exception -ForegroundColor Red
+                    Write-Host $_.ScriptStackTrace
+                    Write-Host $_.PSMessageDetails
+
+                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
         }
