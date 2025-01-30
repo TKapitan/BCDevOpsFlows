@@ -5,14 +5,11 @@
 function AnalyzeRepo {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory)]
         [hashTable] $settings,
-        [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
         [switch] $skipAppsInPreview,
         [version] $minBcVersion = [version]'0.0.0.0'
     )
-
     $settings = $settings | Copy-HashTable
 
     if (!$runningLocal) {
@@ -160,7 +157,8 @@ function AnalyzeRepo {
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
 
-    if (!$doNotCheckArtifactSetting) {
+    # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
+    if ($settings.artifact -notlike "https://*") {
         $artifactUrl = DetermineArtifactUrl -settings $settings -doNotIssueWarnings:$doNotIssueWarnings
         $version = $artifactUrl.Split('/')[4]
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
@@ -206,5 +204,6 @@ function AnalyzeRepo {
         if (!$doNotIssueWarnings) { OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" }
     }
 
+    $settings.analyzeRepoCompleted = $true
     return $settings
 }

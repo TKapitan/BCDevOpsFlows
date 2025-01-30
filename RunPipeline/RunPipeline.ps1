@@ -56,18 +56,15 @@ try {
     }
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
-    Write-Host "use settings and secrets"
-    $settings = $env:Settings | ConvertFrom-Json | ConvertTo-HashTable
-    # ENV:Secrets is not set when running Pull_Request trigger
-    if ($env:Secrets) {
-        $secrets = $env:Secrets | ConvertFrom-Json | ConvertTo-HashTable
+    Write-Host "Using secrets from ENV:SECRETS"
+    # ENV:SECRETS is not set when running Pull_Request trigger
+    if ($ENV:SECRETS) {
+        $secrets = $ENV:SECRETS | ConvertFrom-Json | ConvertTo-HashTable
     }
     else {
         $secrets = @{}
     }
 
-    $appBuild = $settings.appBuild
-    $appRevision = $settings.appRevision
     'licenseFileUrl', 'codeSignCertificateUrl', '*codeSignCertificatePassword', 'keyVaultCertificateUrl', '*keyVaultCertificatePassword', 'keyVaultClientId', 'applicationInsightsConnectionString' | ForEach-Object {
         # Secrets might not be read during Pull Request runs
         if ($secrets.Keys -contains $_) {
@@ -82,24 +79,28 @@ try {
     }
 
     $analyzeRepoParams = @{}
-
-    if ($artifact) {
-        # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
-        $settings.artifact = $artifact
-        if ($artifact -like "https://*") {
-            $analyzeRepoParams += @{
-                "doNotCheckArtifactSetting" = $true
-            }
-        }
-    }
     if ($skipAppsInPreview) {
         $analyzeRepoParams += @{
             "skipAppsInPreview" = $true
         }
     }
 
-    $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
+    if (!$ENV:SETTINGS) {
+        Write-Error "ENV:SETTINGS not found. The Read-Settings step must be run before this step."
+    }
+    if (!$settings.analyzeRepoCompleted) {
+        if ($artifact) {
+            $settings.artifact = $artifact
+        }
+        $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
+    }
+    else {
+        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:SETTINGS"
+        $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+    }
 
+    $appBuild = $settings.appBuild
+    $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         Write-Error "Repository is empty (no app or test folders found)"
         exit
