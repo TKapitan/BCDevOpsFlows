@@ -1,4 +1,5 @@
 function Get-AppJsonFile {
+    [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
         [string] $sourceAppJsonFilePath
@@ -23,6 +24,7 @@ function Get-AppJsonFile {
     return $appFile;
 }
 function Get-BCDependencies {
+    [CmdletBinding()]
     Param (
         $appFile,
         [string] $appArtifactSharedFolder
@@ -42,6 +44,7 @@ function Get-BCDependencies {
     Write-Host "List of dependencies = $listOfDependencies"
 }
 function Get-AppSourceFileLocation {
+    [CmdletBinding()]
     Param (
         $appFile
     )
@@ -49,6 +52,7 @@ function Get-AppSourceFileLocation {
     return (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output") + '/' + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
 }
 function Get-AppFileName {
+    [CmdletBinding()]
     Param (
         [string]$publisher,
         [string]$name,
@@ -57,7 +61,28 @@ function Get-AppFileName {
 
     return $publisher + '_' + $name + '_' + $version + '.app';
 }
+function Get-AppTargetFilePathForNewApp {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory)]
+        [string] $appArtifactSharedFolder,
+        [Parameter(Mandatory)]
+        $appFileJson,
+        [switch] $isPreview
+    )
+
+    $releaseTypeFolderParam = @{}
+    if ($isPreview -eq $true) {
+        $releaseTypeFolderParam = @{ "isPreview" = $true }
+    }
+    
+    $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
+    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
+    Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
+    return $targetFilePath
+}
 function Get-AppTargetFilePath {
+    [CmdletBinding()]
     Param (
         [string] $appArtifactSharedFolder,
         [string] $extensionID,
@@ -67,25 +92,26 @@ function Get-AppTargetFilePath {
         [string] $findExisting = $true
     )
 
-    $releaseTypeSubfolder = 'public'
+    $releaseTypeFolderParam = @{}
     if ($skipAppsInPreview -eq $true) {
         [version]$latestPreviewVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'preview'
         [version]$latestPublicVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
         $latestExistingVersion = $latestPublicVersion
         if ($latestPreviewVersion -gt $latestPublicVersion) {
             $skipAppsInPreview = $false
-            $releaseTypeSubfolder = 'preview'
             $latestExistingVersion = $latestPreviewVersion
+            $releaseTypeFolderParam = @{ "isPreview" = $true }
         }
     }
+    $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
 
     if ($findExisting -ne 'true') {
-        $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID\$extensionVersion-BC$minBcVersion\"
+        $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
         Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
         return $targetFilePath
     }
         
-    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID") -PathType Container)) {
+    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID") -PathType Container)) {
         # if no extension found found, use the previous file structure, throw error if not found in that function
         return Get-AppTargetFilePathWithoutReleaseType -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -extensionVersion $extensionVersion
     }
@@ -94,10 +120,23 @@ function Get-AppTargetFilePath {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
     Write-Host "Using version $latestExistingVersion for extension $extensionID";
-    return "$appArtifactSharedFolder\apps\$releaseTypeSubfolder\$extensionID\$latestExistingVersion\";
+    return "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
 }
+function Get-ReleaseTypeFolderName {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory)]
+        [switch] $isPreview
+    )
 
+    $releaseTypeFolder = 'stable'
+    if ($isPreview -eq $true) {
+        $releaseTypeFolder = 'preview'
+    }
+    return $releaseTypeFolder
+}
 function Get-LatestVersion {
+    [CmdletBinding()]
     Param (
         [string] $appArtifactSharedFolder,
         [string] $extensionID,
@@ -135,6 +174,7 @@ function Get-LatestVersion {
 
 # FOR LEGACY REASON ONLY ->
 function Get-AppTargetFilePathWithoutReleaseType {
+    [CmdletBinding()]
     Param (
         [string] $appArtifactSharedFolder,
         [string] $extensionID,
@@ -158,6 +198,7 @@ function Get-AppTargetFilePathWithoutReleaseType {
 # FOR LEGACY REASON ONLY <-
 
 function Get-AllBCDependencies {
+    [CmdletBinding()]
     Param (
         [string] $appArtifactSharedFolder,
         [string] $excludeExtensionID = "",

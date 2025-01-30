@@ -1,6 +1,4 @@
 Param(
-    [Parameter(HelpMessage = "Specifies the minimal BC version the app supports. Must be format X.Y.Z.W", Mandatory = $true)]
-    [version] $forBcVersion,
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
     [string] $isPreview
 )
@@ -24,6 +22,6 @@ foreach ($folderTypeNumber in 1..2) {
     foreach ($folderName in $folders) {
         $appJsonFilePath = Join-Path -Path $folderName -ChildPath "app.json"
         Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
-        Save-AppLocally -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFilePath -forBcVersion $forBcVersion -isPreview $isPreview
+        Save-AppLocally -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFilePath -isPreview $isPreview
     }
 }
