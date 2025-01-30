@@ -8,7 +8,6 @@ function AnalyzeRepo {
         [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
-        [string[]] $includeOnlyAppIds,
         [version] $minBcVersion = '0.0.0.0',
         [switch] $skipAppsInPreview
     )
@@ -162,23 +161,6 @@ function AnalyzeRepo {
     }
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
-
-    if ($includeOnlyAppIds) {
-        $i = 0
-        while ($i -lt $includeOnlyAppIds.Count) {
-            $id = $includeOnlyAppIds[$i]
-            if ($appIdFolders.Contains($id)) {
-                $dependencies."$($appIdFolders."$id")" | ForEach-Object {
-                    $includeOnlyAppIds += @($_.Id)
-                }
-            }
-            $i++
-        }
-
-        $settings.appFolders = @(ExcludeUnneededApps -folders $settings.appFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-        $settings.testFolders = @(ExcludeUnneededApps -folders $settings.testFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-        $settings.bcptTestFolders = @(ExcludeUnneededApps -folders $settings.bcptTestFolders -includeOnlyAppIds $includeOnlyAppIds -appIdFolders $appIdFolders)
-    }
 
     if (!$doNotCheckArtifactSetting) {
         $artifactUrl = DetermineArtifactUrl -settings $settings -doNotIssueWarnings:$doNotIssueWarnings
