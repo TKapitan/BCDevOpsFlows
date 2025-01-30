@@ -3,6 +3,7 @@ Param(
     [string] $isPreview
 )
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
 
 $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
