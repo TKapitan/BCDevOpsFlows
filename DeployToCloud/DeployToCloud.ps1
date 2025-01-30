@@ -43,7 +43,7 @@ try {
 
     $apps = @()
     $dependencies = @()
-    $appToDeployFolderPath = Get-AppTargetFilePath -appArtifactSharedFolder $settings.appArtifactSharedFolder -extensionID $appToDeploySettings.id -extensionVersion $appToDeploySettings.version -includeAppsInPreview $includeAppsInPreview
+    $appToDeployFolderPath = Get-AppTargetFilePath -appArtifactSharedFolder $settings.appArtifactSharedFolder -extensionID $appToDeploySettings.id -extensionVersion $appToDeploySettings.version -minBcVersion $appToDeploySettings.minBcVersion -includeAppsInPreview $includeAppsInPreview
     if (!$appToDeployFolderPath) {
         throw "There are no apps specified and ready to be deployed."
     }
