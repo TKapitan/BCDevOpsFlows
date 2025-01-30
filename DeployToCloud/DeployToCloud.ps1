@@ -56,7 +56,7 @@ try {
     }
 
     if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-        $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath (Join-Path -Path $appToDeployFolderPath -ChildPath 'app.json') -includeAppsInPreview $includeAppsInPreview
+        $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath (Join-Path -Path $appToDeployFolderPath -ChildPath 'app.json') -minBcVersion $appToDeploySettings.minBcVersion -includeAppsInPreview $includeAppsInPreview
         if ($dependenciesToDeploy) {
             $dependencies += $dependenciesToDeploy
         }
