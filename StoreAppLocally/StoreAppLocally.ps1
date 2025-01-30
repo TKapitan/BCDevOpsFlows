@@ -3,7 +3,7 @@ Param(
     [string] $isPreview
 )
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
 
 $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
@@ -20,8 +20,21 @@ foreach ($folderTypeNumber in 1..2) {
     
     Write-Host "Saving apps in following folders: $folders"
     foreach ($folderName in $folders) {
-        $appJsonFilePath = Join-Path -Path $folderName -ChildPath "app.json"
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$folderName\app.json"
         Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
-        Save-AppLocally -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFilePath -isPreview $isPreview
+
+        # Find app.json & target path
+        $appFile = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        $appTargetFilePathForNewAppParam = @{}
+        if ($isPreview -eq $true) {
+            $appTargetFilePathForNewAppParam = @{ "isPreview" = $true }
+        }
+        $targetPath = Get-AppTargetFilePathForNewApp -appArtifactSharedFolder $settings.appArtifactSharedFolder -appFile $appFile @appTargetFilePathForNewAppParam
+
+        # Copy application file & app.json file to our shared folder
+        $newAppFileLocation = $targetPath + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
+        New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
+        Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
+        Copy-Item $appJsonFilePath ($targetPath + 'app.json')
     }
 }

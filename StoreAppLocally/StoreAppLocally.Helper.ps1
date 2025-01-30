@@ -1,26 +1,22 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
 
-function Save-AppLocally {
-    Param(
+function Get-AppTargetFilePathForNewApp {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory)]
         [string] $appArtifactSharedFolder,
-        [string] $appJsonFilePath,
+        [Parameter(Mandatory)]
+        $appFileJson,
         [switch] $isPreview
     )
 
-    $appJsonFilePath = (Join-Path $ENV:BUILD_REPOSITORY_LOCALPATH $appJsonFilePath);
-    Write-Host "Using local path '$appJsonFilePath'"
-
-    # Find app.json & target path
-    $appFile = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
-    $appTargetFilePathForNewAppParam = @{}
+    $releaseTypeFolderParam = @{}
     if ($isPreview -eq $true) {
-        $appTargetFilePathForNewAppParam = @{ "isPreview" = $true }
+        $releaseTypeFolderParam = @{ "isPreview" = $true }
     }
-    $targetPath = Get-AppTargetFilePathForNewApp -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFile @appTargetFilePathForNewAppParam
-
-    # Copy application file & app.json file to our shared folder
-    $newAppFileLocation = $targetPath + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
-    New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
-    Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
-    Copy-Item $appJsonFilePath ($targetPath + 'app.json')
+    
+    $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
+    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
+    Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
+    return $targetFilePath
 }

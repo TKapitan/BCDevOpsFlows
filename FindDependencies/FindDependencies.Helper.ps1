@@ -61,26 +61,6 @@ function Get-AppFileName {
 
     return $publisher + '_' + $name + '_' + $version + '.app';
 }
-function Get-AppTargetFilePathForNewApp {
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [string] $appArtifactSharedFolder,
-        [Parameter(Mandatory)]
-        $appFileJson,
-        [switch] $isPreview
-    )
-
-    $releaseTypeFolderParam = @{}
-    if ($isPreview -eq $true) {
-        $releaseTypeFolderParam = @{ "isPreview" = $true }
-    }
-    
-    $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
-    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
-    Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
-    return $targetFilePath
-}
 function Get-AppTargetFilePath {
     [CmdletBinding()]
     Param (
