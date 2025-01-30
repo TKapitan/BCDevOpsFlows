@@ -3,9 +3,7 @@ Param(
     [string] $environmentName,
     [Parameter(HelpMessage = "Type of deployment (CD or Publish)", Mandatory = $false)]
     [ValidateSet('CD', 'Publish')]
-    [string] $deploymentType = "CD",
-    [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [switch] $skipAppsInPreview
+    [string] $deploymentType = "CD"
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeployToCloud.Helper.ps1" -Resolve)
