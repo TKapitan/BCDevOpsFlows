@@ -70,9 +70,11 @@ try {
         exit
     }
 
-    Write-Host "Apps to deploy"
     foreach ($appToDeploy in $appsToDeploy) {
-        Write-Host "- $([System.IO.Path]::GetFileName($appToDeploy.appFile))"
+        Write-Host "Apps to deploy"
+        foreach ($appToDeployProperty in $appToDeploy.GetEnumerator()) {
+            Write-Host " - $($appToDeployProperty.Name): $($appToDeployProperty.Value)"
+        }
     }
 
     # Deploy apps
