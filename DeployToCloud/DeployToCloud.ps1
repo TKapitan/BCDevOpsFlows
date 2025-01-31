@@ -18,7 +18,7 @@ try {
     if (!$deploymentSettings) {
         throw "No deployment settings found for environment '$environmentName'."
     }
-    $appsToDeploy = $ENV:GENERATEDAPPS | ConvertFrom-Json;
+    $appsToDeploy = $ENV:SAVEDAPPSDETAILS | ConvertFrom-Json
     if (!$appsToDeploy) {
         throw "No app to deploy settings found."
     }

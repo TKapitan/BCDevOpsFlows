@@ -48,10 +48,10 @@ foreach ($folderTypeNumber in 1..2) {
     }
 }
 
-$generatedAppsJson = $generatedApps | ConvertTo-Json
-$ENV:GENERATEDAPPS = $generatedAppsJson
-Write-Host "##vso[task.setvariable variable=GENERATEDAPPS;]$generatedAppsJson"
-Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
+$generatedAppsJson = $generatedApps | ConvertTo-Json -Compress
+$ENV:SAVEDAPPSDETAILS = $generatedAppsJson
+Write-Host "##vso[task.setvariable variable=SAVEDAPPSDETAILS;]$generatedAppsJson"
+Write-Host "Set environment variable SAVEDAPPSDETAILS to ($ENV:SAVEDAPPSDETAILS)"
 
 foreach ($generatedApp in $generatedApps) {
     Write-Host "Generated app:"
