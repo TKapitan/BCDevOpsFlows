@@ -374,9 +374,9 @@ try {
     Copy-Item -Path $buildOutputFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
     Copy-Item -Path $containerEventLogFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
 
-    $ENV:TESTRESULTS = $allTestResults
-    Write-Host "##vso[task.setvariable variable=TESTRESULTS]$allTestResults"
-    Write-Host "Set environment variable TESTRESULTS to ($ENV:TESTRESULTS)"
+    $ENV:TestResults = $allTestResults
+    Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
+    Write-Host "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red
