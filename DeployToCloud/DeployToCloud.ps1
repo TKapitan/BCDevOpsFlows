@@ -18,7 +18,7 @@ try {
     if (!$deploymentSettings) {
         throw "No deployment settings found for environment '$environmentName'."
     }
-    $appsToDeploy = $ENV:GENERATEDAPPS;
+    $appsToDeploy = $ENV:GENERATEDAPPS | ConvertFrom-Json;
     if (!$appsToDeploy) {
         throw "No app to deploy settings found."
     }
@@ -74,7 +74,7 @@ try {
         Write-Host "Apps to deploy"
         foreach ($appToDeployProperty in $appToDeploy.GetEnumerator()) {
             $appToDeployProperty
-            
+
             Write-Host " - $($appToDeployProperty.Name): $($appToDeployProperty.Value)"
         }
     }
