@@ -72,6 +72,11 @@ try {
 
     Write-Host "Apps to deploy"
     $appsToDeploy | ForEach-Object {
+        Write-Host "- $([System.IO.Path]::GetFileName($_.appFile))"
+    }
+
+    # Deploy apps
+    $appsToDeploy | ForEach-Object {
         $dependencies = @()
 
         $appFile = $_.appFile
@@ -97,72 +102,66 @@ try {
             }
         }
 
-        try {
-            $sandboxEnvironment = ($response.environmentType -eq 1)
-            $scope = $deploymentSettings.Scope
-            if ($null -eq $scope) {
-                if ($settings.Type -eq 'AppSource App' -or ($sandboxEnvironment -and !($bcAuthContext.ClientSecret -or $bcAuthContext.ClientAssertion))) {
-                    # Sandbox and not S2S -> use dev endpoint (Publish-BcContainerApp)
-                    $scope = 'Dev'
-                }
-                else {
-                    $scope = 'PTE'
-                }
-            }
-            elseif (@('Dev', 'PTE') -notcontains $scope) {
-                throw "Invalid Scope $($scope). Valid values are Dev and PTE."
-            }
-            if (!$sandboxEnvironment -and $deploymentType -eq 'CD' -and !($deploymentSettings.continuousDeployment)) {
-                # Continuous deployment is undefined in settings - we will not deploy to production environments
-                Write-Host "::Warning::Ignoring environment $($deploymentSettings.environmentName), which is a production environment"
+        $sandboxEnvironment = ($response.environmentType -eq 1)
+        $scope = $deploymentSettings.Scope
+        if ($null -eq $scope) {
+            if ($settings.Type -eq 'AppSource App' -or ($sandboxEnvironment -and !($bcAuthContext.ClientSecret -or $bcAuthContext.ClientAssertion))) {
+                # Sandbox and not S2S -> use dev endpoint (Publish-BcContainerApp)
+                $scope = 'Dev'
             }
             else {
-                if ($dependencies) {
-                    InstallOrUpgradeApps -bcAuthContext $bcAuthContext -environment $deploymentSettings.environmentName -Apps $dependencies -installMode $deploymentSettings.dependencyInstallMode
-                }
-                if ($scope -eq 'Dev') {
-                    if (!$sandboxEnvironment) {
-                        throw "Scope Dev is only valid for sandbox environments"
-                    }
-                    $parameters = @{
-                        "bcAuthContext" = $bcAuthContext
-                        "environment"   = $deploymentSettings.environmentName
-                        "appFile"       = $appFile
-                    }
-                    if ($deploymentSettings.SyncMode) {
-                        if (@('Add', 'ForceSync', 'Clean', 'Development') -notcontains $deploymentSettings.SyncMode) {
-                            throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the development endpoint. Valid values are Add, ForceSync, Development and Clean."
-                        }
-                        Write-Host "Using $($deploymentSettings.SyncMode)"
-                        $parameters += @{ "SyncMode" = $deploymentSettings.SyncMode }
-                    }
-                    Write-Host "Publishing apps using development endpoint"
-                    Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
-                }
-                else {
-                    # Use automation API for production environments (Publish-PerTenantExtensionApps)
-                    $parameters = @{
-                        "bcAuthContext" = $bcAuthContext
-                        "environment"   = $deploymentSettings.environmentName
-                        "appFiles"      = $appFile
-                    }
-                    if ($deploymentSettings.SyncMode) {
-                        if (@('Add', 'ForceSync') -notcontains $deploymentSettings.SyncMode) {
-                            throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the automation API. Valid values are Add and ForceSync."
-                        }
-                        Write-Host "Using $($deploymentSettings.SyncMode)"
-                        $syncMode = $deploymentSettings.SyncMode
-                        if ($syncMode -eq 'ForceSync') { $syncMode = 'Force' }
-                        $parameters += @{ "SchemaSyncMode" = $syncMode }
-                    }
-                    Write-Host "Publishing apps using automation API"
-                    Publish-PerTenantExtensionApps @parameters
-                }
+                $scope = 'PTE'
             }
         }
-        catch {
-            OutputError -message "Deploying to $environmentName failed.$([environment]::Newline) $($_.Exception.Message)"
-            exit
+        elseif (@('Dev', 'PTE') -notcontains $scope) {
+            throw "Invalid Scope $($scope). Valid values are Dev and PTE."
+        }
+        if (!$sandboxEnvironment -and $deploymentType -eq 'CD' -and !($deploymentSettings.continuousDeployment)) {
+            # Continuous deployment is undefined in settings - we will not deploy to production environments
+            Write-Host "::Warning::Ignoring environment $($deploymentSettings.environmentName), which is a production environment"
+        }
+        else {
+            if ($dependencies) {
+                InstallOrUpgradeApps -bcAuthContext $bcAuthContext -environment $deploymentSettings.environmentName -Apps $dependencies -installMode $deploymentSettings.dependencyInstallMode
+            }
+            if ($scope -eq 'Dev') {
+                if (!$sandboxEnvironment) {
+                    throw "Scope Dev is only valid for sandbox environments"
+                }
+                $parameters = @{
+                    "bcAuthContext" = $bcAuthContext
+                    "environment"   = $deploymentSettings.environmentName
+                    "appFile"       = $appFile
+                }
+                if ($deploymentSettings.SyncMode) {
+                    if (@('Add', 'ForceSync', 'Clean', 'Development') -notcontains $deploymentSettings.SyncMode) {
+                        throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the development endpoint. Valid values are Add, ForceSync, Development and Clean."
+                    }
+                    Write-Host "Using $($deploymentSettings.SyncMode)"
+                    $parameters += @{ "SyncMode" = $deploymentSettings.SyncMode }
+                }
+                Write-Host "Publishing apps using development endpoint"
+                Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
+            }
+            else {
+                # Use automation API for production environments (Publish-PerTenantExtensionApps)
+                $parameters = @{
+                    "bcAuthContext" = $bcAuthContext
+                    "environment"   = $deploymentSettings.environmentName
+                    "appFiles"      = $appFile
+                }
+                if ($deploymentSettings.SyncMode) {
+                    if (@('Add', 'ForceSync') -notcontains $deploymentSettings.SyncMode) {
+                        throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the automation API. Valid values are Add and ForceSync."
+                    }
+                    Write-Host "Using $($deploymentSettings.SyncMode)"
+                    $syncMode = $deploymentSettings.SyncMode
+                    if ($syncMode -eq 'ForceSync') { $syncMode = 'Force' }
+                    $parameters += @{ "SchemaSyncMode" = $syncMode }
+                }
+                Write-Host "Publishing apps using automation API"
+                Publish-PerTenantExtensionApps @parameters
+            }
         }
     }
 }
