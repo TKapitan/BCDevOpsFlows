@@ -73,6 +73,8 @@ try {
     foreach ($appToDeploy in $appsToDeploy) {
         Write-Host "Apps to deploy"
         foreach ($appToDeployProperty in $appToDeploy.GetEnumerator()) {
+            $appToDeployProperty
+            
             Write-Host " - $($appToDeployProperty.Name): $($appToDeployProperty.Value)"
         }
     }
