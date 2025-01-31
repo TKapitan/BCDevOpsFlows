@@ -13,7 +13,6 @@ foreach ($folderTypeNumber in 1..2) {
     Write-Host "Reading apps #$folderTypeNumber"
     
     if ($appFolder) {
-        $generatedApps = @()
         $folders = @($settings.appFolders)
     }
     elseif ($testFolder) {
@@ -39,7 +38,7 @@ foreach ($folderTypeNumber in 1..2) {
         Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
         Copy-Item $appJsonFilePath ($targetPath + 'app.json')
         if ($appFolder) {
-            $generatedApps += @{
+            $generatedApp = @{
                 "appFile"            = $newAppFileLocation
                 "appJsonFile"        = ($targetPath + 'app.json')
                 "applicationVersion" = $appFile.application
@@ -48,14 +47,11 @@ foreach ($folderTypeNumber in 1..2) {
     }
 }
 
-$generatedAppsJson = $generatedApps | ConvertTo-Json -Compress
-$ENV:SAVEDAPPSDETAILS = $generatedAppsJson
-Write-Host "##vso[task.setvariable variable=SAVEDAPPSDETAILS;]$generatedAppsJson"
-Write-Host "Set environment variable SAVEDAPPSDETAILS to ($ENV:SAVEDAPPSDETAILS)"
+$generatedAppJson = $generatedApp | ConvertTo-Json -Compress
+$ENV:SAVEDAPPDETAILS = $generatedAppJson
+Write-Host "##vso[task.setvariable variable=SAVEDAPPDETAILS;]$generatedAppJson"
+Write-Host "Set environment variable SAVEDAPPDETAILS to ($ENV:SAVEDAPPDETAILS)"
 
-foreach ($generatedApp in $generatedApps) {
-    Write-Host "Generated app:"
-    foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
-        Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
-    }
+foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
+    Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
 }
