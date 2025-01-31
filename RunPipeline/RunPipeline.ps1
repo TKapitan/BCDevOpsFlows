@@ -365,16 +365,14 @@ try {
         -appRevision $appRevision `
         -uninstallRemovedApps
 
-    if ($containerBaseFolder) {
-        Write-Host "Copy artifacts and build output back from build container"
-        $destFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
-        Copy-Item -Path (Join-Path $baseFolder ".buildartifacts") -Destination $destFolder -Recurse -Force
-        Copy-Item -Path (Join-Path $baseFolder ".output") -Destination $destFolder -Recurse -Force
-        Copy-Item -Path (Join-Path $baseFolder "testResults*.xml") -Destination $destFolder
-        Copy-Item -Path (Join-Path $baseFolder "bcptTestResults*.json") -Destination $destFolder
-        Copy-Item -Path $buildOutputFile -Destination $destFolder -Force -ErrorAction SilentlyContinue
-        Copy-Item -Path $containerEventLogFile -Destination $destFolder -Force -ErrorAction SilentlyContinue
-    }
+    $testResultsDestinationFolder = $ENV:COMMON_TESTRESULTSDIRECTORY
+    Write-Host "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
+    Copy-Item -Path (Join-Path $baseFolder ".buildartifacts") -Destination $testResultsDestinationFolder -Recurse -Force
+    Copy-Item -Path (Join-Path $baseFolder ".output") -Destination $testResultsDestinationFolder -Recurse -Force
+    Copy-Item -Path (Join-Path $baseFolder "testResults*.xml") -Destination $testResultsDestinationFolder
+    Copy-Item -Path (Join-Path $baseFolder "bcptTestResults*.json") -Destination $testResultsDestinationFolder
+    Copy-Item -Path $buildOutputFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
+    Copy-Item -Path $containerEventLogFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red
