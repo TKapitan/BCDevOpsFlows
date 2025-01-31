@@ -78,10 +78,12 @@ try {
     # Deploy apps
     $appsToDeploy | ForEach-Object {
         $dependencies = @()
+        $appToDeploy = $_ | ConvertFrom-Json
+        Write-Host "Deploy app details: $appToDeploy"
 
-        $appFile = $_.appFile
-        $appJsonFile = $_.appJsonFile
-        $minBcVersion = $_.applicationVersion
+        $appFile = $appToDeploy.appFile
+        $appJsonFile = $appToDeploy.appJsonFile
+        $minBcVersion = $appToDeploy.applicationVersion
 
         Write-Host "- $([System.IO.Path]::GetFileName($appFile))"
 
