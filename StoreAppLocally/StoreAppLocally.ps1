@@ -38,14 +38,23 @@ foreach ($folderTypeNumber in 1..2) {
         New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
         Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
         Copy-Item $appJsonFilePath ($targetPath + 'app.json')
-        $generatedApps += @{
-            "appFile"            = $newAppFileLocation
-            "appJsonFile"        = ($targetPath + 'app.json')
-            "applicationVersion" = $appFile.application
+        if ($appFolder) {
+            $generatedApps += @{
+                "appFile"            = $newAppFileLocation
+                "appJsonFile"        = ($targetPath + 'app.json')
+                "applicationVersion" = $appFile.application
+            }
         }
     }
+}
     
-    $ENV:GENERATEDAPPS = $generatedApps
-    Write-Host "##vso[task.setvariable variable=GENERATEDAPPS;]$generatedApps"
-    Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
+$ENV:GENERATEDAPPS = $generatedApps
+Write-Host "##vso[task.setvariable variable=GENERATEDAPPS;]$generatedApps"
+Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
+
+foreach ($generatedApp in $generatedApps) {
+    Write-Host "Generated app:"
+    foreach ($generatedAppProperty in $generatedApp.Keys) {
+        Write-Host $generatedAppProperty":" $value
+    }
 }
