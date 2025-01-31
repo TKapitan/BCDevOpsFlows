@@ -71,16 +71,15 @@ try {
     }
 
     Write-Host "Apps to deploy"
-    $appsToDeploy | ForEach-Object {
-        Write-Host "- $([System.IO.Path]::GetFileName($_.appFile))"
+    foreach ($appToDeploy in $appsToDeploy) {
+        Write-Host "- $([System.IO.Path]::GetFileName($appToDeploy.appFile))"
     }
 
     # Deploy apps
-    $appsToDeploy | ForEach-Object {
+    foreach ($appToDeploy in $appsToDeploy) {
         $dependencies = @()
-        Write-Host "Deploy app details: $_"
+        Write-Host "Deploy app details: $appToDeploy"
 
-        $appToDeploy = $_
         $appFile = $appToDeploy.appFile
         $appJsonFile = $appToDeploy.appJsonFile
         $minBcVersion = $appToDeploy.applicationVersion

@@ -55,6 +55,6 @@ Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
 foreach ($generatedApp in $generatedApps) {
     Write-Host "Generated app:"
     foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
-        Write-Host "$($generatedAppProperty.Name): $($generatedAppProperty.Value)"
+        Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
     }
 }
