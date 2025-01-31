@@ -78,9 +78,9 @@ try {
     # Deploy apps
     $appsToDeploy | ForEach-Object {
         $dependencies = @()
+        Write-Host "Deploy app details: $_"
+        
         $appToDeploy = $_ | ConvertFrom-Json
-        Write-Host "Deploy app details: $appToDeploy"
-
         $appFile = $appToDeploy.appFile
         $appJsonFile = $appToDeploy.appJsonFile
         $minBcVersion = $appToDeploy.applicationVersion
