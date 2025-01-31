@@ -20,6 +20,7 @@ foreach ($folderTypeNumber in 1..2) {
     }
     
     Write-Host "Saving apps in following folders: $folders"
+    $generatedApps = @()
     foreach ($folderName in $folders) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$folderName\app.json"
         Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
@@ -37,5 +38,14 @@ foreach ($folderTypeNumber in 1..2) {
         New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
         Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
         Copy-Item $appJsonFilePath ($targetPath + 'app.json')
+        $generatedApps += @{
+            "appFile"            = $newAppFileLocation
+            "appJsonFile"        = ($targetPath + 'app.json')
+            "applicationVersion" = $appFile.application
+        }
     }
+    
+    $ENV:GENERATEDAPPS = $generatedApps
+    Write-Host "##vso[task.setvariable variable=GENERATEDAPPS;]$generatedApps"
+    Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
 }
