@@ -16,7 +16,7 @@ function Get-AppTargetFilePathForNewApp {
     }
     
     $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
-    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
+    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$($appFileJson.id)\$($appFileJson.version)-BC$($appFileJson.application)\"
     Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
     return $targetFilePath
 }
