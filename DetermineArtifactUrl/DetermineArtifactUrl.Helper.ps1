@@ -61,8 +61,6 @@ function DetermineArtifactUrl {
         }
         $version = $artifactUrl.Split('/')[4]
         $storageAccount = $artifactUrl.Split('/')[2]
-
-        return $artifactUrl
     }
 
     if ($settings.additionalCountries -or $country -ne $settings.country) {

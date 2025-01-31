@@ -147,7 +147,7 @@ function Get-LatestVersion {
             }
         }
     }
-    Write-Host "Latest preview version of" $extensionID "is" $minVersion;
+    Write-Host "Latest $releaseType version of" $extensionID "is" $minVersion;
     return $minVersion;
 }
 

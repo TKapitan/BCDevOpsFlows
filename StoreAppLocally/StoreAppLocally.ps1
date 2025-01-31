@@ -37,5 +37,21 @@ foreach ($folderTypeNumber in 1..2) {
         New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
         Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
         Copy-Item $appJsonFilePath ($targetPath + 'app.json')
+        if ($appFolder) {
+            $generatedApp = @{
+                "appFile"            = $newAppFileLocation
+                "appJsonFile"        = ($targetPath + 'app.json')
+                "applicationVersion" = $appFile.application
+            }
+        }
     }
+}
+
+$generatedAppJson = $generatedApp | ConvertTo-Json -Compress
+$ENV:SAVEDAPPDETAILS = $generatedAppJson
+Write-Host "##vso[task.setvariable variable=SAVEDAPPDETAILS;]$generatedAppJson"
+Write-Host "Set environment variable SAVEDAPPDETAILS to ($ENV:SAVEDAPPDETAILS)"
+
+foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
+    Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
 }
