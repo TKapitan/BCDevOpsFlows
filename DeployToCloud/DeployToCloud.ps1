@@ -18,7 +18,7 @@ try {
     if (!$deploymentSettings) {
         throw "No deployment settings found for environment '$environmentName'."
     }
-    $appToDeploy = $ENV:SAVEDAPPDETAILS | ConvertFrom-Json -AsHashtable
+    $appToDeploy = $ENV:SAVEDAPPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$appToDeploy) {
         throw "No app to deploy settings found."
     }
