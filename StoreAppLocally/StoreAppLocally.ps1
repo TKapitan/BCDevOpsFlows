@@ -13,6 +13,7 @@ foreach ($folderTypeNumber in 1..2) {
     Write-Host "Reading apps #$folderTypeNumber"
     
     if ($appFolder) {
+        $generatedApps = @()
         $folders = @($settings.appFolders)
     }
     elseif ($testFolder) {
@@ -20,7 +21,6 @@ foreach ($folderTypeNumber in 1..2) {
     }
     
     Write-Host "Saving apps in following folders: $folders"
-    $generatedApps = @()
     foreach ($folderName in $folders) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$folderName\app.json"
         Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
@@ -54,7 +54,7 @@ Write-Host "Set environment variable GENERATEDAPPS to ($ENV:GENERATEDAPPS)"
 
 foreach ($generatedApp in $generatedApps) {
     Write-Host "Generated app:"
-    foreach ($generatedAppProperty in $generatedApp.Keys) {
-        Write-Host $generatedAppProperty":" $value
+    foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
+        Write-Host "$($generatedAppProperty.Name): $($generatedAppProperty.Value)"
     }
 }
