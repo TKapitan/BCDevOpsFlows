@@ -53,20 +53,20 @@ try {
         $baseFolder = Join-Path $containerBaseFolder (Get-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH).BaseName
     }
 
-    $analyzeRepoParams = @{}
-    if ($skipAppsInPreview) {
-        $analyzeRepoParams += @{
-            "skipAppsInPreview" = $true
-        }
-    }
-
     if (!$ENV:AL_SETTINGS) {
         Write-Error "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if (!$settings.analyzeRepoCompleted) {
+    if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
+        $analyzeRepoParams = @{}
+        if ($skipAppsInPreview) {
+            $analyzeRepoParams += @{
+                "skipAppsInPreview" = $true
+            }
+        }
+
         if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $settings.artifact"
+            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
             $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
         $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
