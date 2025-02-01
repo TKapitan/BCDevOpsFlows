@@ -8,7 +8,7 @@ Param(
     [Parameter(HelpMessage = "A JSON-formatted list of test apps to install", Mandatory = $false)]
     [string] $installTestAppsJson = '[]',
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [string] $skipAppsInPreview = $false
+    [switch] $skipAppsInPreview
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
