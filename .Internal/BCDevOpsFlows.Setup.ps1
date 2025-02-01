@@ -1,6 +1,6 @@
 
 $scriptsFolderName = '.azure-pipelines'
-$repoSettingsFile = '.azure-pipelines\BCDevOpsFlows-Settings.json'
+$repoSettingsFile = '.azure-pipelines\BCDevOpsFlows.Settings.json'
 $defaultBcContainerHelperVersion = "preview"
 
 Write-Host "Reading base file structure settings..."
