@@ -1,6 +1,6 @@
 Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [string] $isPreview
+    [switch] $isPreview
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
