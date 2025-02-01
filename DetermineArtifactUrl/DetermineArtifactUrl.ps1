@@ -7,7 +7,7 @@ DownloadAndImportBcContainerHelper
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\AnalyzeRepository\AnalyzeRepository.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "DetermineArtifactUrl.Helper.ps1" -Resolve)
 
-$settings = $env:Settings | ConvertFrom-Json | ConvertTo-HashTable
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 $settings = AnalyzeRepo -settings $settings
 $artifactUrl = DetermineArtifactUrl -settings $settings
 $artifactCacheKey = ''
@@ -17,9 +17,9 @@ if ($settings.useCompilerFolder) {
 }
 
 # Set output variables
-$ENV:SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
-Write-Host "##vso[task.setvariable variable=SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
-Write-Host "Set environment variable SETTINGS to ($ENV:SETTINGS)"
+$ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
+Write-Host "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
 $ENV:ARTIFACT = $artifactUrl
 Write-Host "##vso[task.setvariable variable=artifact;]$artifactUrl"
