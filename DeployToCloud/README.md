@@ -70,7 +70,7 @@ Use existing artifact and deploy the app to the cloud environment
 }
 ```
 
-#### OUTPUT
+## ENV OUTPUT variables
 
 | Name                  | Description                                                                                                   |
 | :--                   | :--                                                                                                           |
