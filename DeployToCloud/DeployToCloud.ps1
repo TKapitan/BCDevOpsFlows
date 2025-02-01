@@ -7,8 +7,8 @@ Param(
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeployToCloud.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\BCContainerHelper.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 
 DownloadAndImportBcContainerHelper
 
@@ -18,7 +18,7 @@ try {
     if (!$deploymentSettings) {
         throw "No deployment settings found for environment '$environmentName'."
     }
-    $appToDeploy = $ENV:SAVEDAPPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
+    $appToDeploy = $ENV:AL_APPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$appToDeploy) {
         throw "No app to deploy settings found."
     }
@@ -27,7 +27,7 @@ try {
         $buildMode = ''
     }
     $authContexts = $ENV:AL_AUTHCONTEXT | ConvertFrom-Json
-    $settings = $ENV:SETTINGS | ConvertFrom-Json
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
     $authContext = $null
     $authContextVariableName = $deploymentSettings.authContextVariableName
@@ -55,9 +55,9 @@ try {
 
     $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
     
-    $ENV:ENVIRONMENTURL = $environmentUrl
-    Write-Host "##vso[task.setvariable variable=ENVIRONMENTURL;]$environmentUrl"
-    Write-Host "Set environment variable ENVIRONMENTURL to ($ENV:ENVIRONMENTURL)"
+    $ENV:AL_ENVIRONMENTURL = $environmentUrl
+    Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
+    Write-Host "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
     
     Write-Host "EnvironmentUrl: $environmentUrl"
     $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"

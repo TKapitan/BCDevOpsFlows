@@ -1,7 +1,6 @@
 function DetermineArtifactUrl {
     Param(
-        [hashtable] $settings,
-        [switch] $doNotIssueWarnings
+        [hashtable] $settings
     )
 
     $artifact = $settings.artifact
@@ -64,7 +63,7 @@ function DetermineArtifactUrl {
     }
 
     if ($settings.additionalCountries -or $country -ne $settings.country) {
-        if ($country -ne $settings.country -and !$doNotIssueWarnings) {
+        if ($country -ne $settings.country) {
             OutputWarning -Message "artifact definition in $repoSettingsFile uses a different country ($country) than the country definition ($($settings.country))"
         }
         Write-Host "Checking Country and additionalCountries"

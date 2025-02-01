@@ -1,10 +1,9 @@
-.(Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
+.(Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
-# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)       = Project settings variable
-# - .azure-pipelines/BCDevOpsFlows-Settings.json               = Repository Settings file
-# - BCDevOpsFlowsRepoSettings (Azure DevOps Variable)          = Repository settings variable
+# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
+# - .azure-pipelines/BCDevOpsFlows-Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
@@ -15,8 +14,7 @@ function ReadSettings {
         [string] $pipelineName = "$ENV:BUILD_DEFINITIONNAME",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettingsVariableValue = "$ENV:AL_SETTINGS",
-        [string] $repoSettingsVariableValue
+        [string] $projectSettings
     )
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
@@ -117,8 +115,6 @@ function ReadSettings {
         "templateBranch"                                = ""
         "appDependencyProbingPaths"                     = @()
         "useProjectDependencies"                        = $false
-        "buildRunner"                                   = "windows-latest"
-        "buildRunnerShell"                              = ""
         "cacheImageName"                                = "my"
         "cacheKeepDays"                                 = 3
         "environments"                                  = @()
@@ -151,18 +147,13 @@ function ReadSettings {
 
     $settingsObjects = @()
     # Read settings from project settings variable (parameter)
-    if ($projectSettingsVariableValue) {
-        $projectSettingsVariableValueObject = $projectSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($projectSettingsVariableValueObject)
+    if ($projectSettings) {
+        $projectSettingsObject = $projectSettings | ConvertFrom-Json
+        $settingsObjects += @($projectSettingsObject)
     }
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    # Read settings from repository settings variable (parameter)
-    if ($repoSettingsVariableValue) {
-        $repoSettingsVariableObject = $repoSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($repoSettingsVariableObject)
-    }
     if ($pipelineName) {
         # Read settings from workflow settings file
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
@@ -213,16 +204,6 @@ function ReadSettings {
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
         Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
-    }
-    if ($settings.buildRunner -eq "") {
-        $settings.buildRunner = "windows-latest"
-    }
-    if ($settings.buildRunnerShell -eq "") {
-        $settings.buildRunnerShell = "powershell"
-    }
-    # Check that buildRunnerShell and Shell is valid
-    if ($settings.buildRunnerShell -ne "powershell" -and $settings.buildRunnerShell -ne "pwsh") {
-        Write-Error "Invalid value for setting: buildRunnerShell: $($settings.buildRunnerShell)"
     }
     $settings
 }

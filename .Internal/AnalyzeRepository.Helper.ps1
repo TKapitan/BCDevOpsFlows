@@ -1,12 +1,11 @@
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\DetermineArtifactUrl\DetermineArtifactUrl.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "FindDependencies.Helper.ps1" -Resolve)
 
 function AnalyzeRepo {
     [CmdletBinding()]
     Param(
         [hashTable] $settings,
-        [switch] $doNotIssueWarnings,
         [switch] $skipAppsInPreview,
         [version] $minBcVersion = [version]'0.0.0.0'
     )
@@ -78,13 +77,13 @@ function AnalyzeRepo {
 
             # Check if there are any folders matching $folder
             if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
-                if (!$doNotIssueWarnings) { OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" }
+                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
             }
             elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
-                if (!$doNotIssueWarnings) { OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" }
+                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
             }
             elseif ($bcptTestFolder -and (-not (Test-Path $bcptSuiteFile -PathType Leaf))) {
-                if (!$doNotIssueWarnings) { OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" }
+                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
                 $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
                 $enumerate = $false
             }
@@ -159,7 +158,7 @@ function AnalyzeRepo {
 
     # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
     if ($settings.artifact -notlike "https://*") {
-        $artifactUrl = DetermineArtifactUrl -settings $settings -doNotIssueWarnings:$doNotIssueWarnings
+        $artifactUrl = DetermineArtifactUrl -settings $settings
         $version = $artifactUrl.Split('/')[4]
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
         $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
@@ -197,11 +196,11 @@ function AnalyzeRepo {
         $settings.doNotRunBcptTests = $true
     }
     if (!$settings.doNotRunTests -and -not $settings.testFolders) {
-        if (!$doNotIssueWarnings) { OutputWarning -Message "No test apps found in testFolders in $repoSettingsFile" }
+        OutputWarning -Message "No test apps found in testFolders in $repoSettingsFile" 
         $settings.doNotRunTests = $true
     }
     if (-not $settings.appFolders) {
-        if (!$doNotIssueWarnings) { OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" }
+        OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" 
     }
 
     Write-Host "Analyzing repository completed"
