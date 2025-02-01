@@ -6,4 +6,5 @@ There won't be any change log or manuals available until the first stable versio
 
 ## Documented pipeline steps
 
+- [WorkflowInitialize README](./WorkflowInitialize/README.md)
 - [DeployToCloud README](./DeployToCloud/README.md)
