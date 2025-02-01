@@ -1,6 +1,4 @@
 Param(
-    [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $false)]
-    [string] $token,
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
     [string] $artifact = "",
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
@@ -53,29 +51,6 @@ try {
         New-Item -Path $containerBaseFolder -ItemType Directory | Out-Null
         Copy-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH -Destination $containerBaseFolder -Recurse -Force
         $baseFolder = Join-Path $containerBaseFolder (Get-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH).BaseName
-    }
-
-    $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
-    Write-Host "Using secrets from ENV:SECRETS"
-    # ENV:SECRETS is not set when running Pull_Request trigger
-    if ($ENV:SECRETS) {
-        $secrets = $ENV:SECRETS | ConvertFrom-Json | ConvertTo-HashTable
-    }
-    else {
-        $secrets = @{}
-    }
-
-    'licenseFileUrl', 'codeSignCertificateUrl', '*codeSignCertificatePassword', 'keyVaultCertificateUrl', '*keyVaultCertificatePassword', 'keyVaultClientId', 'applicationInsightsConnectionString' | ForEach-Object {
-        # Secrets might not be read during Pull Request runs
-        if ($secrets.Keys -contains $_) {
-            $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$_"))
-        }
-        else {
-            $value = ""
-        }
-        # Secrets preceded by an asterisk are returned encrypted.
-        # Variable name should not include the asterisk
-        Set-Variable -Name $_.TrimStart('*') -Value $value
     }
 
     $analyzeRepoParams = @{}
@@ -148,23 +123,6 @@ try {
     if (!$settings.skipUpgrade) {
         Write-Host "::group::Locating previous release"
         Write-Host "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
-        # try {
-        #     $latestRelease = GetLatestRelease -token $token -api_url $ENV:GITHUB_API_URL -repository $ENV:GITHUB_REPOSITORY -ref $ENV:GITHUB_REF_NAME
-        #     if ($latestRelease) {
-        #         Write-Host "Using $($latestRelease.name) (tag $($latestRelease.tag_name)) as previous release"
-        #         $artifactsFolder = Join-Path $baseFolder "artifacts"
-        #         New-Item $artifactsFolder -ItemType Directory | Out-Null
-        #         DownloadRelease -token $token -api_url $ENV:GITHUB_API_URL -repository $ENV:GITHUB_REPOSITORY -release $latestRelease -path $artifactsFolder -mask "Apps"
-        #         $previousApps += @(Get-ChildItem -Path $artifactsFolder | ForEach-Object { $_.FullName })
-        #     }
-        #     else {
-        #         OutputWarning -Message "No previous release found"
-        #     }
-        # }
-        # catch {
-        #     OutputError -Message "Error trying to locate previous release. Error was $($_.Exception.Message)"
-        #     exit
-        # }
         Write-Host "::endgroup::"
     }
 
@@ -217,9 +175,9 @@ try {
     $buildOutputFile = Join-Path $baseFolder "BuildOutput.txt"
     $containerEventLogFile = Join-Path $baseFolder "ContainerEventLog.evtx"
 
-    $ENV:CONTAINERNAME = $containerName
-    Write-Host "##vso[task.setvariable variable=containerName;]$containerName"
-    Write-Host "Set environment variable containerName to ($ENV:CONTAINERNAME)"
+    $ENV:AL_CONTAINERNAME = $containerName
+    Write-Host "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
+    Write-Host "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
 
     Set-Location $baseFolder
     $runAlPipelineOverrides | ForEach-Object {
@@ -319,6 +277,7 @@ try {
         $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
+    $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `
         -accept_insiderEula `
