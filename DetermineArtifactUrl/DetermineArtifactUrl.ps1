@@ -8,7 +8,7 @@ DownloadAndImportBcContainerHelper
 . (Join-Path -Path $PSScriptRoot -ChildPath "DetermineArtifactUrl.Helper.ps1" -Resolve)
 
 $settings = $env:Settings | ConvertFrom-Json | ConvertTo-HashTable
-$settings = AnalyzeRepo -settings $settings -doNotIssueWarnings
+$settings = AnalyzeRepo -settings $settings
 $artifactUrl = DetermineArtifactUrl -settings $settings
 $artifactCacheKey = ''
 if ($settings.useCompilerFolder) {
