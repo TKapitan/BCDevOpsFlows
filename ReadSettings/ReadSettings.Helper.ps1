@@ -2,9 +2,8 @@
 
 # Read settings from the settings files
 # Settings are read from the following files:
-# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)       = Project settings variable
-# - .azure-pipelines/BCDevOpsFlows-Settings.json               = Repository Settings file
-# - BCDevOpsFlowsRepoSettings (Azure DevOps Variable)          = Repository settings variable
+# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
+# - .azure-pipelines/BCDevOpsFlows-Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
@@ -15,8 +14,7 @@ function ReadSettings {
         [string] $pipelineName = "$ENV:BUILD_DEFINITIONNAME",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettingsVariableValue = "$ENV:AL_SETTINGS",
-        [string] $repoSettingsVariableValue
+        [string] $projectSettings
     )
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
@@ -149,18 +147,13 @@ function ReadSettings {
 
     $settingsObjects = @()
     # Read settings from project settings variable (parameter)
-    if ($projectSettingsVariableValue) {
-        $projectSettingsVariableValueObject = $projectSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($projectSettingsVariableValueObject)
+    if ($projectSettings) {
+        $projectSettingsObject = $projectSettings | ConvertFrom-Json
+        $settingsObjects += @($projectSettingsObject)
     }
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    # Read settings from repository settings variable (parameter)
-    if ($repoSettingsVariableValue) {
-        $repoSettingsVariableObject = $repoSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($repoSettingsVariableObject)
-    }
     if ($pipelineName) {
         # Read settings from workflow settings file
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")

@@ -8,7 +8,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
 
 # Find requested settings
-$settings = ReadSettings -buildMode $buildMode
+$settings = ReadSettings -buildMode $buildMode -projectSettings $ENV:AL_PROJECTSETTINGS
 if ($get) {
     $getSettings = $get.Split(',').Trim()
 }
