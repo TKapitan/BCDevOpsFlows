@@ -10,3 +10,4 @@ There won't be any change log or manuals available until the first stable versio
 - [WorkflowInitialize README](./WorkflowInitialize/README.md)
 - [StoreAppLocally README](./StoreAppLocally/README.md)
 - [DeployToCloud README](./DeployToCloud/README.md)
+- [PipelineCleanup README](./PipelineCleanup/README.md)
