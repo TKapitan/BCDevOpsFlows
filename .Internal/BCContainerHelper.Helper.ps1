@@ -1,5 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)
 
 #
 # Download and import the BcContainerHelper module based on repository settings
@@ -45,7 +45,7 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
 #
 # Get Path to BcContainerHelper module (download if necessary)
 #
-# If $env:BcContainerHelperPath is set, it will be reused (ignoring the ContainerHelperVersion)
+# If $ENV:AL_BCCONTAINERHELPERPATH is set, it will be reused (ignoring the ContainerHelperVersion)
 #
 # ContainerHelperVersion can be:
 # - preview (or dev), which will use the preview version downloaded from bccontainerhelper blob storage
@@ -61,11 +61,11 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
 # The cache folder is C:\ProgramData\BcContainerHelper on Windows and /home/<username>/.BcContainerHelper on Linux
 # A Mutex will be used to ensure multiple agents aren't fighting over the same cache folder
 #
-# This function will set $env:BcContainerHelperPath, which is the path to the BcContainerHelper.ps1 file for reuse in subsequent calls
+# This function will set $ENV:AL_BCCONTAINERHELPERPATH, which is the path to the BcContainerHelper.ps1 file for reuse in subsequent calls
 #
 function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
-    if ("$env:BcContainerHelperPath" -and (Test-Path -Path $env:BcContainerHelperPath -PathType Leaf)) {
-        return $env:BcContainerHelperPath
+    if ("$ENV:AL_BCCONTAINERHELPERPATH" -and (Test-Path -Path $ENV:AL_BCCONTAINERHELPERPATH -PathType Leaf)) {
+        return $ENV:AL_BCCONTAINERHELPERPATH
     }
 
     if ($bcContainerHelperVersion -eq 'None') {
@@ -140,10 +140,9 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
         }
     }
 
-    $env:BcContainerHelperPath = $bcContainerHelperPath
-    # Set output variables
-    Write-Host "##vso[task.setvariable variable=BcContainerHelperPath;]$bcContainerHelperPath"
-    Write-Host "Set environment variable BcContainerHelperPath to ($env:bcContainerHelperPath)"
+    $ENV:AL_BCCONTAINERHELPERPATH = $bcContainerHelperPath
+    Write-Host "##vso[task.setvariable variable=BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
+    Write-Host "Set environment variable BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
     return $bcContainerHelperPath
 }
 

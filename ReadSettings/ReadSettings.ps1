@@ -5,10 +5,10 @@ Param(
     [string] $get = ""
 )
 . (Join-Path -Path $PSScriptRoot -ChildPath "ReadSettings.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Troubleshooting.Helper.ps1" -Resolve)
 
 # Find requested settings
-$settings = ReadSettings -buildMode $buildMode
+$settings = ReadSettings -buildMode $buildMode -projectSettings $ENV:AL_PROJECTSETTINGS
 if ($get) {
     $getSettings = $get.Split(',').Trim()
 }
@@ -73,23 +73,11 @@ $settings.Keys | ForEach-Object {
             Write-Host "##vso[task.setvariable variable=$setting;]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
         }
         else {
-            $env:buildRunnerShell = $buildRunnerShell
             Write-Host "##vso[task.setvariable variable=$setting;]$settingValue"
         }
-        Write-Host "Set environment variable to ($env:DepartmentId)"
     }
 }
 
-$ENV:SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
-Write-Host "##vso[task.setvariable variable=SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
-Write-Host "Set environment variable SETTINGS to ($ENV:SETTINGS)"
-
-$buildRunnerJson = $settings.buildRunner.Split(',').Trim() | ConvertTo-Json -compress
-$ENV:BUILDRUNNERJSON = $buildRunnerJson
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERJSON;]$buildRunnerJson"
-Write-Host "Set environment variable BUILDRUNNERJSON to ($ENV:BUILDRUNNERJSON)"
-
-$buildRunnerShell = $settings.buildRunnerShell
-$ENV:BUILDRUNNERSHELL = $buildRunnerShell
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERSHELL;]$buildRunnerShell"
-Write-Host "Set environment variable BUILDRUNNERSHELL to ($ENV:BUILDRUNNERSHELL)"
+$ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
+Write-Host "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

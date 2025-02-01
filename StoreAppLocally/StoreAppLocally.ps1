@@ -1,12 +1,12 @@
 Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [string] $isPreview
+    [switch] $isPreview
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 
-$settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
     $appFolder = $folderTypeNumber -eq 1
     $testFolder = $folderTypeNumber -eq 2
@@ -48,9 +48,9 @@ foreach ($folderTypeNumber in 1..2) {
 }
 
 $generatedAppJson = $generatedApp | ConvertTo-Json -Compress
-$ENV:SAVEDAPPDETAILS = $generatedAppJson
-Write-Host "##vso[task.setvariable variable=SAVEDAPPDETAILS;]$generatedAppJson"
-Write-Host "Set environment variable SAVEDAPPDETAILS to ($ENV:SAVEDAPPDETAILS)"
+$ENV:AL_APPDETAILS = $generatedAppJson
+Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
+Write-Host "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
 
 foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
     Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"

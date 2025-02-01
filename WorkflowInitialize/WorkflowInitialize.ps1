@@ -3,6 +3,6 @@ $scopeJson = @{
     "workflowStartTime" = [DateTime]::UtcNow
 } | ConvertTo-Json -Compress
 
-$env:telemetryScopeJson = $scopeJson
-Write-Host "##vso[task.setvariable variable=telemetryScopeJson;]$scopeJson"
-Write-Host "Set environment variable telemetryScopeJson to ($env:telemetryScopeJson)"
+$env:AL_TELEMETRYSCOPE = $scopeJson
+Write-Host "##vso[task.setvariable variable=AL_TELEMETRYSCOPE;]$scopeJson"
+Write-Host "Set environment variable AL_TELEMETRYSCOPE to ($env:AL_TELEMETRYSCOPE)"
