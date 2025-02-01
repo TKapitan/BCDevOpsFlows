@@ -1,5 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)
 
 #
 # Download and import the BcContainerHelper module based on repository settings

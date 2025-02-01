@@ -1,10 +1,10 @@
 # Install BCContainerHelper
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 
 DownloadAndImportBcContainerHelper
 
 # Determine artifacts to use
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\AnalyzeRepository\AnalyzeRepository.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "DetermineArtifactUrl.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable

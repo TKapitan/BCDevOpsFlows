@@ -67,4 +67,4 @@ Write-Host " - testLibrariesApps = $testLibrariesApps"
 Write-Host " - testFrameworkApps = $testFrameworkApps"
 Write-Host " - testRunnerApps = $testRunnerApps"
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)

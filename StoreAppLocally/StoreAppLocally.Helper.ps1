@@ -1,4 +1,4 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 
 function Get-AppTargetFilePathForNewApp {
     [CmdletBinding()]

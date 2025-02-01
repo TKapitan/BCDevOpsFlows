@@ -5,7 +5,7 @@ Param(
     [string] $get = ""
 )
 . (Join-Path -Path $PSScriptRoot -ChildPath "ReadSettings.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Troubleshooting.Helper.ps1" -Resolve)
 
 # Find requested settings
 $settings = ReadSettings -buildMode $buildMode -projectSettings $ENV:AL_PROJECTSETTINGS

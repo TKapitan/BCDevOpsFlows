@@ -4,7 +4,7 @@ Param(
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
