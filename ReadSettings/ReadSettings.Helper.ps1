@@ -117,8 +117,6 @@ function ReadSettings {
         "templateBranch"                                = ""
         "appDependencyProbingPaths"                     = @()
         "useProjectDependencies"                        = $false
-        "buildRunner"                                   = "windows-latest"
-        "buildRunnerShell"                              = ""
         "cacheImageName"                                = "my"
         "cacheKeepDays"                                 = 3
         "environments"                                  = @()
@@ -213,16 +211,6 @@ function ReadSettings {
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
         Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
-    }
-    if ($settings.buildRunner -eq "") {
-        $settings.buildRunner = "windows-latest"
-    }
-    if ($settings.buildRunnerShell -eq "") {
-        $settings.buildRunnerShell = "powershell"
-    }
-    # Check that buildRunnerShell and Shell is valid
-    if ($settings.buildRunnerShell -ne "powershell" -and $settings.buildRunnerShell -ne "pwsh") {
-        Write-Error "Invalid value for setting: buildRunnerShell: $($settings.buildRunnerShell)"
     }
     $settings
 }

@@ -73,23 +73,11 @@ $settings.Keys | ForEach-Object {
             Write-Host "##vso[task.setvariable variable=$setting;]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
         }
         else {
-            $env:buildRunnerShell = $buildRunnerShell
             Write-Host "##vso[task.setvariable variable=$setting;]$settingValue"
         }
-        Write-Host "Set environment variable to ($env:DepartmentId)"
     }
 }
 
 $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
 Write-Host "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
-
-$buildRunnerJson = $settings.buildRunner.Split(',').Trim() | ConvertTo-Json -compress
-$ENV:BUILDRUNNERJSON = $buildRunnerJson
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERJSON;]$buildRunnerJson"
-Write-Host "Set environment variable BUILDRUNNERJSON to ($ENV:BUILDRUNNERJSON)"
-
-$buildRunnerShell = $settings.buildRunnerShell
-$ENV:BUILDRUNNERSHELL = $buildRunnerShell
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERSHELL;]$buildRunnerShell"
-Write-Host "Set environment variable BUILDRUNNERSHELL to ($ENV:BUILDRUNNERSHELL)"
