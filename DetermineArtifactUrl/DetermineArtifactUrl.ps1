@@ -21,10 +21,10 @@ $ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
 Write-Host "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
-$ENV:ARTIFACT = $artifactUrl
+$ENV:AL_ARTIFACT = $artifactUrl
 Write-Host "##vso[task.setvariable variable=artifact;]$artifactUrl"
-Write-Host "Set environment variable artifact to ($ENV:ARTIFACT)"
+Write-Host "Set environment variable artifact to ($ENV:AL_ARTIFACT)"
 
-$ENV:ARTIFACTCACHEKEY = $artifactCacheKey
+$ENV:AL_ARTIFACTCACHEKEY = $artifactCacheKey
 Write-Host "##vso[task.setvariable variable=artifactCacheKey;]$artifactCacheKey"
-Write-Host "Set environment variable artifactCacheKey to ($ENV:ARTIFACTCACHEKEY)"
+Write-Host "Set environment variable artifactCacheKey to ($ENV:AL_ARTIFACTCACHEKEY)"

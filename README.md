@@ -6,8 +6,9 @@ There won't be any change log or manuals available until the first stable versio
 
 ## Documented pipeline steps
 
-- [ReadSettings README](./ReadSettings/README.md)
 - [WorkflowInitialize README](./WorkflowInitialize/README.md)
+- [ReadSettings README](./ReadSettings/README.md)
+- [DetermineArtifactUrl README](./DetermineArtifactUrl/README.md)
 - [StoreAppLocally README](./StoreAppLocally/README.md)
 - [DeployToCloud README](./DeployToCloud/README.md)
 - [PipelineCleanup README](./PipelineCleanup/README.md)
