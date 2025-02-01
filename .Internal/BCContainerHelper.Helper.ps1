@@ -1,5 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Output.Helper.ps1" -Resolve)
 
 #
 # Download and import the BcContainerHelper module based on repository settings
@@ -17,12 +17,12 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
         $repoSettings = Get-Content $repoSettingsPath -Encoding UTF8 | ConvertFrom-Json | ConvertTo-HashTable
         if ($repoSettings.Keys -contains "BcContainerHelperVersion") {
             $bcContainerHelperVersion = $repoSettings.BcContainerHelperVersion
-            Write-Host "Using BcContainerHelper $bcContainerHelperVersion version"
+            OutputMessage "Using BcContainerHelper $bcContainerHelperVersion version"
             if ($bcContainerHelperVersion -like "https://*") {
-                Write-Error "Setting BcContainerHelperVersion to a URL in settings is not allowed."
+                OutputError "Setting BcContainerHelperVersion to a URL in settings is not allowed."
             }
             if ($bcContainerHelperVersion -ne 'latest' -and $bcContainerHelperVersion -ne 'preview') {
-                Write-Host "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."
+                OutputMessage "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."
             }
         }
         $params += @{ "bcContainerHelperConfigFile" = $repoSettingsPath }
@@ -33,12 +33,12 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
     }
 
     if ($bcContainerHelperVersion -eq 'private') {
-        Write-Error "ContainerHelperVersion private is no longer supported."
+        OutputError "ContainerHelperVersion private is no longer supported."
     }
 
     $bcContainerHelperPath = GetBcContainerHelperPath -bcContainerHelperVersion $bcContainerHelperVersion
 
-    Write-Host "Import from $bcContainerHelperPath"
+    OutputMessage "Import from $bcContainerHelperPath"
     . $bcContainerHelperPath @params
 }
 
@@ -71,7 +71,7 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
     if ($bcContainerHelperVersion -eq 'None') {
         $module = Get-Module BcContainerHelper
         if (-not $module) {
-            OutputError "When setting BcContainerHelperVersion to none, you need to ensure that BcContainerHelper is installed on the build agent"
+            OutputMessageError "When setting BcContainerHelperVersion to none, you need to ensure that BcContainerHelper is installed on the build agent"
         }
         $bcContainerHelperPath = Join-Path (Split-Path $module.Path -parent) "BcContainerHelper.ps1" -Resolve
     }
@@ -85,14 +85,14 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
         if ($bcContainerHelperVersion -like "https://*") {
             # Use temp space for private versions
             $tempName = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
-            Write-Host "Downloading BcContainerHelper developer version from $bcContainerHelperVersion"
+            OutputMessage "Downloading BcContainerHelper developer version from $bcContainerHelperVersion"
             try {
                 $webclient.DownloadFile($bcContainerHelperVersion, "$tempName.zip")
             }
             catch {
                 $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
                 $bcContainerHelperVersion = "preview"
-                Write-Host "Download failed, downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
+                OutputMessage "Download failed, downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
                 $webclient.DownloadFile("https://bccontainerhelper.blob.core.windows.net/public/$($bcContainerHelperVersion).zip", "$tempName.zip")
             }
         }
@@ -102,7 +102,7 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
                 # For backwards compatibility, use preview when dev is specified
                 $bcContainerHelperVersion = 'preview'
             }
-            Write-Host "Downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
+            OutputMessage "Downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
             $webclient.DownloadFile("https://bccontainerhelper.blob.core.windows.net/public/$($bcContainerHelperVersion).zip", "$tempName.zip")
         }
         Expand-7zipArchive -Path "$tempName.zip" -DestinationPath $tempName
@@ -118,13 +118,13 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
             try {
                 try {
                     if (!$buildMutex.WaitOne(1000)) {
-                        Write-Host "Waiting for other process loading BcContainerHelper"
+                        OutputMessage "Waiting for other process loading BcContainerHelper"
                         $buildMutex.WaitOne() | Out-Null
-                        Write-Host "Other process completed loading BcContainerHelper"
+                        OutputMessage "Other process completed loading BcContainerHelper"
                     }
                 }
                 catch [System.Threading.AbandonedMutexException] {
-                    Write-Host "Other process terminated abnormally"
+                    OutputMessage "Other process terminated abnormally"
                 }
                 if (Test-Path $cacheFolder) {
                     Remove-Item $tempName -Recurse -Force
@@ -141,8 +141,8 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
     }
 
     $ENV:AL_BCCONTAINERHELPERPATH = $bcContainerHelperPath
-    Write-Host "##vso[task.setvariable variable=BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
-    Write-Host "Set environment variable BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
+    OutputMessage "##vso[task.setvariable variable=BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
+    OutputMessage "Set environment variable BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
     return $bcContainerHelperPath
 }
 
@@ -166,13 +166,13 @@ function Expand-7zipArchive {
     }
 
     if ($use7zip) {
-        OutputDebug -Message "Using 7zip"
+        OutputMessageDebug -Message "Using 7zip"
         Set-Alias -Name 7z -Value $7zipPath
         $command = '7z x "{0}" -o"{1}" -aoa -r' -f $Path, $DestinationPath
         Invoke-Expression -Command $command | Out-Null
     }
     else {
-        OutputDebug -Message "Using Expand-Archive"
+        OutputMessageDebug -Message "Using Expand-Archive"
         Expand-Archive -Path $Path -DestinationPath "$DestinationPath" -Force
     }
 }

@@ -1,4 +1,5 @@
-.(Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Output.Helper.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
@@ -35,18 +36,18 @@ function ReadSettings {
 
         if (Test-Path $path) {
             try {
-                Write-Host "Applying settings from $path"
+                OutputMessage "Applying settings from $path"
                 $settings = Get-Content $path -Encoding UTF8 | ConvertFrom-Json
                 if ($settings) {
                     return $settings
                 }
             }
             catch {
-                Write-Error "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+                OutputError "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
             }
         }
         else {
-            Write-Host "No settings found in $path"
+            OutputMessage "No settings found in $path"
         }
         return $null
     }
@@ -198,7 +199,7 @@ function ReadSettings {
                             $conditions += @("userReqForEmail: $userReqForEmail")
                         }
                         if ($conditionMet) {
-                            Write-Host "Applying conditional settings for $($conditions -join ", ")"
+                            OutputMessage "Applying conditional settings for $($conditions -join ", ")"
                             MergeCustomObjectIntoOrderedDictionary -dst $settings -src $conditionalSetting.settings
                         }
                     }
@@ -209,7 +210,7 @@ function ReadSettings {
     }
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
-        Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+        OutputError "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
     }
     $settings
 }
@@ -242,7 +243,7 @@ function MergeCustomObjectIntoOrderedDictionary {
 
     # Loop through all properties in the destination object
     # If the property does not exist in the source object, do nothing
-    # If the property exists in the source object, but is of a different type, Write-Error an error
+    # If the property exists in the source object, but is of a different type, OutputError an error
     # If the property exists in the source object:
     # If the property is an Object, call this function recursively to merge values
     # If the property is an Object[], merge the arrays
@@ -259,8 +260,8 @@ function MergeCustomObjectIntoOrderedDictionary {
             }
             elseif ($dstPropType -ne $srcPropType -and !($srcPropType -eq "Int64" -and $dstPropType -eq "Int32")) {
                 # Under Linux, the Int fields read from the .json file will be Int64, while the settings defaults will be Int32
-                # This is not seen as an error and will not Write-Error an error
-                Write-Error "property $prop should be of type $dstPropType, is $srcPropType."
+                # This is not seen as an error and will not OutputError an error
+                OutputError "property $prop should be of type $dstPropType, is $srcPropType."
             }
             else {
                 if ($srcProp -is [Object[]]) {

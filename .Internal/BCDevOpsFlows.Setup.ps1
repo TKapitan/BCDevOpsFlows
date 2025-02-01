@@ -1,12 +1,13 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "Output.Helper.ps1" -Resolve)
 
 $scriptsFolderName = '.azure-pipelines'
 $repoSettingsFile = '.azure-pipelines\BCDevOpsFlows.Settings.json'
 $defaultBcContainerHelperVersion = "preview"
 
-Write-Host "Reading base file structure settings..."
-Write-Host " - scriptsFolderName = $scriptsFolderName"
-Write-Host " - repoSettingsFile = $repoSettingsFile"
-Write-Host " - defaultBcContainerHelperVersion = $defaultBcContainerHelperVersion"
+OutputMessage "Reading base file structure settings..."
+OutputMessage " - scriptsFolderName = $scriptsFolderName"
+OutputMessage " - repoSettingsFile = $repoSettingsFile"
+OutputMessage " - defaultBcContainerHelperVersion = $defaultBcContainerHelperVersion"
 
 $runAlPipelineOverrides = @(
     "DockerPull"
@@ -27,8 +28,8 @@ $runAlPipelineOverrides = @(
     "PostCompileApp"
 )
 
-Write-Host "Reading run AL pipeline overrides..."
-Write-Host " - runAlPipelineOverrides = $runAlPipelineOverrides"
+OutputMessage "Reading run AL pipeline overrides..."
+OutputMessage " - runAlPipelineOverrides = $runAlPipelineOverrides"
 
 # Well known AppIds
 $systemAppId = "63ca2fa4-4f03-4f2b-a480-172fef340d3f"
@@ -43,28 +44,26 @@ $systemApplicationTestLibraryAppId = "9856ae4f-d1a7-46ef-89bb-6ef056398228"
 $TestsTestLibrariesAppId = "5d86850b-0d76-4eca-bd7b-951ad998e997"
 $performanceToolkitAppId = "75f1590f-55c5-4501-ae63-bada5534e852"
 
-Write-Host "Reading well known AppIds..."
-Write-Host " - systemAppId = $systemAppId"
-Write-Host " - baseAppId = $baseAppId"
-Write-Host " - applicationAppId = $applicationAppId"
-Write-Host " - permissionsMockAppId = $permissionsMockAppId"
-Write-Host " - testRunnerAppId = $testRunnerAppId"
-Write-Host " - anyAppId = $anyAppId"
-Write-Host " - libraryAssertAppId = $libraryAssertAppId"
-Write-Host " - libraryVariableStorageAppId = $libraryVariableStorageAppId"
-Write-Host " - systemApplicationTestLibraryAppId = $systemApplicationTestLibraryAppId"
-Write-Host " - TestsTestLibrariesAppId = $TestsTestLibrariesAppId"
-Write-Host " - performanceToolkitAppId = $performanceToolkitAppId"
+OutputMessage "Reading well known AppIds..."
+OutputMessage " - systemAppId = $systemAppId"
+OutputMessage " - baseAppId = $baseAppId"
+OutputMessage " - applicationAppId = $applicationAppId"
+OutputMessage " - permissionsMockAppId = $permissionsMockAppId"
+OutputMessage " - testRunnerAppId = $testRunnerAppId"
+OutputMessage " - anyAppId = $anyAppId"
+OutputMessage " - libraryAssertAppId = $libraryAssertAppId"
+OutputMessage " - libraryVariableStorageAppId = $libraryVariableStorageAppId"
+OutputMessage " - systemApplicationTestLibraryAppId = $systemApplicationTestLibraryAppId"
+OutputMessage " - TestsTestLibrariesAppId = $TestsTestLibrariesAppId"
+OutputMessage " - performanceToolkitAppId = $performanceToolkitAppId"
 
 $performanceToolkitApps = @($performanceToolkitAppId)
 $testLibrariesApps = @($systemApplicationTestLibraryAppId, $TestsTestLibrariesAppId)
 $testFrameworkApps = @($anyAppId, $libraryAssertAppId, $libraryVariableStorageAppId) + $testLibrariesApps
 $testRunnerApps = @($permissionsMockAppId, $testRunnerAppId) + $performanceToolkitApps + $testLibrariesApps + $testFrameworkApps
 
-Write-Host "Reading well known AppIds collections..."
-Write-Host " - performanceToolkitApps = $performanceToolkitApps"
-Write-Host " - testLibrariesApps = $testLibrariesApps"
-Write-Host " - testFrameworkApps = $testFrameworkApps"
-Write-Host " - testRunnerApps = $testRunnerApps"
-
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)
+OutputMessage "Reading well known AppIds collections..."
+OutputMessage " - performanceToolkitApps = $performanceToolkitApps"
+OutputMessage " - testLibrariesApps = $testLibrariesApps"
+OutputMessage " - testFrameworkApps = $testFrameworkApps"
+OutputMessage " - testRunnerApps = $testRunnerApps"

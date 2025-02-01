@@ -5,12 +5,13 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Output.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
     $appFolder = $folderTypeNumber -eq 1
     $testFolder = $folderTypeNumber -eq 2
-    Write-Host "Reading apps #$folderTypeNumber"
+    OutputMessage "Reading apps #$folderTypeNumber"
     
     if ($appFolder) {
         $folders = @($settings.appFolders)
@@ -19,10 +20,10 @@ foreach ($folderTypeNumber in 1..2) {
         $folders = @($settings.testFolders)
     }
     
-    Write-Host "Saving apps in following folders: $folders"
+    OutputMessage "Saving apps in following folders: $folders"
     foreach ($folderName in $folders) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$folderName\app.json"
-        Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
+        OutputMessage "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
 
         # Find app.json & target path
         $appFile = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
@@ -49,9 +50,9 @@ foreach ($folderTypeNumber in 1..2) {
 
 $generatedAppJson = $generatedApp | ConvertTo-Json -Compress
 $ENV:AL_APPDETAILS = $generatedAppJson
-Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
-Write-Host "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
+OutputMessage "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
+OutputMessage "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
 
 foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
-    Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
+    OutputMessage " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
 }

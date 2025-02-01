@@ -14,20 +14,20 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Output.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
 try {
-    Write-Host "Using artifact $artifact"
+    OutputMessage "Using artifact $artifact"
 
     DownloadAndImportBcContainerHelper
 
     if ($isWindows) {
         # Pull docker image in the background
-        Write-Host "Pulling generic image in the background"
+        OutputMessage "Pulling generic image in the background"
         $genericImageName = Get-BestGenericImageName
-        Write-Host " - name: $genericImageName"
+        OutputMessage " - name: $genericImageName"
         Start-Job -ScriptBlock {
             docker pull --quiet $using:genericImageName
         } | Out-Null
@@ -47,14 +47,14 @@ try {
         if (Test-Path $containerBaseFolder) {
             Remove-Item -Path $containerBaseFolder -Recurse -Force
         }
-        Write-Host "Creating temp folder"
+        OutputMessage "Creating temp folder"
         New-Item -Path $containerBaseFolder -ItemType Directory | Out-Null
         Copy-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH -Destination $containerBaseFolder -Recurse -Force
         $baseFolder = Join-Path $containerBaseFolder (Get-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH).BaseName
     }
 
     if (!$ENV:AL_SETTINGS) {
-        Write-Error "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
+        OutputError "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
@@ -66,24 +66,24 @@ try {
         }
 
         if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
+            OutputMessage "Changing settings to use artifact = $artifact from $($settings.artifact)"
             $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
         $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
     }
     else {
-        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
+        OutputMessage "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
     }
 
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
-        Write-Error "Repository is empty (no app or test folders found)"
+        OutputError "Repository is empty (no app or test folders found)"
         exit
     }
 
     # Trusted NuGet feeds not supported
-    Write-Host "Trusted NuGet feeds not supported, skipping"
+    OutputMessage "Trusted NuGet feeds not supported, skipping"
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
 
     $installApps = $settings.installApps
@@ -91,15 +91,15 @@ try {
 
     $installApps += $installAppsJson | ConvertFrom-Json
     $installApps += $settings.appDependencies
-    Write-Host "InstallApps: $installApps"
+    OutputMessage "InstallApps: $installApps"
 
     $installTestApps += $installTestAppsJson | ConvertFrom-Json
     $installTestApps += $settings.testDependencies
-    Write-Host "InstallTestApps: $installTestApps"
+    OutputMessage "InstallTestApps: $installTestApps"
 
     # Check if codeSignCertificateUrl+Password is used (and defined)
     if (!$settings.doNotSignApps -and $codeSignCertificateUrl -and $codeSignCertificatePassword -and !$settings.keyVaultCodesignCertificateName) {
-        OutputWarning -Message "Using the legacy CodeSignCertificateUrl and CodeSignCertificatePassword parameters. Consider using the new Azure Keyvault signing instead. Go to https://aka.ms/ALGoSettings#keyVaultCodesignCertificateName to find out more"
+        OutputMessageWarning -Message "Using the legacy CodeSignCertificateUrl and CodeSignCertificatePassword parameters. Consider using the new Azure Keyvault signing instead. Go to https://aka.ms/ALGoSettings#keyVaultCodesignCertificateName to find out more"
         $runAlPipelineParams += @{
             "CodeSignCertPfxFile"     = $codeSignCertificateUrl
             "CodeSignCertPfxPassword" = ConvertTo-SecureString -string $codeSignCertificatePassword
@@ -121,25 +121,25 @@ try {
 
     $previousApps = @()
     if (!$settings.skipUpgrade) {
-        Write-Host "::group::Locating previous release"
-        Write-Host "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
-        Write-Host "::endgroup::"
+        OutputMessage "::group::Locating previous release"
+        OutputMessage "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
+        OutputMessage "::endgroup::"
     }
 
     $additionalCountries = $settings.additionalCountries
 
     $imageName = $settings.cacheImageName
     if ($imageName) {
-        Write-Host "::group::Flush ContainerHelper Cache"
+        OutputMessage "::group::Flush ContainerHelper Cache"
         Flush-ContainerHelperCache -cache 'all,exitedcontainers' -keepdays $settings.cacheKeepDays
-        Write-Host "::endgroup::"
+        OutputMessage "::endgroup::"
     }
     $authContext = $null
     $environmentName = ""
     $CreateRuntimePackages = $false
 
     if ($settings.versioningStrategy -eq -1) {
-        Write-Host "Applying versioning strategy -1 ($($settings.artifact))"
+        OutputMessage "Applying versioning strategy -1 ($($settings.artifact))"
         $artifactVersion = [Version]$settings.artifact.Split('/')[4]
         $runAlPipelineParams += @{
             "appVersion" = "$($artifactVersion.Major).$($artifactVersion.Minor)"
@@ -149,7 +149,7 @@ try {
     }
     elseif ($settings.versioningStrategy -eq 10) {
         # The app.json version is applied in Run-AlPipeline
-        Write-Host "Applying versioning strategy 10 ($($settings.appJsonVersion))"
+        OutputMessage "Applying versioning strategy 10 ($($settings.appJsonVersion))"
         $runAlPipelineParams += @{
             "appVersion" = $null
         }
@@ -176,15 +176,15 @@ try {
     $containerEventLogFile = Join-Path $baseFolder "ContainerEventLog.evtx"
 
     $ENV:AL_CONTAINERNAME = $containerName
-    Write-Host "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
-    Write-Host "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
+    OutputMessage "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
+    OutputMessage "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
 
     Set-Location $baseFolder
     $runAlPipelineOverrides | ForEach-Object {
         $scriptName = $_
         $scriptPath = Join-Path $scriptsFolderName "$scriptName.ps1"
         if (Test-Path -Path $scriptPath -Type Leaf) {
-            Write-Host "Add override for $scriptName"
+            OutputMessage "Add override for $scriptName"
             Trace-Information -Message "Using override for $scriptName"
 
             $runAlPipelineParams += @{
@@ -205,12 +205,12 @@ try {
 
     if ($runAlPipelineParams.Keys -notcontains 'ImportTestDataInBcContainer') {
         if (($settings.configPackages) -or ($settings.Keys | Where-Object { $_ -like 'configPackages.*' })) {
-            Write-Host "Adding Import Test Data override"
-            Write-Host "Configured config packages:"
+            OutputMessage "Adding Import Test Data override"
+            OutputMessage "Configured config packages:"
             $settings.Keys | Where-Object { $_ -like 'configPackages*' } | ForEach-Object {
-                Write-Host "- $($_):"
+                OutputMessage "- $($_):"
                 $settings."$_" | ForEach-Object {
-                    Write-Host "  - $_"
+                    OutputMessage "  - $_"
                 }
             }
             $runAlPipelineParams += @{
@@ -222,7 +222,7 @@ try {
                         $prop = "configPackages"
                     }
                     if ($settings."$prop") {
-                        Write-Host "Importing config packages from $prop"
+                        OutputMessage "Importing config packages from $prop"
                         $settings."$prop" | ForEach-Object {
                             $configPackage = $_.Split(',')[0].Replace('{COUNTRY}', $country)
                             $packageId = $_.Split(',')[1]
@@ -264,7 +264,7 @@ try {
         if ($runAlPipelineParams.Keys -notcontains 'features') {
             $runAlPipelineParams["features"] = @()
         }
-        Write-Host "Adding translationfile feature"
+        OutputMessage "Adding translationfile feature"
         $runAlPipelineParams["features"] += "translationfile"
     }
 
@@ -273,12 +273,12 @@ try {
     }
 
     if ($settings.ContainsKey('preprocessorSymbols')) {
-        Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
+        OutputMessage "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
         $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
-    Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
+    OutputMessage "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `
         -accept_insiderEula `
         -pipelinename $workflowName `
@@ -325,7 +325,7 @@ try {
         -uninstallRemovedApps
 
     $testResultsDestinationFolder = $ENV:COMMON_TESTRESULTSDIRECTORY
-    Write-Host "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
+    OutputMessage "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
     Copy-Item -Path (Join-Path $baseFolder ".buildartifacts") -Destination $testResultsDestinationFolder -Recurse -Force
     Copy-Item -Path (Join-Path $baseFolder ".output") -Destination $testResultsDestinationFolder -Recurse -Force
     Copy-Item -Path (Join-Path $baseFolder "testResults*.xml") -Destination $testResultsDestinationFolder
@@ -334,25 +334,25 @@ try {
     Copy-Item -Path $containerEventLogFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
 
     $ENV:TestResults = $allTestResults
-    Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
-    Write-Host "Set environment variable TestResults to ($ENV:TestResults)"
+    OutputMessage "##vso[task.setvariable variable=TestResults]$allTestResults"
+    OutputMessage "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
-    Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
+    OutputMessage $_.Exception -ForegroundColor Red
+    OutputMessage $_.ScriptStackTrace
+    OutputMessage $_.PSMessageDetails
 
-    Write-Error "Error running pipeline. See previous lines for details."
+    OutputError "Error running pipeline. See previous lines for details."
 }
 finally {
     try {
         if (Test-BcContainer -containerName $containerName) {
-            Write-Host "Get Event Log from container"
+            OutputMessage "Get Event Log from container"
             $eventlogFile = Get-BcContainerEventLog -containerName $containerName -doNotOpen
             Copy-Item -Path $eventLogFile -Destination $containerEventLogFile
         }
     }
     catch {
-        Write-Error "Error getting event log from container: $($_.Exception.Message)"
+        OutputError "Error getting event log from container: $($_.Exception.Message)"
     }
 }

@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Output.Helper.ps1" -Resolve)
+
 function CheckIfAppNeedsInstallOrUpgrade {
     Param(
         [PSCustomObject] $appJson,
@@ -13,22 +15,22 @@ function CheckIfAppNeedsInstallOrUpgrade {
         if ($newVersion -gt $installedVersion) {
             $msg = "Dependency app $($appJson.name) is already installed in version $installedVersion, which is lower than $newVersion."
             if ($installMode -eq 'upgrade') {
-                Write-Host "$msg Needs upgrade."
+                OutputMessage "$msg Needs upgrade."
                 $needsUpgrade = $true
             }
             else {
-                Write-Host "::WARNING::$msg Set DependencyInstallMode to 'upgrade' or 'forceUpgrade' to upgrade dependencies."
+                OutputMessage "::WARNING::$msg Set DependencyInstallMode to 'upgrade' or 'forceUpgrade' to upgrade dependencies."
             }
         }
         elseif ($newVersion -lt $installedVersion) {
-            Write-Host "::WARNING::Dependency app $($appJson.name) is already installed in version $installedVersion, which is higher than $newVersion, used for this build. Please update your local copy of this dependency."
+            OutputMessage "::WARNING::Dependency app $($appJson.name) is already installed in version $installedVersion, which is higher than $newVersion, used for this build. Please update your local copy of this dependency."
         }
         else {
-            Write-Host "Dependency app $($appJson.name) is already installed in version $installedVersion."
+            OutputMessage "Dependency app $($appJson.name) is already installed in version $installedVersion."
         }
     }
     else {
-        Write-Host "Dependency app $($appJson.name) is not installed."
+        OutputMessage "Dependency app $($appJson.name) is not installed."
         $needsInstall = $true
     }
     return $needsInstall, $needsUpgrade
@@ -63,7 +65,7 @@ function InstallOrUpgradeApps {
             $needsInstall, $needsUpgrade = CheckIfAppNeedsInstallOrUpgrade -appJson $appJson -installedApp $installedApp -installMode $installMode
             if ($needsUpgrade) {
                 if (-not $isPTE -and $installedApp.publishedAs.Trim() -eq 'Dev') {
-                    Write-Host "::WARNING::Dependency AppSource App $($appJson.name) is published in Dev scoope. Cannot upgrade."
+                    OutputMessage "::WARNING::Dependency AppSource App $($appJson.name) is published in Dev scoope. Cannot upgrade."
                     $needsUpgrade = $false
                 }
             }

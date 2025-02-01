@@ -1,6 +1,7 @@
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\DetermineArtifactUrl\DetermineArtifactUrl.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Output.Helper.ps1" -Resolve)
 
 function AnalyzeRepo {
     [CmdletBinding()]
@@ -12,13 +13,13 @@ function AnalyzeRepo {
     $settings = $settings | Copy-HashTable
 
     if (!$runningLocal) {
-        Write-Host "::group::Analyzing repository"
+        OutputMessage "::group::Analyzing repository"
     }
 
     # Check applicationDependency
     [Version]$settings.applicationDependency | Out-null
 
-    Write-Host "Checking type"
+    OutputMessage "Checking type"
     if ($settings.type -eq "PTE") {
         if (!$settings.Contains('enablePerTenantExtensionCop')) {
             $settings.Add('enablePerTenantExtensionCop', $true)
@@ -35,21 +36,21 @@ function AnalyzeRepo {
             $settings.Add('enableAppSourceCop', $true)
         }
         if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
-            Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
+            OutputError "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
     }
     else {
-        Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
+        OutputError "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
 
-    Write-Host "Checking appFolders, testFolders and bcptTestFolders"
+    OutputMessage "Checking appFolders, testFolders and bcptTestFolders"
     $dependencies = [ordered]@{}
     $appIdFolders = [ordered]@{}
     foreach ($folderTypeNumber in 1..3) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
         $bcptTestFolder = $folderTypeNumber -eq 3
-        Write-Host "Reading apps #$folderTypeNumber"
+        OutputMessage "Reading apps #$folderTypeNumber"
         
         if ($appFolder) {
             $folders = @($settings.appFolders)
@@ -64,39 +65,39 @@ function AnalyzeRepo {
             $descr = "Bcpt Test folder"
         }
         else {
-            Write-Error "Internal error"
+            OutputError "Internal error"
         }
 
         $folders | ForEach-Object {
             $folderName = $_
             $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
-            Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
+            OutputMessage "Analyzing dependencies for '$folderName' in '$folder'"
             $appJsonFile = Join-Path $folder "app.json"
             $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
             $enumerate = $true
 
             # Check if there are any folders matching $folder
             if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
+                OutputMessageWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
             }
             elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
+                OutputMessageWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
             }
             elseif ($bcptTestFolder -and (-not (Test-Path $bcptSuiteFile -PathType Leaf))) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
+                OutputMessageWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
                 $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
                 $enumerate = $false
             }
 
             if ($enumerate) {
                 if ($dependencies.Contains($folderName)) {
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
+                    OutputError "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
                 }
                 $dependencies.Add($folderName, @())
                 try {
                     $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
                     if ($appIdFolders.Contains($appJson.Id)) {
-                        Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders."$($appJson.Id)"))"
+                        OutputError "$descr $folderName contains a duplicate AppId ($($appIdFolders."$($appJson.Id)"))"
                     }
                     $appIdFolders.Add($appJson.Id, $folderName)
                     if ($appJson.PSObject.Properties.Name -eq 'Dependencies') {
@@ -133,46 +134,46 @@ function AnalyzeRepo {
                         if ($foundAppDependencies) {
                             $settings.appDependencies += $foundAppDependencies
                         }
-                        Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
+                        OutputMessage "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
                         $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
                         if ($foundTestDependencies) {
                             $settings.testDependencies += $foundTestDependencies
                         }
-                        Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
+                        OutputMessage "Adding newly found TEST dependencies: $($settings.testDependencies)"
                     }
                 }
                 catch {
-                    Write-Host $_.Exception -ForegroundColor Red
-                    Write-Host $_.ScriptStackTrace
-                    Write-Host $_.PSMessageDetails
+                    OutputMessage $_.Exception -ForegroundColor Red
+                    OutputMessage $_.ScriptStackTrace
+                    OutputMessage $_.PSMessageDetails
 
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
+                    OutputError "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
         }
     }
-    Write-Host "App.json version $($settings.appJsonVersion)"
-    Write-Host "Application Dependency $($settings.applicationDependency)"
+    OutputMessage "App.json version $($settings.appJsonVersion)"
+    OutputMessage "Application Dependency $($settings.applicationDependency)"
 
     # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
     if ($settings.artifact -notlike "https://*") {
         $artifactUrl = DetermineArtifactUrl -settings $settings
         $version = $artifactUrl.Split('/')[4]
-        Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
+        OutputMessage "Downloading artifacts from $($artifactUrl.Split('?')[0])"
         $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
         if (-not ($folders)) {
-            Write-Error "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
+            OutputError "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
         }
         $settings.artifact = $artifactUrl
 
         if ([Version]$settings.applicationDependency -gt [Version]$version) {
-            Write-Error "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
+            OutputError "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
         }
     }
 
-    Write-Host "Analyzing Test App Dependencies"
+    OutputMessage "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
 
@@ -188,22 +189,22 @@ function AnalyzeRepo {
     # }
 
     if (!$runningLocal) {
-        Write-Host "::endgroup::"
+        OutputMessage "::endgroup::"
     }
 
     if (!$settings.doNotRunBcptTests -and -not $settings.bcptTestFolders) {
-        Write-Host "No performance test apps found in bcptTestFolders in $repoSettingsFile"
+        OutputMessage "No performance test apps found in bcptTestFolders in $repoSettingsFile"
         $settings.doNotRunBcptTests = $true
     }
     if (!$settings.doNotRunTests -and -not $settings.testFolders) {
-        OutputWarning -Message "No test apps found in testFolders in $repoSettingsFile" 
+        OutputMessageWarning -Message "No test apps found in testFolders in $repoSettingsFile" 
         $settings.doNotRunTests = $true
     }
     if (-not $settings.appFolders) {
-        OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" 
+        OutputMessageWarning -Message "No apps found in appFolders in $repoSettingsFile" 
     }
 
-    Write-Host "Analyzing repository completed"
+    OutputMessage "Analyzing repository completed"
     $settings | Add-Member -NotePropertyName analyzeRepoCompleted -NotePropertyValue $true -Force
     return $settings
 }

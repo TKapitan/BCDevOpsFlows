@@ -3,17 +3,30 @@ $script:warnings = @()
 $script:suggestions = @()
 $script:debugMessages = @()
 
-function OutputDebug {
+function OutputMessageDebug {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message
     )
 
+    if (!$ENV:AL_DEBUGMODE) {
+        return;
+    }
+
     $script:debugMessages += "- $Message"
     Write-Host "::Debug::$Message"
 }
 
-function OutputWarning {
+function OutputMessage {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string] $Message
+    )
+
+    Write-Host $Message
+}
+
+function OutputMessageWarning {
     Param (
         [Parameter(Mandatory = $true)]
         [string] $Message
@@ -23,7 +36,7 @@ function OutputWarning {
     Write-Host "- Warning: $Message"
 }
 
-function OutputError {
+function OutputMessageError {
     Param (
         [Parameter(Mandatory = $true)]
         [string] $Message
@@ -33,7 +46,7 @@ function OutputError {
     Write-Host "- Error: $Message"
 }
 
-function OutputSuggestion {
+function OutputMessageSuggestion {
     Param (
         [Parameter(Mandatory = $true)]
         [string] $Message
@@ -41,4 +54,24 @@ function OutputSuggestion {
 
     $script:suggestions += "- $Message"
     Write-Host "- Suggestion: $Message"
+}
+
+function OutputWarning {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string] $Message
+    )
+
+    $script:warnings += "- $Message"
+    Write-Warning "Warning: $Message"
+}
+
+function OutputError {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string] $Message
+    )
+
+    $script:errors += "- $Message"
+    Write-Error "Error: $Message"
 }

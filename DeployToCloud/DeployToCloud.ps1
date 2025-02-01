@@ -9,6 +9,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeployToCloud.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Output.Helper.ps1" -Resolve)
 
 DownloadAndImportBcContainerHelper
 
@@ -33,10 +34,10 @@ try {
     $authContextVariableName = $deploymentSettings.authContextVariableName
     Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
     if (!$authContextVariableName) {
-        Write-Error "No AuthContextVariableName specified for environment ($environmentName)."
+        OutputError "No AuthContextVariableName specified for environment ($environmentName)."
     }
     if (!$authContexts."$authContextVariableName") {
-        Write-Error "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
+        OutputError "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
     }
     try {
         $authContext = $authContexts."$authContextVariableName"
@@ -46,44 +47,44 @@ try {
         }
     }
     catch {
-        Write-Host $_.Exception -ForegroundColor Red
-        Write-Host $_.ScriptStackTrace
-        Write-Host $_.PSMessageDetails
+        OutputMessage $_.Exception -ForegroundColor Red
+        OutputMessage $_.ScriptStackTrace
+        OutputMessage $_.PSMessageDetails
     
-        Write-Error "Authentication failed. See previous lines for details."
+        OutputError "Authentication failed. See previous lines for details."
     }
 
     $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
     
     $ENV:AL_ENVIRONMENTURL = $environmentUrl
-    Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
-    Write-Host "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
+    OutputMessage "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
+    OutputMessage "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
     
-    Write-Host "EnvironmentUrl: $environmentUrl"
+    OutputMessage "EnvironmentUrl: $environmentUrl"
     $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
     if ($response.Status -eq "DoesNotExist") {
-        OutputError -message "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context."
+        OutputMessageError -message "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context."
         exit
     }
     if ($response.Status -ne "Ready") {
-        OutputError -message "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status))."
+        OutputMessageError -message "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status))."
         exit
     }
 
-    Write-Host "Apps to deploy"
+    OutputMessage "Apps to deploy"
     foreach ($appToDeployProperty in $appToDeploy.GetEnumerator()) {
-        Write-Host " - $($appToDeployProperty.Name): $($appToDeployProperty.Value)"
+        OutputMessage " - $($appToDeployProperty.Name): $($appToDeployProperty.Value)"
     }
     
     # Deploy app
     $dependencies = @()
-    Write-Host "Deploy app details: $appToDeploy"
+    OutputMessage "Deploy app details: $appToDeploy"
 
     $appFile = $appToDeploy.appFile
     $appJsonFile = $appToDeploy.appJsonFile
     $minBcVersion = $appToDeploy.applicationVersion
 
-    Write-Host "- $([System.IO.Path]::GetFileName($appFile))"
+    OutputMessage "- $([System.IO.Path]::GetFileName($appFile))"
 
     if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
         $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
@@ -91,14 +92,14 @@ try {
             $dependencies += $dependenciesToDeploy
         }
     
-        Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
+        OutputMessage "Dependencies to $($deploymentSettings.dependencyInstallMode)"
         if ($dependencies) {
             $dependencies | ForEach-Object {
-                Write-Host "- $([System.IO.Path]::GetFileName($_))"
+                OutputMessage "- $([System.IO.Path]::GetFileName($_))"
             }
         }
         else {
-            Write-Host "- None"
+            OutputMessage "- None"
         }
     }
 
@@ -118,7 +119,7 @@ try {
     }
     if (!$sandboxEnvironment -and $deploymentType -eq 'CD' -and !($deploymentSettings.continuousDeployment)) {
         # Continuous deployment is undefined in settings - we will not deploy to production environments
-        Write-Host "::Warning::Ignoring environment $($deploymentSettings.environmentName), which is a production environment"
+        OutputMessage "::Warning::Ignoring environment $($deploymentSettings.environmentName), which is a production environment"
     }
     else {
         if ($dependencies) {
@@ -137,10 +138,10 @@ try {
                 if (@('Add', 'ForceSync', 'Clean', 'Development') -notcontains $deploymentSettings.SyncMode) {
                     throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the development endpoint. Valid values are Add, ForceSync, Development and Clean."
                 }
-                Write-Host "Using $($deploymentSettings.SyncMode)"
+                OutputMessage "Using $($deploymentSettings.SyncMode)"
                 $parameters += @{ "SyncMode" = $deploymentSettings.SyncMode }
             }
-            Write-Host "Publishing apps using development endpoint"
+            OutputMessage "Publishing apps using development endpoint"
             Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
         }
         else {
@@ -154,20 +155,20 @@ try {
                 if (@('Add', 'ForceSync') -notcontains $deploymentSettings.SyncMode) {
                     throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the automation API. Valid values are Add and ForceSync."
                 }
-                Write-Host "Using $($deploymentSettings.SyncMode)"
+                OutputMessage "Using $($deploymentSettings.SyncMode)"
                 $syncMode = $deploymentSettings.SyncMode
                 if ($syncMode -eq 'ForceSync') { $syncMode = 'Force' }
                 $parameters += @{ "SchemaSyncMode" = $syncMode }
             }
-            Write-Host "Publishing apps using automation API"
+            OutputMessage "Publishing apps using automation API"
             Publish-PerTenantExtensionApps @parameters
         }
     }
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
-    Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
+    OutputMessage $_.Exception -ForegroundColor Red
+    OutputMessage $_.ScriptStackTrace
+    OutputMessage $_.PSMessageDetails
 
-    Write-Error "Error running deployment pipeline. See previous lines for details."
+    OutputError "Error running deployment pipeline. See previous lines for details."
 }
