@@ -75,3 +75,4 @@ Use existing artifact and deploy the app to the cloud environment
 | Name                  | Description                                                                                                   |
 | :--                   | :--                                                                                                           |
 | AL_ENVIRONMENTURL     | The URL for the environment used for deployment                                                               |
+| AL_BCCONTAINERHELPERPATH  | Path to used BC Container Helper module.  |
