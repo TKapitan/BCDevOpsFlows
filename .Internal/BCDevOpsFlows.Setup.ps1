@@ -1,6 +1,6 @@
 
 $scriptsFolderName = '.azure-pipelines'
-$repoSettingsFile = '.azure-pipelines\BCDevOpsFlows-Settings.json'
+$repoSettingsFile = '.azure-pipelines\BCDevOpsFlows.Settings.json'
 $defaultBcContainerHelperVersion = "preview"
 
 Write-Host "Reading base file structure settings..."
@@ -67,4 +67,4 @@ Write-Host " - testLibrariesApps = $testLibrariesApps"
 Write-Host " - testFrameworkApps = $testFrameworkApps"
 Write-Host " - testRunnerApps = $testRunnerApps"
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
