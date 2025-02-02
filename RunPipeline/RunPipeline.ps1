@@ -338,7 +338,7 @@ try {
     OutputMessage "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
-    OutputMessage $_.Exception -ForegroundColor Red
+    OutputMessage $_.Exception
     OutputMessage $_.ScriptStackTrace
     OutputMessage $_.PSMessageDetails
 

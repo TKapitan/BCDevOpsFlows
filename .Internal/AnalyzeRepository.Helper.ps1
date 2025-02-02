@@ -145,7 +145,7 @@ function AnalyzeRepo {
                     }
                 }
                 catch {
-                    OutputMessage $_.Exception -ForegroundColor Red
+                    OutputMessage $_.Exception
                     OutputMessage $_.ScriptStackTrace
                     OutputMessage $_.PSMessageDetails
 
