@@ -11,10 +11,7 @@ function AnalyzeRepo {
     )
     $settings = $settings | Copy-HashTable
 
-    if (!$runningLocal) {
-        Write-Host "::group::Analyzing repository"
-    }
-
+    Write-Host "::group::Analyzing repository"
     # Check applicationDependency
     [Version]$settings.applicationDependency | Out-null
 
@@ -186,10 +183,7 @@ function AnalyzeRepo {
     #         if ($performanceToolkitApps.Contains($dep.id)) { $settings.installPerformanceToolkit = $true }
     #     }
     # }
-
-    if (!$runningLocal) {
-        Write-Host "::endgroup::"
-    }
+    Write-Host "::endgroup::"
 
     if (!$settings.doNotRunBcptTests -and -not $settings.bcptTestFolders) {
         Write-Host "No performance test apps found in bcptTestFolders in $repoSettingsFile"
