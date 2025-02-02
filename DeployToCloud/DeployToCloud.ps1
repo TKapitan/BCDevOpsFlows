@@ -26,7 +26,7 @@ try {
     if ($null -eq $buildMode -or $buildMode -eq 'default') {
         $buildMode = ''
     }
-    $authContexts = $ENV:AL_AUTHCONTEXT | ConvertFrom-Json
+    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
     $authContext = $null
