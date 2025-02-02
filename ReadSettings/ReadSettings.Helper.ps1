@@ -121,7 +121,7 @@ function ReadSettings {
         "templateBranch"                                = ""
         "appDependencyProbingPaths"                     = @()
         "useProjectDependencies"                        = $false
-        "cacheImageName"                                = "my"
+        "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
         "environments"                                  = @()
         "buildModes"                                    = @()
