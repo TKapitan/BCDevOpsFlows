@@ -8,7 +8,9 @@ No parameters.
 
 ## ENV INPUT variables
 
-No environment input variables.
+| Name | Description |
+| :-- | :-- |
+| AL_DEBUG | If set to 'true', pipelines generate additional logs that provides better details. If requesting support, you must provide log generated when this variable is enabled. |
 
 ## ENV OUTPUT variables
 

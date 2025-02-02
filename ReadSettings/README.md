@@ -15,6 +15,7 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 | :--                   | :--                                                               |
 | AL_PROJECTSETTINGS    | Compressed json file with settings to be used for this project.   |
 | AL_PIPELINENAME       | Specifies the name of the pipeline. This value is used to determine setting file for the pipeline-specific configuration. If this value is blank, the predefined Build.DefinitionName environment variable (pipeline name as configured in devops) is used.  |
+| AL_DEBUG | If set to 'true', pipelines generate additional logs that provides better details. If requesting support, you must provide log generated when this variable is enabled. |
 
 ## ENV OUTPUT variables
 
