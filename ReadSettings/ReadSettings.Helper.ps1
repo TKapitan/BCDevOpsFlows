@@ -1,4 +1,5 @@
-.(Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
@@ -256,6 +257,7 @@ function MergeCustomObjectIntoOrderedDictionary {
             $srcPropType = $srcProp.GetType().Name
             if ($srcPropType -eq "PSCustomObject" -and $dstPropType -eq "OrderedDictionary") {
                 MergeCustomObjectIntoOrderedDictionary -dst $dst."$prop" -src $srcProp
+                OutputDebug -Message "Calling MergeCustomObjectIntoOrderedDictionary recursively for $prop"
             }
             elseif ($dstPropType -ne $srcPropType -and !($srcPropType -eq "Int64" -and $dstPropType -eq "Int32")) {
                 # Under Linux, the Int fields read from the .json file will be Int64, while the settings defaults will be Int32
@@ -272,17 +274,21 @@ function MergeCustomObjectIntoOrderedDictionary {
                             $ht = [ordered]@{}
                             $srcElm.PSObject.Properties | Sort-Object -Property Name -Culture "iv-iv" | ForEach-Object {
                                 $ht[$_.Name] = $_.Value
+                                OutputDebug -Message "Adding property $($_.Name) to child object $prop"
                             }
                             $dst."$prop" += @($ht)
+                            OutputDebug -Message "Adding child object $prop"
                         }
                         else {
                             # Add source element to destination array, but only if it does not already exist
                             $dst."$prop" = @($dst."$prop" + $srcElm | Select-Object -Unique)
+                            OutputDebug -Message "Setting property $prop to $($dst."$prop")"
                         }
                     }
                 }
                 else {
                     $dst."$prop" = $srcProp
+                    OutputDebug -Message "Setting property $prop to $srcProp"
                 }
             }
         }

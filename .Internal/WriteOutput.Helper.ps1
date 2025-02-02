@@ -9,6 +9,9 @@ function OutputDebug {
         [string] $Message
     )
 
+    if (![boolean]$ENV:AL_DEBUG) {
+        return;
+    }
     $script:debugMessages += "- $Message"
     Write-Host "::Debug::$Message"
 }
