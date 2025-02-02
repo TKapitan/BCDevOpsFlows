@@ -18,7 +18,6 @@ else {
 
 # Determine versioning strategy
 if ($ENV:BUILD_REASON -in @("PullRequest")) {
-    $settings.doNotSignApps = $true
     $settings.versioningStrategy = 15
 }
 if ($settings.appBuild -eq [int32]::MaxValue) {

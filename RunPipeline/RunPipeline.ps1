@@ -96,14 +96,6 @@ try {
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
 
-    # Check if codeSignCertificateUrl+Password is used (and defined)
-    if (!$settings.doNotSignApps -and $codeSignCertificateUrl -and $codeSignCertificatePassword -and !$settings.keyVaultCodesignCertificateName) {
-        OutputWarning -Message "Using the legacy CodeSignCertificateUrl and CodeSignCertificatePassword parameters. Consider using the new Azure Keyvault signing instead. Go to https://aka.ms/ALGoSettings#keyVaultCodesignCertificateName to find out more"
-        $runAlPipelineParams += @{
-            "CodeSignCertPfxFile"     = $codeSignCertificateUrl
-            "CodeSignCertPfxPassword" = ConvertTo-SecureString -string $codeSignCertificatePassword
-        }
-    }
     if ($applicationInsightsConnectionString) {
         $runAlPipelineParams += @{
             "applicationInsightsConnectionString" = $applicationInsightsConnectionString

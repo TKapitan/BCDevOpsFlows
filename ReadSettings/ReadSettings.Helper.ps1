@@ -67,16 +67,6 @@ function ReadSettings {
         "runNumberOffset"                               = 0
         "appBuild"                                      = 0
         "appRevision"                                   = 0
-        "keyVaultName"                                  = ""
-        "licenseFileUrlSecretName"                      = "licenseFileUrl"
-        "adminCenterApiCredentialsSecretName"           = "adminCenterApiCredentials"
-        "applicationInsightsConnectionStringSecretName" = "applicationInsightsConnectionString"
-        "keyVaultCertificateUrlSecretName"              = ""
-        "keyVaultCertificatePasswordSecretName"         = ""
-        "keyVaultClientIdSecretName"                    = ""
-        "keyVaultCodesignCertificateName"               = ""
-        "codeSignCertificateUrlSecretName"              = "codeSignCertificateUrl"
-        "codeSignCertificatePasswordSecretName"         = "codeSignCertificatePassword"
         "additionalCountries"                           = @()
         "appDependencies"                               = @()
         "appFolders"                                    = @()
@@ -112,42 +102,14 @@ function ReadSettings {
         "doNotRunBcptTests"                             = $false
         "doNotRunPageScriptingTests"                    = $false
         "doNotPublishApps"                              = $false
-        "doNotSignApps"                                 = $false
         "configPackages"                                = @()
         "appSourceCopMandatoryAffixes"                  = @()
         "obsoleteTagMinAllowedMajorMinor"               = ""
         "memoryLimit"                                   = ""
-        "templateUrl"                                   = ""
-        "templateSha"                                   = ""
-        "templateBranch"                                = ""
-        "appDependencyProbingPaths"                     = @()
-        "useProjectDependencies"                        = $false
         "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
-        "environments"                                  = @()
         "buildModes"                                    = @()
         "useCompilerFolder"                             = $false
-        "pullRequestTrigger"                            = "pull_request_target"
-        "bcptThresholds"                                = [ordered]@{
-            "DurationWarning"         = 10
-            "DurationError"           = 25
-            "NumberOfSqlStmtsWarning" = 5
-            "NumberOfSqlStmtsError"   = 10
-        }
-        "fullBuildPatterns"                             = @()
-        "excludeEnvironments"                           = @()
-        "commitOptions"                                 = [ordered]@{
-            "messageSuffix"        = ""
-            "pullRequestAutoMerge" = $false
-            "pullRequestLabels"    = @()
-        }
-        "trustedSigning"                                = [ordered]@{
-            "Endpoint"           = ""
-            "Account"            = ""
-            "CertificateProfile" = ""
-        }
-        "useGitSubmodules"                              = "false"
-        "gitSubmodulesTokenSecretName"                  = "gitSubmodulesToken"
     }
 
     # Read settings from files and merge them into the settings object
