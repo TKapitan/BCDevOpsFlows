@@ -102,14 +102,6 @@ try {
         }
     }
 
-    if ($keyVaultCertificateUrl -and $keyVaultCertificatePassword -and $keyVaultClientId) {
-        $runAlPipelineParams += @{
-            "KeyVaultCertPfxFile"     = $keyVaultCertificateUrl
-            "keyVaultCertPfxPassword" = ConvertTo-SecureString -string $keyVaultCertificatePassword
-            "keyVaultClientId"        = $keyVaultClientId
-        }
-    }
-
     $previousApps = @()
     if (!$settings.skipUpgrade) {
         Write-Host "::group::Locating previous release"
