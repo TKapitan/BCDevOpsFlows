@@ -9,7 +9,7 @@ function OutputDebug {
         [string] $Message
     )
 
-    if (![boolean]$ENV:AL_DEBUG) {
+    if ($ENV:AL_DEBUG -ne 'true') {
         return;
     }
     $script:debugMessages += "- $Message"
