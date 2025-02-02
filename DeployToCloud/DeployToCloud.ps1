@@ -9,6 +9,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeployToCloud.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 DownloadAndImportBcContainerHelper
 
@@ -26,7 +27,7 @@ try {
     if ($null -eq $buildMode -or $buildMode -eq 'default') {
         $buildMode = ''
     }
-    $authContexts = $ENV:AL_AUTHCONTEXT | ConvertFrom-Json
+    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
     $authContext = $null
@@ -57,7 +58,7 @@ try {
     
     $ENV:AL_ENVIRONMENTURL = $environmentUrl
     Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
-    Write-Host "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
+    OutputDebug -Message "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
     
     Write-Host "EnvironmentUrl: $environmentUrl"
     $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"

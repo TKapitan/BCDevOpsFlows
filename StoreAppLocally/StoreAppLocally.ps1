@@ -5,6 +5,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
@@ -50,7 +51,7 @@ foreach ($folderTypeNumber in 1..2) {
 $generatedAppJson = $generatedApp | ConvertTo-Json -Compress
 $ENV:AL_APPDETAILS = $generatedAppJson
 Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
-Write-Host "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
+OutputDebug -Message "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
 
 foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
     Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"

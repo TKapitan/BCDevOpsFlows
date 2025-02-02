@@ -12,9 +12,8 @@ Param(
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
@@ -97,25 +96,9 @@ try {
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
 
-    # Check if codeSignCertificateUrl+Password is used (and defined)
-    if (!$settings.doNotSignApps -and $codeSignCertificateUrl -and $codeSignCertificatePassword -and !$settings.keyVaultCodesignCertificateName) {
-        OutputWarning -Message "Using the legacy CodeSignCertificateUrl and CodeSignCertificatePassword parameters. Consider using the new Azure Keyvault signing instead. Go to https://aka.ms/ALGoSettings#keyVaultCodesignCertificateName to find out more"
-        $runAlPipelineParams += @{
-            "CodeSignCertPfxFile"     = $codeSignCertificateUrl
-            "CodeSignCertPfxPassword" = ConvertTo-SecureString -string $codeSignCertificatePassword
-        }
-    }
     if ($applicationInsightsConnectionString) {
         $runAlPipelineParams += @{
             "applicationInsightsConnectionString" = $applicationInsightsConnectionString
-        }
-    }
-
-    if ($keyVaultCertificateUrl -and $keyVaultCertificatePassword -and $keyVaultClientId) {
-        $runAlPipelineParams += @{
-            "KeyVaultCertPfxFile"     = $keyVaultCertificateUrl
-            "keyVaultCertPfxPassword" = ConvertTo-SecureString -string $keyVaultCertificatePassword
-            "keyVaultClientId"        = $keyVaultClientId
         }
     }
 
@@ -177,7 +160,7 @@ try {
 
     $ENV:AL_CONTAINERNAME = $containerName
     Write-Host "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
-    Write-Host "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
+    OutputDebug -Message "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
 
     Set-Location $baseFolder
     $runAlPipelineOverrides | ForEach-Object {
@@ -335,7 +318,7 @@ try {
 
     $ENV:TestResults = $allTestResults
     Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
-    Write-Host "Set environment variable TestResults to ($ENV:TestResults)"
+    OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red

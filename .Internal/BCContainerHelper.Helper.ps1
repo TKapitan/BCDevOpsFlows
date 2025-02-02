@@ -1,5 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
 
 #
 # Download and import the BcContainerHelper module based on repository settings
@@ -141,8 +141,8 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
     }
 
     $ENV:AL_BCCONTAINERHELPERPATH = $bcContainerHelperPath
-    Write-Host "##vso[task.setvariable variable=BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
-    Write-Host "Set environment variable BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
+    Write-Host "##vso[task.setvariable variable=AL_BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
+    OutputDebug -Message "Set environment variable AL_BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
     return $bcContainerHelperPath
 }
 
