@@ -177,7 +177,7 @@ try {
 
     $ENV:AL_CONTAINERNAME = $containerName
     Write-Host "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
-    Write-Host "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
+    OutputDebug -Message "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
 
     Set-Location $baseFolder
     $runAlPipelineOverrides | ForEach-Object {
@@ -335,7 +335,7 @@ try {
 
     $ENV:TestResults = $allTestResults
     Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
-    Write-Host "Set environment variable TestResults to ($ENV:TestResults)"
+    OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red

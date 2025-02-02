@@ -70,14 +70,16 @@ $settings.Keys | ForEach-Object {
     $outSettings += @{ "$setting" = $settingValue }
     if ($getSettings -contains $setting) {
         if ($settingValue -is [System.Collections.Specialized.OrderedDictionary] -or $settingValue -is [hashtable]) {
-            Write-Host "##vso[task.setvariable variable=$setting;]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
+            Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
+            OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($(ConvertTo-Json $settingValue -Depth 99 -Compress))"
         }
         else {
-            Write-Host "##vso[task.setvariable variable=$setting;]$settingValue"
+            Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$settingValue"
+            OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($settingValue)"
         }
     }
 }
 
 $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
-Write-Host "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

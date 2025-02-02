@@ -141,8 +141,8 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
     }
 
     $ENV:AL_BCCONTAINERHELPERPATH = $bcContainerHelperPath
-    Write-Host "##vso[task.setvariable variable=BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
-    Write-Host "Set environment variable BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
+    Write-Host "##vso[task.setvariable variable=AL_BCCONTAINERHELPERPATH;]$bcContainerHelperPath"
+    OutputDebug -Message "Set environment variable AL_BCCONTAINERHELPERPATH to ($ENV:AL_BCCONTAINERHELPERPATH)"
     return $bcContainerHelperPath
 }
 
