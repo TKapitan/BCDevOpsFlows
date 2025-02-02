@@ -4,9 +4,9 @@ $script:suggestions = @()
 $script:debugMessages = @()
 
 function OutputMessageDebug {
-    Param(
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+    Param (
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     if (!$ENV:AL_DEBUGMODE) {
@@ -19,8 +19,8 @@ function OutputMessageDebug {
 
 function OutputMessage {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     Write-Host $Message
@@ -28,8 +28,8 @@ function OutputMessage {
 
 function OutputMessageWarning {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     $script:warnings += "- $Message"
@@ -38,8 +38,8 @@ function OutputMessageWarning {
 
 function OutputMessageError {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     $script:errors += "- $Message"
@@ -48,8 +48,8 @@ function OutputMessageError {
 
 function OutputMessageSuggestion {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     $script:suggestions += "- $Message"
@@ -58,8 +58,8 @@ function OutputMessageSuggestion {
 
 function OutputWarning {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     $script:warnings += "- $Message"
@@ -68,8 +68,8 @@ function OutputWarning {
 
 function OutputError {
     Param (
-        [Parameter(Mandatory = $true)]
-        [string] $Message
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [Object] $Message
     )
 
     $script:errors += "- $Message"
