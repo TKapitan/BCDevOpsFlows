@@ -14,7 +14,7 @@ function Get-AppDependencies {
         }
         else {
             # Find app.json 
-            Write-Host "Looking for " $appJsonFilePath;
+            OutputDebug -Message "Looking for " $appJsonFilePath;
             $appFileContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
             
             # Get all dependencies for specific extension
@@ -42,7 +42,7 @@ function Get-AppJsonFile {
     $PSDefaultParameterValues['*:Encoding'] = 'utf8'
     foreach ($appFilePath in $sourceAppJsonFilePath) {
         if (Test-Path -Path $appFilePath -PathType Leaf) {
-            Write-Host "Trying to load json file:" $appFilePath
+            OutputDebug -Message "Trying to load json file:" $appFilePath
             $appFile = (Get-Content $appFilePath | ConvertFrom-Json);
             break;
         }
@@ -51,7 +51,7 @@ function Get-AppJsonFile {
         Write-Error "App.json file was not found for $($sourceAppJsonFilePath).";
     }
     else {
-        Write-Host "App.json found for $($appFilePath)"
+        OutputDebug -Message "App.json found for $($appFilePath)"
     }
     return $appFile;
 }
@@ -119,7 +119,7 @@ function Get-AppTargetFilePath {
 
     if ($findExisting -ne 'true') {
         $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
-        Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
+        OutputDebug -Message "Using '$targetFilePath' regardless if the extension exists or not"
         return $targetFilePath
     }
         
@@ -131,7 +131,7 @@ function Get-AppTargetFilePath {
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
-    Write-Host "Using version $latestExistingVersion for extension $extensionID";
+    OutputDebug -Message "Using version $latestExistingVersion for extension $extensionID";
     return "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
 }
 function Get-ReleaseTypeFolderName {
@@ -155,14 +155,14 @@ function Get-LatestVersion {
         [string] $releaseType
     )
     
-    Write-Host "Searching for latest version of $extensionID in '$releaseType' folder";
+    OutputDebug -Message "Searching for latest version of $extensionID in '$releaseType' folder";
     $minVersion = '0.0.0.0';
     if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseType\$extensionID") -PathType Container)) {
         Write-Host "Can not find $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
         return $minVersion
     }
 
-    Write-Host "Scanning $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
+    OutputDebug -Message "Scanning $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
     $sourceDirectoryContent = Get-ChildItem ("$appArtifactSharedFolder\apps\$releaseType\$extensionID\") -Directory
     foreach ($currDir in $sourceDirectoryContent) {
         if ($currDir -contains '-BC') {
@@ -179,7 +179,7 @@ function Get-LatestVersion {
             }
         }
     }
-    Write-Host "Latest $releaseType version of" $extensionID "is" $minVersion;
+    OutputDebug -Message "Latest $releaseType version of $extensionID is $minVersion";
     return $minVersion;
 }
 
@@ -221,9 +221,9 @@ function Get-AllBCDependencies {
     $listOfDependencies = @()
     foreach ($dependency in $appFile.dependencies) {
         if ($dependency.publisher -ne 'Microsoft') {
-            Write-Host "Searching for dependencies for app $($dependency.name) ($($dependency.id))"
+            OutputDebug -Message "Searching for dependencies for app $($dependency.name) ($($dependency.id))"
             if ($excludeExtensionID -ne '' -and $excludeExtensionID -ne $null) {
-                Write-Host "Verifying the dependency is not to be excluded ($excludeExtensionID)"
+                OutputDebug -Message "Verifying the dependency is not to be excluded ($excludeExtensionID)"
             }
             if ($dependency.id -eq $excludeExtensionID) {
                 Write-Host "Skipping dependency $($dependency.name) ($($dependency.id))"
@@ -236,18 +236,19 @@ function Get-AllBCDependencies {
                     $allBCDependencies = @{ "includeAppsInPreview" = $true }
                 }
 
-                Write-Host "Path:" $appArtifactSharedFolder ", id:" $dependency.id ", name: " $dependency.name ", version:" $dependency.version
+                OutputDebug -Message "Path: $appArtifactSharedFolder , id: $($dependency.id) , name: $($dependency.name) , version: $($dependency.version)"
                 $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
-                $dependencyAppContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $innerDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
+                $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
+                $innerDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppJsonContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
                 
                 # Add dependencies from the apps (found recursively)
                 if ($innerDependencies -ne @()) {
                     $listOfDependencies += $innerDependencies
+                    OutputDebug -Message "Adding previously found dependencies..."
                 }
 
                 # Add the current app
-                $currentFileInfo = Get-DependencyObject -dependencyFolder $appsLocation
+                $currentFileInfo = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
                 if ($listOfDependencies.id -notcontains $currentFileInfo.id) {
                     $listOfDependencies += $currentFileInfo
                 }
@@ -260,12 +261,16 @@ function Get-AllBCDependencies {
 function Get-DependencyObject {
     [CmdletBinding()]
     Param (
-        $dependencyFolder
+        $dependencyFolder,
+        $dependencyAppJsonContent
     )
 
-    $newDependency = $()
-    $appJsonFileContent = Get-AppJsonFile -sourceAppJsonFilePath ($dependencyFolder + 'app.json')
-    $newDependency | Add-Member -MemberType NoteProperty -Name "id" -Value $appJsonFileContent.id
-    $newDependency | Add-Member -MemberType NoteProperty -Name "appFile" -Value ($dependencyFolder + (Get-AppFileName -publisher $appJsonFileContent.publisher -name $appJsonFileContent.name -version $appJsonFileContent.version))
+    $newDependency = [PSCustomObject]@{
+        id = ''
+        appFile = ''
+    }
+    $newDependency.id = $dependencyAppJsonContent.id
+    $newDependency.appFile = $dependencyFolder + (Get-AppFileName -publisher $dependencyAppJsonContent.publisher -name $dependencyAppJsonContent.name -version $dependencyAppJsonContent.version)
+    OutputDebug -Message "Adding dependency: $($newDependency.id), $($newDependency.name) from $($newDependency.appFile)"
     return $newDependency
 }
