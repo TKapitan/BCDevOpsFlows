@@ -18,5 +18,4 @@ No input parameters.
 | Name | Description |
 | AL_SETTINGS       | Compressed json file with BCDevOpsFlows settings.     |
 | AL_ARTIFACT | The ArtifactUrl to use for the build |
-| AL_ARTIFACTCACHEKEY | The Cache Key to use for caching the artifacts when using CompilerFolder |
 | AL_BCCONTAINERHELPERPATH  | Path to used BC Container Helper module.  |

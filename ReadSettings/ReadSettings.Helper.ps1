@@ -109,7 +109,6 @@ function ReadSettings {
         "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
         "buildModes"                                    = @()
-        "useCompilerFolder"                             = $false
     }
 
     # Read settings from files and merge them into the settings object
