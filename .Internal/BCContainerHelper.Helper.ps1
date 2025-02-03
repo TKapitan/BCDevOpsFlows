@@ -32,10 +32,6 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
         $bcContainerHelperVersion = "latest"
     }
 
-    if ($bcContainerHelperVersion -eq 'private') {
-        Write-Error "ContainerHelperVersion private is no longer supported."
-    }
-
     $bcContainerHelperPath = GetBcContainerHelperPath -bcContainerHelperVersion $bcContainerHelperVersion
 
     Write-Host "Import from $bcContainerHelperPath"
@@ -98,10 +94,6 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
         }
         else {
             $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
-            if ($bcContainerHelperVersion -eq "dev") {
-                # For backwards compatibility, use preview when dev is specified
-                $bcContainerHelperVersion = 'preview'
-            }
             Write-Host "Downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
             $webclient.DownloadFile("https://bccontainerhelper.blob.core.windows.net/public/$($bcContainerHelperVersion).zip", "$tempName.zip")
         }
