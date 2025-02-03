@@ -64,7 +64,7 @@ function ReadSettings {
         "repoVersion"                                   = "1.0"
         "repoName"                                      = $repoName
         "versioningStrategy"                            = 0
-        "runNumberOffset"                               = 0
+        "buildNumberOffset"                               = 0
         "appBuild"                                      = 0
         "appRevision"                                   = 0
         "additionalCountries"                           = @()
@@ -109,7 +109,6 @@ function ReadSettings {
         "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
         "buildModes"                                    = @()
-        "useCompilerFolder"                             = $false
     }
 
     # Read settings from files and merge them into the settings object

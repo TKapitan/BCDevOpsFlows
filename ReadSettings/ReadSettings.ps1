@@ -27,7 +27,7 @@ if ($settings.versioningStrategy -ne -1) {
     switch ($settings.versioningStrategy -band 15) {
         0 {
             # Use BUILD_NUMBER and SYSTEM_JOBATTEMPT
-            $settings.appBuild = $settings.runNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
+            $settings.appBuild = $settings.buildNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
             $settings.appRevision = [Int32]($ENV:SYSTEM_JOBATTEMPT) - 1
         }
         2 {
@@ -38,7 +38,7 @@ if ($settings.versioningStrategy -ne -1) {
         3 {
             # USE BUIlD from app.json and BUILD_NUMBER
             $settings.appBuild = -1
-            $settings.appRevision = $settings.runNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
+            $settings.appRevision = $settings.buildNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
         }
         10 {
             # USE both from app.json (handled later in RunPipeline)
