@@ -206,8 +206,7 @@ function Get-DependenciesAsTextString {
     Param(
         [array] $dependencies
     )
-    return $dependencies | ForEach-Object {
-        $dependency = $_
-        $($dependency.appFile)
-    } -join ","
+    return ($dependencies | ForEach-Object {
+        $_.appFile
+    }) -join ","
 }
