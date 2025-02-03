@@ -218,7 +218,7 @@ function Get-AllBCDependencies {
         $appFile
     )
 
-    $listOfDependencies = ''
+    $listOfDependencies = @()
     foreach ($dependency in $appFile.dependencies) {
         if ($dependency.publisher -ne 'Microsoft') {
             Write-Host "Searching for dependencies for app $($dependency.name) ($($dependency.id))"
@@ -239,25 +239,33 @@ function Get-AllBCDependencies {
                 Write-Host "Path:" $appArtifactSharedFolder ", id:" $dependency.id ", name: " $dependency.name ", version:" $dependency.version
                 $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
                 $dependencyAppContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $otherDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
+                $innerDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
                 
-                if ($otherDependencies -ne '') {
-                    if ($listOfDependencies.IndexOf($otherDependencies) -eq -1) {
-                        if ($listOfDependencies -ne '') {
-                            $listOfDependencies += ','
-                        }
-                        $listOfDependencies += $otherDependencies
-                    }
+                # Add dependencies from the apps (found recursively)
+                if ($innerDependencies -ne @()) {
+                    $listOfDependencies += $innerDependencies
                 }
-                $dependencyAppFileLocation = $appsLocation + (Get-AppFileName -publisher $dependencyAppContent.publisher -name $dependencyAppContent.name -version $dependencyAppContent.version);
-                if ($listOfDependencies.IndexOf($dependencyAppFileLocation) -eq -1) {
-                    if ($listOfDependencies -ne '') {
-                        $listOfDependencies += ','
-                    }
-                    $listOfDependencies += ($dependencyAppFileLocation)
+
+                # Add the current app
+                $currentFileInfo = Get-DependencyObject -dependencyFolder $appsLocation
+                if ($listOfDependencies.id -notcontains $currentFileInfo.id) {
+                    $listOfDependencies += $currentFileInfo
                 }
             }
         }
     }
     return $listOfDependencies;
+}
+
+function Get-DependencyObject {
+    [CmdletBinding()]
+    Param (
+        $dependencyFolder
+    )
+
+    $newDependency = $()
+    $appJsonFileContent = Get-AppJsonFile -sourceAppJsonFilePath ($dependencyFolder + 'app.json')
+    $newDependency | Add-Member -MemberType NoteProperty -Name "id" -Value $appJsonFileContent.id
+    $newDependency | Add-Member -MemberType NoteProperty -Name "appFile" -Value ($dependencyFolder + (Get-AppFileName -publisher $appJsonFileContent.publisher -name $appJsonFileContent.name -version $appJsonFileContent.version))
+    return $newDependency
 }
