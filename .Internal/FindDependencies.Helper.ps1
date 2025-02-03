@@ -14,7 +14,7 @@ function Get-AppDependencies {
         }
         else {
             # Find app.json 
-            OutputDebug -Message "Looking for " $appJsonFilePath;
+            OutputDebug -Message "Looking for  $appJsonFilePath";
             $appFileContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
             
             # Get all dependencies for specific extension
@@ -42,7 +42,7 @@ function Get-AppJsonFile {
     $PSDefaultParameterValues['*:Encoding'] = 'utf8'
     foreach ($appFilePath in $sourceAppJsonFilePath) {
         if (Test-Path -Path $appFilePath -PathType Leaf) {
-            OutputDebug -Message "Trying to load json file:" $appFilePath
+            OutputDebug -Message "Trying to load json file: $appFilePath"
             $appFile = (Get-Content $appFilePath | ConvertFrom-Json);
             break;
         }
