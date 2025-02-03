@@ -128,14 +128,14 @@ function AnalyzeRepo {
 
                         $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
                         if ($foundAppDependencies) {
-                            $settings.appDependencies += $foundAppDependencies
+                            $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
                         $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
                         if ($foundTestDependencies) {
-                            $settings.testDependencies += $foundTestDependencies
+                            $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
                         }
                         Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
                     }
@@ -148,6 +148,20 @@ function AnalyzeRepo {
                     Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
+                    
+            Write-Host "Analyzing Test App Dependencies"
+            if ($settings.testFolders) { $settings.installTestRunner = $true }
+            if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
+            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
+
+            $foundAppDependencies + $foundTestDependencies | ForEach-Object {
+                $dependency = $_
+                if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
+                if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
+                if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
+                if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
+            }
+            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
         }
     }
     Write-Host "App.json version $($settings.appJsonVersion)"
@@ -168,21 +182,6 @@ function AnalyzeRepo {
             Write-Error "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
         }
     }
-
-    Write-Host "Analyzing Test App Dependencies"
-    if ($settings.testFolders) { $settings.installTestRunner = $true }
-    if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
-
-    # TODO review design
-    # $settings.appDependencies + $settings.testDependencies | ForEach-Object {
-    #     $dep = $_
-    #     if ($dep.GetType().Name -eq "OrderedDictionary") {
-    #         if ($testRunnerApps.Contains($dep.id)) { $settings.installTestRunner = $true }
-    #         if ($testFrameworkApps.Contains($dep.id)) { $settings.installTestFramework = $true }
-    #         if ($testLibrariesApps.Contains($dep.id)) { $settings.installTestLibraries = $true }
-    #         if ($performanceToolkitApps.Contains($dep.id)) { $settings.installPerformanceToolkit = $true }
-    #     }
-    # }
     Write-Host "::endgroup::"
 
     if (!$settings.doNotRunBcptTests -and -not $settings.bcptTestFolders) {
@@ -200,4 +199,15 @@ function AnalyzeRepo {
     Write-Host "Analyzing repository completed"
     $settings | Add-Member -NotePropertyName analyzeRepoCompleted -NotePropertyValue $true -Force
     return $settings
+}
+
+function Get-DependenciesAsTextString {
+    [CmdletBinding()]
+    Param(
+        [array] $dependencies
+    )
+    return $dependencies | ForEach-Object {
+        $dependency = $_
+        $($dependency.appFile)
+    } -join ","
 }
