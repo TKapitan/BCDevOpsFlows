@@ -14,7 +14,10 @@ This section describes most important points how to use and configure BCDevOps F
 
 ## Create your first project
 
-TODO Create your first project docu
+This section describes how to start using BCDevOps Flows.
+1. [Create New BCDevOps Flows Project](.Scenarios/CreateNewProject.md)
+1. [Add BCDevOps Flows to Existing Project](.Scenarios/AddBCDevOpsFlowsToExistingProject.md)
+1. [Configure Pipelines](.Scenarios/ConfigurePipelines.md)
 
 ## Supported pipeline steps
 We strongly recommend to not change any of the standard pipeline or standard scripts. It's highly likely that customized scripts and/or pipelines will be broken in a future update.
