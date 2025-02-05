@@ -165,6 +165,8 @@ function Set-VersionInSettingsFile {
 
     $settingsJson.$settingName = $newVersion.ToString()
     $settingsJson | Set-JsonContentLF -Path $settingsFilePath
+
+    return $settingsJson.$settingName
 }
 function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
     # Check if repository uses repoVersion versioning strategy
@@ -173,6 +175,5 @@ function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
         $newValue = $settings.repoVersion
     }
     # Set version in app.json file
-    Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue
-    return $newValue
+    return (Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue)
 }
