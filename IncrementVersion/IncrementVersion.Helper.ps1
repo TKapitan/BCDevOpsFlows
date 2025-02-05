@@ -164,7 +164,7 @@ function Set-VersionInSettingsFile {
     }
 
     $settingsJson.$settingName = $newVersion.ToString()
-    $settingsJson | Set-JsonContentLF -Path $settingsFilePath
+    Set-JsonContentLF -Path $settingsFilePath -object $settingsJson
 
     return $settingsJson.$settingName
 }

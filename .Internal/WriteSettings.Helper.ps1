@@ -1,8 +1,8 @@
 function Set-ContentLF {
     Param(
-        [parameter(mandatory = $true, ValueFromPipeline = $false)]
+        [parameter(mandatory = $true)]
         [string] $path,
-        [parameter(mandatory = $true, ValueFromPipeline = $true)]
+        [parameter(mandatory = $true)]
         $content
     )
 
@@ -19,14 +19,14 @@ function Set-ContentLF {
 }
 function Set-JsonContentLF {
     Param(
-        [parameter(mandatory = $true, ValueFromPipeline = $false)]
+        [parameter(mandatory = $true)]
         [string] $path,
-        [parameter(mandatory = $true, ValueFromPipeline = $true)]
+        [parameter(mandatory = $true)]
         [object] $object
     )
 
     Process {
-        $object | ConvertTo-Json -Depth 99 | Set-ContentLF -path $path
+        Set-ContentLF -path $path -content ($object | ConvertTo-Json -Depth 99)
         if ($PSVersionTable.PSVersion.Major -lt 6) {
             try {
                 $path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
