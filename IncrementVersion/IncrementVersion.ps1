@@ -61,12 +61,15 @@ try {
     # Find repository settings 
     $repositorySettings = ReadSettings -baseFolder $baseFolder
 
-    # Set version in app manifests (app.json file)
-    $appFilePath = Join-Path $basePath "app.json"
-
+    # Set git user and restore unstaged changes for changed file
     Set-GitUser
     Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
+
+    # Set version in app manifests (app.json file)
+    $appFilePath = Join-Path $baseFolder "app.json"
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
+
+    # Commit and push changes
     Invoke-GitAddCommitPush -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }
 catch {
@@ -74,5 +77,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Authentication failed. See previous lines for details."
+    Write-Error "Updating app.json or pushing changes to Azure DevOps failed. See previous lines for details."
 }
