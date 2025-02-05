@@ -60,6 +60,7 @@ try {
 
     # Find repository settings 
     $repositorySettings = ReadSettings -baseFolder $baseFolder
+    $appFilePath = Join-Path $baseFolder "app.json"
 
     # Set git user and restore unstaged changes for changed file
     Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
@@ -67,7 +68,6 @@ try {
     Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
 
     # Set version in app manifests (app.json file)
-    $appFilePath = Join-Path $baseFolder "app.json"
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
     # Commit and push changes
