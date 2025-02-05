@@ -14,7 +14,7 @@ function Set-ContentLF {
         else {
             $content = "$content".Replace("`r", "")
         }
-        Set-Content -Path .\Test*.txt -Value "$content`n"
+        Set-Content -Path $path -Value "$content`n"
     }
 }
 function Set-JsonContentLF {
