@@ -62,6 +62,7 @@ try {
     $repositorySettings = ReadSettings -baseFolder $baseFolder
 
     # Set git user and restore unstaged changes for changed file
+    Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
     Set-GitUser
     Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
 
