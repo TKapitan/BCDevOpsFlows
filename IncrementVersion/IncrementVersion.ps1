@@ -5,6 +5,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "IncrementVersion.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.Helper.ps1" -Resolve)
 
 try {
@@ -61,7 +62,12 @@ try {
     $repositorySettings = ReadSettings -baseFolder $baseFolder
 
     # Set version in app manifests (app.json file)
-    Set-VersionInAppManifests -projectPath $baseFolder -projectSettings $repositorySettings -newValue $versionNumber
+    $appFilePath = Join-Path $basePath "app.json"
+
+    Set-GitUser
+    Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
+    $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
+    Invoke-GitAddCommitPush -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red

@@ -1,4 +1,3 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 
@@ -167,17 +166,13 @@ function Set-VersionInSettingsFile {
     $settingsJson.$settingName = $newVersion.ToString()
     $settingsJson | Set-JsonContentLF -Path $settingsFilePath
 }
-function Set-VersionInAppManifests($basePath, $settings, $newValue) {
+function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
     # Check if repository uses repoVersion versioning strategy
     $useRepoVersion = (($settings.PSObject.Properties.Name -eq "versioningStrategy") -and (($settings.versioningStrategy -band 16) -eq 16))
     if ($useRepoVersion) {
         $newValue = $settings.repoVersion
     }
     # Set version in app.json file
-    $appFilePath = Join-Path $basePath "app.json"
-
-    Set-GitUser
-    Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
     Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue
-    Invoke-GitAddCommitPush -appFilePath $appFilePath -commitMessage "Updating version to $newValue"
+    return $newValue
 }
