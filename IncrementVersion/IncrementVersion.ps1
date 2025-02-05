@@ -9,7 +9,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.Helper.ps1" -Resolve)
 
 try {
-    $baseFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH/App"
+    $baseFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     if ($versionNumber.StartsWith('+')) {
         # Handle incremental version number
