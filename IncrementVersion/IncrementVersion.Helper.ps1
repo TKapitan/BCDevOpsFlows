@@ -1,4 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Setup.ps1" -Resolve)
 
 function Test-SettingExists {
     param(
