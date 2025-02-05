@@ -45,6 +45,11 @@ try {
     $repositorySettingsPath = Join-Path $baseFolder $RepoSettingsFile
     $repoVersionExistsInRepoSettings = Test-SettingExists -settingsFilePath $repositorySettingsPath -settingName 'repoVersion'
 
+    # Set git user and restore unstaged changes for changed file
+    Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
+    Set-GitUser
+    Invoke-RestoreUnstagedChanges -appFilePath $repositorySettingsPath
+
     if ($repoVersionExistsInRepoSettings) {
         # If 'repoVersion' exists in repo settings, update it 
         Write-Host "Setting 'repoVersion' found in $repositorySettingsPath. Updating it on repo level instead"
@@ -62,15 +67,14 @@ try {
     $repositorySettings = ReadSettings -baseFolder $baseFolder
     $appFilePath = Join-Path $baseFolder "App\app.json"
 
-    # Set git user and restore unstaged changes for changed file
-    Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
-    Set-GitUser
+    # Restore unstaged changes for changed file
     Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
 
     # Set version in app manifests (app.json file)
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
     # Commit and push changes
+    Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommitPush -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }
 catch {

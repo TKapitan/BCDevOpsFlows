@@ -11,6 +11,14 @@ function Invoke-RestoreUnstagedChanges {
     OutputDebug -Message "Restoring unstaged changes for $appFilePath"
     invoke-git restore $appFilePath
 }
+function Invoke-GitAdd {
+    Param(
+        [string] $appFilePath
+    )
+
+    OutputDebug -Message "Staging changes for $appFilePath"
+    invoke-git add $appFilePath
+}
 function Invoke-GitAddCommitPush {
     Param(
         [string] $appFilePath,
@@ -18,9 +26,7 @@ function Invoke-GitAddCommitPush {
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
-    OutputDebug -Message "Staging changes for $appFilePath"
-    invoke-git add $appFilePath
-
+    Invoke-GitAdd -appFilePath $appFilePath
     if ($commitMessage -eq '') {
         $commitMessage = "BCDevOps Flows Update [skip azurepipelines]"
     }
