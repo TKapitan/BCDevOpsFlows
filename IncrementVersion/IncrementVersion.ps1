@@ -60,7 +60,7 @@ try {
 
     # Find repository settings 
     $repositorySettings = ReadSettings -baseFolder $baseFolder
-    $appFilePath = Join-Path $baseFolder "app.json"
+    $appFilePath = Join-Path $baseFolder "App\app.json"
 
     # Set git user and restore unstaged changes for changed file
     Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
