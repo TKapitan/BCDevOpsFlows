@@ -122,6 +122,10 @@ function Set-VersionInSettingsFile {
             else {
                 $versionNumbers += $oldVersion.Build + 1
             }
+            # Include revision number if it exists in the old version number
+            if ($oldVersion.Revision -ne -1) {
+                $versionNumbers += 0
+            }
         }
         '+0.0.0.1' {
             # Increment revision version number
@@ -139,6 +143,9 @@ function Set-VersionInSettingsFile {
             # Absolute version number
             $versionNumbers += $newValue.Split('.')
             if ($versionNumbers.Count -eq 2 -and ($null -ne $oldVersion -and $oldVersion.Build -ne -1)) {
+                $versionNumbers += 0
+            }
+            if ($versionNumbers.Count -eq 3 -and ($null -ne $oldVersion -and $oldVersion.Revision -ne -1)) {
                 $versionNumbers += 0
             }
         }
