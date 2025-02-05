@@ -165,7 +165,6 @@ function Set-VersionInSettingsFile {
 
     $settingsJson.$settingName = $newVersion.ToString()
     Set-JsonContentLF -Path $settingsFilePath -object $settingsJson
-
     return $settingsJson.$settingName
 }
 function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
@@ -175,5 +174,7 @@ function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
         $newValue = $settings.repoVersion
     }
     # Set version in app.json file
-    return (Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue)
+    $newVersion = Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue
+    OutputDebug -Message "New version applied to app.json: $newVersion"
+    return $newVersion
 }
