@@ -8,7 +8,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.Helper.ps1" -Resolve)
 
 $baseFolder = "$ENV:PIPELINE_WORKSPACE/App"
-$settings = $ENV:SETTINGS | ConvertFrom-Json
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 if ($versionNumber.StartsWith('+')) {
     # Handle incremental version number
     $allowedIncrementalVersionNumbers = @('+1', '+0.1')
