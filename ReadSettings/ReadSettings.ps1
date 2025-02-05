@@ -5,10 +5,10 @@ Param(
     [string] $get = ""
 )
 . (Join-Path -Path $PSScriptRoot -ChildPath "ReadSettings.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 # Find requested settings
-$settings = ReadSettings -buildMode $buildMode
+$settings = ReadSettings -buildMode $buildMode -projectSettings $ENV:AL_PROJECTSETTINGS
 if ($get) {
     $getSettings = $get.Split(',').Trim()
 }
@@ -18,7 +18,6 @@ else {
 
 # Determine versioning strategy
 if ($ENV:BUILD_REASON -in @("PullRequest")) {
-    $settings.doNotSignApps = $true
     $settings.versioningStrategy = 15
 }
 if ($settings.appBuild -eq [int32]::MaxValue) {
@@ -28,7 +27,7 @@ if ($settings.versioningStrategy -ne -1) {
     switch ($settings.versioningStrategy -band 15) {
         0 {
             # Use BUILD_NUMBER and SYSTEM_JOBATTEMPT
-            $settings.appBuild = $settings.runNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
+            $settings.appBuild = $settings.buildNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
             $settings.appRevision = [Int32]($ENV:SYSTEM_JOBATTEMPT) - 1
         }
         2 {
@@ -39,7 +38,7 @@ if ($settings.versioningStrategy -ne -1) {
         3 {
             # USE BUIlD from app.json and BUILD_NUMBER
             $settings.appBuild = -1
-            $settings.appRevision = $settings.runNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
+            $settings.appRevision = $settings.buildNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
         }
         10 {
             # USE both from app.json (handled later in RunPipeline)
@@ -70,26 +69,16 @@ $settings.Keys | ForEach-Object {
     $outSettings += @{ "$setting" = $settingValue }
     if ($getSettings -contains $setting) {
         if ($settingValue -is [System.Collections.Specialized.OrderedDictionary] -or $settingValue -is [hashtable]) {
-            Write-Host "##vso[task.setvariable variable=$setting;]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
+            Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
+            OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($(ConvertTo-Json $settingValue -Depth 99 -Compress))"
         }
         else {
-            $env:buildRunnerShell = $buildRunnerShell
-            Write-Host "##vso[task.setvariable variable=$setting;]$settingValue"
+            Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$settingValue"
+            OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($settingValue)"
         }
-        Write-Host "Set environment variable to ($env:DepartmentId)"
     }
 }
 
-$ENV:SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
-Write-Host "##vso[task.setvariable variable=SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
-Write-Host "Set environment variable SETTINGS to ($ENV:SETTINGS)"
-
-$buildRunnerJson = $settings.buildRunner.Split(',').Trim() | ConvertTo-Json -compress
-$ENV:BUILDRUNNERJSON = $buildRunnerJson
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERJSON;]$buildRunnerJson"
-Write-Host "Set environment variable BUILDRUNNERJSON to ($ENV:BUILDRUNNERJSON)"
-
-$buildRunnerShell = $settings.buildRunnerShell
-$ENV:BUILDRUNNERSHELL = $buildRunnerShell
-Write-Host "##vso[task.setvariable variable=BUILDRUNNERSHELL;]$buildRunnerShell"
-Write-Host "Set environment variable BUILDRUNNERSHELL to ($ENV:BUILDRUNNERSHELL)"
+$ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

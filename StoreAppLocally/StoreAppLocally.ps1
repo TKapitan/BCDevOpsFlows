@@ -1,12 +1,13 @@
 Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [string] $isPreview
+    [switch] $isPreview
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "StoreAppLocally.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\FindDependencies\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 foreach ($folderTypeNumber in 1..2) {
     $appFolder = $folderTypeNumber -eq 1
     $testFolder = $folderTypeNumber -eq 2
@@ -37,5 +38,21 @@ foreach ($folderTypeNumber in 1..2) {
         New-Item -ItemType File -Path $newAppFileLocation -Force -Verbose
         Copy-Item (Get-AppSourceFileLocation -appFile $appFile) $newAppFileLocation
         Copy-Item $appJsonFilePath ($targetPath + 'app.json')
+        if ($appFolder) {
+            $generatedApp = @{
+                "appFile"            = $newAppFileLocation
+                "appJsonFile"        = ($targetPath + 'app.json')
+                "applicationVersion" = $appFile.application
+            }
+        }
     }
+}
+
+$generatedAppJson = $generatedApp | ConvertTo-Json -Compress
+$ENV:AL_APPDETAILS = $generatedAppJson
+Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
+OutputDebug -Message "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
+
+foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
+    Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
 }

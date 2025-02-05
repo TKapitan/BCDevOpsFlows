@@ -1,10 +1,10 @@
-.(Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
-# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)       = Project settings variable
-# - .azure-pipelines/BCDevOpsFlows-Settings.json               = Repository Settings file
-# - BCDevOpsFlowsRepoSettings (Azure DevOps Variable)          = Repository settings variable
+# - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
+# - .azure-pipelines/BCDevOpsFlows-Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
@@ -12,12 +12,17 @@ function ReadSettings {
         [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
-        [string] $pipelineName = "$ENV:BUILD_DEFINITIONNAME",
+        [string] $pipelineName,
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettingsVariableValue = "$ENV:AL_SETTINGS",
-        [string] $repoSettingsVariableValue
+        [string] $projectSettings
     )
+    if ($pipelineName -eq "") {
+        $pipelineName = $ENV:AL_PIPELINENAME
+        if ($pipelineName -eq "") {
+            $pipelineName = $ENV:BUILD_DEFINITIONNAME
+        }
+    }
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
     if ($ENV:BUILD_REASON -eq "PullRequest") {
@@ -59,19 +64,9 @@ function ReadSettings {
         "repoVersion"                                   = "1.0"
         "repoName"                                      = $repoName
         "versioningStrategy"                            = 0
-        "runNumberOffset"                               = 0
+        "buildNumberOffset"                               = 0
         "appBuild"                                      = 0
         "appRevision"                                   = 0
-        "keyVaultName"                                  = ""
-        "licenseFileUrlSecretName"                      = "licenseFileUrl"
-        "adminCenterApiCredentialsSecretName"           = "adminCenterApiCredentials"
-        "applicationInsightsConnectionStringSecretName" = "applicationInsightsConnectionString"
-        "keyVaultCertificateUrlSecretName"              = ""
-        "keyVaultCertificatePasswordSecretName"         = ""
-        "keyVaultClientIdSecretName"                    = ""
-        "keyVaultCodesignCertificateName"               = ""
-        "codeSignCertificateUrlSecretName"              = "codeSignCertificateUrl"
-        "codeSignCertificatePasswordSecretName"         = "codeSignCertificatePassword"
         "additionalCountries"                           = @()
         "appDependencies"                               = @()
         "appFolders"                                    = @()
@@ -107,62 +102,26 @@ function ReadSettings {
         "doNotRunBcptTests"                             = $false
         "doNotRunPageScriptingTests"                    = $false
         "doNotPublishApps"                              = $false
-        "doNotSignApps"                                 = $false
         "configPackages"                                = @()
         "appSourceCopMandatoryAffixes"                  = @()
         "obsoleteTagMinAllowedMajorMinor"               = ""
         "memoryLimit"                                   = ""
-        "templateUrl"                                   = ""
-        "templateSha"                                   = ""
-        "templateBranch"                                = ""
-        "appDependencyProbingPaths"                     = @()
-        "useProjectDependencies"                        = $false
-        "buildRunner"                                   = "windows-latest"
-        "buildRunnerShell"                              = ""
-        "cacheImageName"                                = "my"
+        "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
-        "environments"                                  = @()
         "buildModes"                                    = @()
-        "useCompilerFolder"                             = $false
-        "pullRequestTrigger"                            = "pull_request_target"
-        "bcptThresholds"                                = [ordered]@{
-            "DurationWarning"         = 10
-            "DurationError"           = 25
-            "NumberOfSqlStmtsWarning" = 5
-            "NumberOfSqlStmtsError"   = 10
-        }
-        "fullBuildPatterns"                             = @()
-        "excludeEnvironments"                           = @()
-        "commitOptions"                                 = [ordered]@{
-            "messageSuffix"        = ""
-            "pullRequestAutoMerge" = $false
-            "pullRequestLabels"    = @()
-        }
-        "trustedSigning"                                = [ordered]@{
-            "Endpoint"           = ""
-            "Account"            = ""
-            "CertificateProfile" = ""
-        }
-        "useGitSubmodules"                              = "false"
-        "gitSubmodulesTokenSecretName"                  = "gitSubmodulesToken"
     }
 
     # Read settings from files and merge them into the settings object
 
     $settingsObjects = @()
     # Read settings from project settings variable (parameter)
-    if ($projectSettingsVariableValue) {
-        $projectSettingsVariableValueObject = $projectSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($projectSettingsVariableValueObject)
+    if ($projectSettings) {
+        $projectSettingsObject = $projectSettings | ConvertFrom-Json
+        $settingsObjects += @($projectSettingsObject)
     }
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    # Read settings from repository settings variable (parameter)
-    if ($repoSettingsVariableValue) {
-        $repoSettingsVariableObject = $repoSettingsVariableValue | ConvertFrom-Json
-        $settingsObjects += @($repoSettingsVariableObject)
-    }
     if ($pipelineName) {
         # Read settings from workflow settings file
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
@@ -214,16 +173,6 @@ function ReadSettings {
     if ($BCDevOpsFlowsSettingExists -eq $false) {
         Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
     }
-    if ($settings.buildRunner -eq "") {
-        $settings.buildRunner = "windows-latest"
-    }
-    if ($settings.buildRunnerShell -eq "") {
-        $settings.buildRunnerShell = "powershell"
-    }
-    # Check that buildRunnerShell and Shell is valid
-    if ($settings.buildRunnerShell -ne "powershell" -and $settings.buildRunnerShell -ne "pwsh") {
-        Write-Error "Invalid value for setting: buildRunnerShell: $($settings.buildRunnerShell)"
-    }
     $settings
 }
 
@@ -269,6 +218,7 @@ function MergeCustomObjectIntoOrderedDictionary {
             $srcPropType = $srcProp.GetType().Name
             if ($srcPropType -eq "PSCustomObject" -and $dstPropType -eq "OrderedDictionary") {
                 MergeCustomObjectIntoOrderedDictionary -dst $dst."$prop" -src $srcProp
+                OutputDebug -Message "Calling MergeCustomObjectIntoOrderedDictionary recursively for $prop"
             }
             elseif ($dstPropType -ne $srcPropType -and !($srcPropType -eq "Int64" -and $dstPropType -eq "Int32")) {
                 # Under Linux, the Int fields read from the .json file will be Int64, while the settings defaults will be Int32
@@ -285,17 +235,21 @@ function MergeCustomObjectIntoOrderedDictionary {
                             $ht = [ordered]@{}
                             $srcElm.PSObject.Properties | Sort-Object -Property Name -Culture "iv-iv" | ForEach-Object {
                                 $ht[$_.Name] = $_.Value
+                                OutputDebug -Message "Adding property $($_.Name) to child object $prop"
                             }
                             $dst."$prop" += @($ht)
+                            OutputDebug -Message "Adding child object $prop"
                         }
                         else {
                             # Add source element to destination array, but only if it does not already exist
                             $dst."$prop" = @($dst."$prop" + $srcElm | Select-Object -Unique)
+                            OutputDebug -Message "Setting property $prop to $($dst."$prop")"
                         }
                     }
                 }
                 else {
                     $dst."$prop" = $srcProp
+                    OutputDebug -Message "Setting property $prop to $srcProp"
                 }
             }
         }

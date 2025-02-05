@@ -1,6 +1,4 @@
 Param(
-    [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $false)]
-    [string] $token,
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
     [string] $artifact = "",
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
@@ -10,14 +8,13 @@ Param(
     [Parameter(HelpMessage = "A JSON-formatted list of test apps to install", Mandatory = $false)]
     [string] $installTestAppsJson = '[]',
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-    [string] $skipAppsInPreview = $false
+    [switch] $skipAppsInPreview
 )
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\BCDevOpsFlows.Setup.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\BCContainerHelper.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\Troubleshooting\Troubleshooting.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\AnalyzeRepository\AnalyzeRepository.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
 try {
@@ -55,49 +52,26 @@ try {
         $baseFolder = Join-Path $containerBaseFolder (Get-Item -Path $ENV:BUILD_REPOSITORY_LOCALPATH).BaseName
     }
 
-    $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
-    Write-Host "Using secrets from ENV:SECRETS"
-    # ENV:SECRETS is not set when running Pull_Request trigger
-    if ($ENV:SECRETS) {
-        $secrets = $ENV:SECRETS | ConvertFrom-Json | ConvertTo-HashTable
+    if (!$ENV:AL_SETTINGS) {
+        Write-Error "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
-    else {
-        $secrets = @{}
-    }
-
-    'licenseFileUrl', 'codeSignCertificateUrl', '*codeSignCertificatePassword', 'keyVaultCertificateUrl', '*keyVaultCertificatePassword', 'keyVaultClientId', 'applicationInsightsConnectionString' | ForEach-Object {
-        # Secrets might not be read during Pull Request runs
-        if ($secrets.Keys -contains $_) {
-            $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$_"))
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+    if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
+        $analyzeRepoParams = @{}
+        if ($skipAppsInPreview) {
+            $analyzeRepoParams += @{
+                "skipAppsInPreview" = $true
+            }
         }
-        else {
-            $value = ""
-        }
-        # Secrets preceded by an asterisk are returned encrypted.
-        # Variable name should not include the asterisk
-        Set-Variable -Name $_.TrimStart('*') -Value $value
-    }
 
-    $analyzeRepoParams = @{}
-    if ($skipAppsInPreview) {
-        $analyzeRepoParams += @{
-            "skipAppsInPreview" = $true
-        }
-    }
-
-    if (!$ENV:SETTINGS) {
-        Write-Error "ENV:SETTINGS not found. The Read-Settings step must be run before this step."
-    }
-    $settings = $ENV:SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if (!$settings.analyzeRepoCompleted) {
         if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $settings.artifact"
+            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
             $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
         $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
     }
     else {
-        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:SETTINGS"
+        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
     }
 
     $appBuild = $settings.appBuild
@@ -122,25 +96,9 @@ try {
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
 
-    # Check if codeSignCertificateUrl+Password is used (and defined)
-    if (!$settings.doNotSignApps -and $codeSignCertificateUrl -and $codeSignCertificatePassword -and !$settings.keyVaultCodesignCertificateName) {
-        OutputWarning -Message "Using the legacy CodeSignCertificateUrl and CodeSignCertificatePassword parameters. Consider using the new Azure Keyvault signing instead. Go to https://aka.ms/ALGoSettings#keyVaultCodesignCertificateName to find out more"
-        $runAlPipelineParams += @{
-            "CodeSignCertPfxFile"     = $codeSignCertificateUrl
-            "CodeSignCertPfxPassword" = ConvertTo-SecureString -string $codeSignCertificatePassword
-        }
-    }
     if ($applicationInsightsConnectionString) {
         $runAlPipelineParams += @{
             "applicationInsightsConnectionString" = $applicationInsightsConnectionString
-        }
-    }
-
-    if ($keyVaultCertificateUrl -and $keyVaultCertificatePassword -and $keyVaultClientId) {
-        $runAlPipelineParams += @{
-            "KeyVaultCertPfxFile"     = $keyVaultCertificateUrl
-            "keyVaultCertPfxPassword" = ConvertTo-SecureString -string $keyVaultCertificatePassword
-            "keyVaultClientId"        = $keyVaultClientId
         }
     }
 
@@ -148,23 +106,6 @@ try {
     if (!$settings.skipUpgrade) {
         Write-Host "::group::Locating previous release"
         Write-Host "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
-        # try {
-        #     $latestRelease = GetLatestRelease -token $token -api_url $ENV:GITHUB_API_URL -repository $ENV:GITHUB_REPOSITORY -ref $ENV:GITHUB_REF_NAME
-        #     if ($latestRelease) {
-        #         Write-Host "Using $($latestRelease.name) (tag $($latestRelease.tag_name)) as previous release"
-        #         $artifactsFolder = Join-Path $baseFolder "artifacts"
-        #         New-Item $artifactsFolder -ItemType Directory | Out-Null
-        #         DownloadRelease -token $token -api_url $ENV:GITHUB_API_URL -repository $ENV:GITHUB_REPOSITORY -release $latestRelease -path $artifactsFolder -mask "Apps"
-        #         $previousApps += @(Get-ChildItem -Path $artifactsFolder | ForEach-Object { $_.FullName })
-        #     }
-        #     else {
-        #         OutputWarning -Message "No previous release found"
-        #     }
-        # }
-        # catch {
-        #     OutputError -Message "Error trying to locate previous release. Error was $($_.Exception.Message)"
-        #     exit
-        # }
         Write-Host "::endgroup::"
     }
 
@@ -217,9 +158,9 @@ try {
     $buildOutputFile = Join-Path $baseFolder "BuildOutput.txt"
     $containerEventLogFile = Join-Path $baseFolder "ContainerEventLog.evtx"
 
-    $ENV:CONTAINERNAME = $containerName
-    Write-Host "##vso[task.setvariable variable=containerName;]$containerName"
-    Write-Host "Set environment variable containerName to ($ENV:CONTAINERNAME)"
+    $ENV:AL_CONTAINERNAME = $containerName
+    Write-Host "##vso[task.setvariable variable=AL_CONTAINERNAME;]$containerName"
+    OutputDebug -Message "Set environment variable AL_CONTAINERNAME to ($ENV:AL_CONTAINERNAME)"
 
     Set-Location $baseFolder
     $runAlPipelineOverrides | ForEach-Object {
@@ -297,8 +238,7 @@ try {
     "enableAppSourceCop",
     "enablePerTenantExtensionCop",
     "enableUICop",
-    "enableCodeAnalyzersOnTestApps",
-    "useCompilerFolder" | ForEach-Object {
+    "enableCodeAnalyzersOnTestApps" | ForEach-Object {
         if ($settings."$_") { $runAlPipelineParams += @{ "$_" = $true } }
     }
 
@@ -319,6 +259,7 @@ try {
         $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
+    $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `
         -accept_insiderEula `
@@ -365,16 +306,18 @@ try {
         -appRevision $appRevision `
         -uninstallRemovedApps
 
-    if ($containerBaseFolder) {
-        Write-Host "Copy artifacts and build output back from build container"
-        $destFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
-        Copy-Item -Path (Join-Path $baseFolder ".buildartifacts") -Destination $destFolder -Recurse -Force
-        Copy-Item -Path (Join-Path $baseFolder ".output") -Destination $destFolder -Recurse -Force
-        Copy-Item -Path (Join-Path $baseFolder "testResults*.xml") -Destination $destFolder
-        Copy-Item -Path (Join-Path $baseFolder "bcptTestResults*.json") -Destination $destFolder
-        Copy-Item -Path $buildOutputFile -Destination $destFolder -Force -ErrorAction SilentlyContinue
-        Copy-Item -Path $containerEventLogFile -Destination $destFolder -Force -ErrorAction SilentlyContinue
-    }
+    $testResultsDestinationFolder = $ENV:COMMON_TESTRESULTSDIRECTORY
+    Write-Host "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
+    Copy-Item -Path (Join-Path $baseFolder ".buildartifacts") -Destination $testResultsDestinationFolder -Recurse -Force
+    Copy-Item -Path (Join-Path $baseFolder ".output") -Destination $testResultsDestinationFolder -Recurse -Force
+    Copy-Item -Path (Join-Path $baseFolder "testResults*.xml") -Destination $testResultsDestinationFolder
+    Copy-Item -Path (Join-Path $baseFolder "bcptTestResults*.json") -Destination $testResultsDestinationFolder
+    Copy-Item -Path $buildOutputFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
+    Copy-Item -Path $containerEventLogFile -Destination $testResultsDestinationFolder -Force -ErrorAction SilentlyContinue
+
+    $ENV:TestResults = $allTestResults
+    Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
+    OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red
