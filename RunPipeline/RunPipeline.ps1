@@ -233,7 +233,7 @@ try {
             OutputDebug -Message "Setting 'internalsVisibleTo' not found in app.json - nothing to remove"
         }
         else {
-            if ($appFileJson.internalsVisibleTo = (ConvertTo-Json @())) {
+            if ($appFileJson.internalsVisibleTo.Count -eq 0) {
                 OutputDebug -Message "'internalsVisibleTo' is blank - nothing to remove"
             } else {
                 $appFileJson.internalsVisibleTo = (ConvertTo-Json @())
