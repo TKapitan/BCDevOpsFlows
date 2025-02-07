@@ -223,6 +223,25 @@ try {
         }
     }
 
+    if ($settings.removeInternalsVisibleTo) {
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+        $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        
+        $settingExists = [bool] ($appFileJson.PSObject.Properties.Name -eq 'internalsVisibleTo')
+        if (!$settingExists) {
+            OutputDebug -Message "Setting 'internalsVisibleTo' not found in app.json - nothing to remove"
+        }
+        else {
+            if ($appFileJson.internalsVisibleTo = (ConvertTo-Json @())) {
+                OutputDebug -Message "'internalsVisibleTo' is blank - nothing to remove"
+            } else {
+                $appFileJson.internalsVisibleTo = (ConvertTo-Json @())
+                Write-Host "Removing 'internalsVisibleTo' from app.json by replacing with empty array"
+            }
+        }
+        Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
+    }
+
     "enableTaskScheduler",
     "assignPremiumPlan",
     "doNotBuildTests",

@@ -34,6 +34,9 @@ function AnalyzeRepo {
         if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
             Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
+        if (!$settings.Contains('removeInternalsVisibleTo')) {
+            $settings.Add('removeInternalsVisibleTo', $true)
+        }
     }
     else {
         Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
