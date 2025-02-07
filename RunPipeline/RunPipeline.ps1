@@ -236,7 +236,7 @@ try {
             if ($appFileJson.internalsVisibleTo.Count -eq 0) {
                 OutputDebug -Message "'internalsVisibleTo' is blank - nothing to remove"
             } else {
-                $appFileJson.internalsVisibleTo = (ConvertTo-Json @())
+                $appFileJson.internalsVisibleTo = @()
                 Write-Host "Removing 'internalsVisibleTo' from app.json by replacing with empty array"
             }
         }
