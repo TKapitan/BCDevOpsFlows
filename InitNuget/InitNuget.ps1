@@ -45,20 +45,3 @@ foreach ($Dependency in $manifestObject.dependencies) {
 $ENV:AL_NUGETINITIALIZED = $true
 Write-Host "##vso[task.setvariable variable=AL_NUGETINITIALIZED;]$true"
 OutputDebug -Message "Set environment variable AL_NUGETINITIALIZED to ($ENV:AL_NUGETINITIALIZED)"
-
-$AppFileName = (("{0}_{1}_{2}.app" -f $manifestObject.publisher, $manifestObject.name, $manifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
-$ParametersList = @()
-$ParametersList += @(("/project:`"$baseAppFolder`" "))
-$ParametersList += @(("/packagecachepath:$packageCachePath"))   
-$ParametersList += @(("/out:`"{0}`"" -f "$ENV:BUILD_ARTIFACTSTAGINGDIRECTORY\$AppFileName"))
-$ParametersList += @(("/loglevel:Warning"))
- 
-Write-Host "Using parameters:"
-foreach ($Parameter in $ParametersList) {
-    Write-Host "  $($Parameter)"
-}
-       
-Push-Location
-Set-Location $ENV:AL_BCDEVTOOLSFOLDER
-.\alc.exe $ParametersList
-Pop-Location
