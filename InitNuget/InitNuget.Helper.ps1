@@ -1,25 +1,7 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-function DownloadNugetPackage() {
-    Param(
-        [string] $packageName,
-        [string] $packageVersion
-    )
-
-    $nugetPackagePath = GetNugetPackagePath -packageName $packageName -packageVersion $packageVersion
-    OutputDebug -Message "Using Nuget package path: $nugetPackagePath"
-    if (-not (Test-Path -Path $nugetPackagePath)) {
-        $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
-
-        Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
-        New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
-        Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
-
-        # Unzip the package
-        Expand-Archive -Path "$nugetPackagePath/$packageName.$packageVersion.zip" -DestinationPath "$nugetPackagePath"
-        # Remove the zip file
-        Remove-Item -Path "$nugetPackagePath/$packageName.$packageVersion.zip"
-    }
-    return $nugetPackagePath
+function InstallAndRegisterNugetPackageProvider() {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+    Install-PackageProvider -Name NuGet
+    AddNugetPackageSource -sourceName 'nuget.org' -sourceUrl 'https://api.nuget.org/v3/index.json'
 }
