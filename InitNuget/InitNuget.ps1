@@ -26,21 +26,21 @@ foreach ($Dependency in $ManifestObject.dependencies) {
     nuget install $PackageName -version $Dependency.version -outputDirectory $packagecachepath 
 }
 
-$ManifestObject     = Get-Content $(Build.SourcesDirectory)\app\app.json -Encoding UTF8 | ConvertFrom-Json
-      $packagecachepath="$(Agent.BuildDirectory)\alpackages"
-      $ParametersList = @()
-      $AppFileName = (("{0}_{1}_{2}.app" -f $ManifestObject.publisher, $ManifestObject.name, $ManifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
-      $ParametersList += @(("/project:`"$(Build.SourcesDirectory)\app`" "))
-      $ParametersList += @(("/packagecachepath:$packagecachepath"))   
-      $ParametersList += @(("/out:`"{0}`"" -f "$(Build.ArtifactStagingDirectory)\$AppFileName"))
-      $ParametersList += @(("/loglevel:Warning"))
+$ManifestObject = Get-Content $(Build.SourcesDirectory)\app\app.json -Encoding UTF8 | ConvertFrom-Json
+$packagecachepath = "$(Agent.BuildDirectory)\alpackages"
+$ParametersList = @()
+$AppFileName = (("{0}_{1}_{2}.app" -f $ManifestObject.publisher, $ManifestObject.name, $ManifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
+$ParametersList += @(("/project:`"$(Build.SourcesDirectory)\app`" "))
+$ParametersList += @(("/packagecachepath:$packagecachepath"))   
+$ParametersList += @(("/out:`"{0}`"" -f "$(Build.ArtifactStagingDirectory)\$AppFileName"))
+$ParametersList += @(("/loglevel:Warning"))
  
-      Write-Host "Using parameters:"
-      foreach ($Parameter in $ParametersList) {
-          Write-Host "  $($Parameter)"
-      }
+Write-Host "Using parameters:"
+foreach ($Parameter in $ParametersList) {
+    Write-Host "  $($Parameter)"
+}
        
-      Push-Location
-      Set-Location .\alc\Tools\net8.0\any
-      .\alc.exe $ParametersList
-      Pop-Location
+Push-Location
+Set-Location .\alc\Tools\net8.0\any
+.\alc.exe $ParametersList
+Pop-Location
