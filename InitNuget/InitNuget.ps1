@@ -13,29 +13,32 @@ DownloadNugetPackage -packageName "Microsoft.Dynamics.BusinessCentral.Developmen
 nuget source add -Name MSSymbols -source "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
 nuget source add -Name AppSourceSymbols -source "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"  
 
+$baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
+$baseAppFolder = "$baseRepoFolder\App"
+
 $ApplicationPackage = "Microsoft.Application.symbols"
-$ManifestObject = Get-Content $(Build.SourcesDirectory)\app\app.json -Encoding UTF8 | ConvertFrom-Json
+$ManifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 $applicationVersion = $ManifestObject.Application 
  
-$packagecachepath = "$(Agent.BuildDirectory)\alpackages"
-mkdir $packagecachepath
+$packageCachePath = "$baseRepoFolder\.alpackages"
+mkdir $packageCachePath
  
-nuget install $ApplicationPackage -version $applicationVersion -outputDirectory $packagecachepath 
+nuget install $ApplicationPackage -version $applicationVersion -outputDirectory $packageCachePath 
  
 foreach ($Dependency in $ManifestObject.dependencies) {
     $PackageName = ("{0}.{1}.symbols.{2}" -f $Dependency.publisher, $Dependency.name, $Dependency.id ) -replace ' ', ''
     Write-Host "Get $PackageName"
          
-    nuget install $PackageName -version $Dependency.version -outputDirectory $packagecachepath 
+    nuget install $PackageName -version $Dependency.version -outputDirectory $packageCachePath 
 }
 
-$ManifestObject = Get-Content $(Build.SourcesDirectory)\app\app.json -Encoding UTF8 | ConvertFrom-Json
-$packagecachepath = "$(Agent.BuildDirectory)\alpackages"
+$ManifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+$packageCachePath = "$baseRepoFolder\.alpackages"
 $ParametersList = @()
 $AppFileName = (("{0}_{1}_{2}.app" -f $ManifestObject.publisher, $ManifestObject.name, $ManifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
-$ParametersList += @(("/project:`"$(Build.SourcesDirectory)\app`" "))
-$ParametersList += @(("/packagecachepath:$packagecachepath"))   
-$ParametersList += @(("/out:`"{0}`"" -f "$(Build.ArtifactStagingDirectory)\$AppFileName"))
+$ParametersList += @(("/project:`"$baseAppFolder\app`" "))
+$ParametersList += @(("/packagecachepath:$packageCachePath"))   
+$ParametersList += @(("/out:`"{0}`"" -f "$ENV:BUILD_ARTIFACTSTAGINGDIRECTORY\$AppFileName"))
 $ParametersList += @(("/loglevel:Warning"))
  
 Write-Host "Using parameters:"
