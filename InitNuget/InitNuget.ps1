@@ -9,36 +9,30 @@ if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
 DownloadNugetPackage -packageName "Microsoft.Dynamics.BusinessCentral.Development.Tools" -packageVersion $settings.nugetBCDevToolsVersion
-
-Get-PackageProvider -ListAvailable
-
 AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
 AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
 
 $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
 $baseAppFolder = "$baseRepoFolder\App"
 
-$ApplicationPackage = "Microsoft.Application.symbols"
-$ManifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-$applicationVersion = $ManifestObject.Application 
+$applicationPackage = "Microsoft.Application.symbols"
+$manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
  
 $packageCachePath = "$baseRepoFolder\.alpackages"
 mkdir $packageCachePath
  
-nuget install $ApplicationPackage -version $applicationVersion -outputDirectory $packageCachePath 
+nuget install $applicationPackage -outputDirectory $packageCachePath 
  
-foreach ($Dependency in $ManifestObject.dependencies) {
+foreach ($Dependency in $manifestObject.dependencies) {
     $PackageName = ("{0}.{1}.symbols.{2}" -f $Dependency.publisher, $Dependency.name, $Dependency.id ) -replace ' ', ''
     Write-Host "Get $PackageName"
          
-    nuget install $PackageName -version $Dependency.version -outputDirectory $packageCachePath 
+    nuget install $PackageName -outputDirectory $packageCachePath 
 }
 
-$ManifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-$packageCachePath = "$baseRepoFolder\.alpackages"
+$AppFileName = (("{0}_{1}_{2}.app" -f $manifestObject.publisher, $manifestObject.name, $manifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
 $ParametersList = @()
-$AppFileName = (("{0}_{1}_{2}.app" -f $ManifestObject.publisher, $ManifestObject.name, $ManifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
-$ParametersList += @(("/project:`"$baseAppFolder\app`" "))
+$ParametersList += @(("/project:`"$baseAppFolder`" "))
 $ParametersList += @(("/packagecachepath:$packageCachePath"))   
 $ParametersList += @(("/out:`"{0}`"" -f "$ENV:BUILD_ARTIFACTSTAGINGDIRECTORY\$AppFileName"))
 $ParametersList += @(("/loglevel:Warning"))

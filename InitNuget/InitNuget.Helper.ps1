@@ -36,8 +36,8 @@ function AddNugetPackageSource() {
         [string] $sourceUrl
     )
 
-    if (-not $(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Ignore))
-    {
+    if (-not $(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Ignore)) {
+        Write-Host "Adding Nuget source $sourceName"
         nuget source add -Name $sourceName -source $sourceUrl
     }
 }
