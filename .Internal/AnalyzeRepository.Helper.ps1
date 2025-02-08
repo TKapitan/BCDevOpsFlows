@@ -151,22 +151,23 @@ function AnalyzeRepo {
                     Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
-                    
-            Write-Host "Analyzing Test App Dependencies"
-            if ($settings.testFolders) { $settings.installTestRunner = $true }
-            if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
-            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
-
-            $foundAppDependencies + $foundTestDependencies | ForEach-Object {
-                $dependency = $_
-                if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
-                if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
-                if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
-                if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
-            }
-            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
         }
     }
+
+    Write-Host "Analyzing Test App Dependencies"
+    if ($settings.testFolders) { $settings.installTestRunner = $true }
+    if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
+    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
+
+    $foundAppDependencies + $foundTestDependencies | ForEach-Object {
+        $dependency = $_
+        if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
+        if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
+        if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
+        if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
+    }
+    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
+    
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
 
@@ -210,6 +211,6 @@ function Get-DependenciesAsTextString {
         [array] $dependencies
     )
     return ($dependencies | ForEach-Object {
-        $_.appFile
-    }) -join ","
+            $_.appFile
+        }) -join ","
 }
