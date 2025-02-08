@@ -47,7 +47,7 @@ function AddNugetPackageSource() {
     )
 
     Write-Host "Adding Nuget source $sourceName"
-    if (!(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue)) {
+    if (!(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Continue)) {
         Register-PackageSource -Name $sourceName -Location $sourceUrl -ProviderName NuGet
     }
 }
@@ -57,7 +57,7 @@ function RemoveNugetPackageSource() {
     )
 
     Write-Host "Removing Nuget source $sourceName"
-    if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue) {
+    if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Continue) {
         Unregister-PackageSource -Source $sourceName
     }
 }
