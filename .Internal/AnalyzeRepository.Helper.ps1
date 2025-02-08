@@ -128,14 +128,14 @@ function AnalyzeRepo {
                             $settings.appJsonVersion = $appJson.version
                         }
 
-                        $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                        $foundAppDependencies = @(Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
                         if ($foundAppDependencies) {
                             $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
-                        $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                        $foundTestDependencies = @(Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
                         if ($foundTestDependencies) {
                             $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
                         }
