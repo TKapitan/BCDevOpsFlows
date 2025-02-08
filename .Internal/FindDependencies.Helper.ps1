@@ -22,7 +22,7 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            $dependencies = $(Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam)
+            $dependencies = @(Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam)
             Write-Host "App dependencies: $dependencies"
 
             return $dependencies
