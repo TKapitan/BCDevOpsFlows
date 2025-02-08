@@ -14,6 +14,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
@@ -221,6 +222,25 @@ try {
                 }
             }
         }
+    }
+
+    if ($settings.removeInternalsVisibleTo) {
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+        $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        
+        $settingExists = [bool] ($appFileJson.PSObject.Properties.Name -eq 'internalsVisibleTo')
+        if (!$settingExists) {
+            OutputDebug -Message "Setting 'internalsVisibleTo' not found in app.json - nothing to remove"
+        }
+        else {
+            if ($appFileJson.internalsVisibleTo.Count -eq 0) {
+                OutputDebug -Message "'internalsVisibleTo' is blank - nothing to remove"
+            } else {
+                $appFileJson.internalsVisibleTo = @()
+                Write-Host "Removing 'internalsVisibleTo' from app.json by replacing with empty array"
+            }
+        }
+        Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
     "enableTaskScheduler",
