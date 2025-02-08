@@ -1,11 +1,11 @@
-# Install BCContainerHelper
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
-DownloadAndImportBcContainerHelper
+# Clean Containers
+if ($ENV:AL_CONTAINERNAME) {
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 
-# Remove container
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
-$containerName = GetContainerName
-Remove-Bccontainer $containerName
+    DownloadAndImportBcContainerHelper
+    Remove-Bccontainer GetContainerName
+}
 
 # Clean Nuget
 if ($ENV:AL_NUGETINITIALIZED) {
