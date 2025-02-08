@@ -109,6 +109,9 @@ function ReadSettings {
         "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
         "buildModes"                                    = @()
+        "appArtifactSharedFolder"                       = ""
+        "nugetSharedFolder"                             = ""
+        "nugetBCDevToolsVersion"                        = "15.0.18.19684-beta"   
     }
 
     # Read settings from files and merge them into the settings object
