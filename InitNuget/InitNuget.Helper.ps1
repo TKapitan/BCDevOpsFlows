@@ -12,7 +12,7 @@ function DownloadNugetPackage() {
             $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
         }    
     }
-    $nugetPackagePath = Join-Path -Path $nugetPackagePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
+    $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     if (-not (Test-Path -Path $nugetPackagePath)) {
         $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
 
