@@ -13,10 +13,11 @@ function DownloadNugetPackage() {
         }    
     }
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
+    OutputDebug -Message "Using Nuget package path: $nugetPackagePath"
     if (-not (Test-Path -Path $nugetPackagePath)) {
         $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
 
-        Write-Host "Downloading Nuget package $packageName $packageVersion..."
+        Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
         New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
         Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
 
