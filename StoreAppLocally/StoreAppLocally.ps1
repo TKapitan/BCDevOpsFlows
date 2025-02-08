@@ -60,7 +60,3 @@ $generatedAppJson = $generatedApp | ConvertTo-Json -Compress
 $ENV:AL_APPDETAILS = $generatedAppJson
 Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
 OutputDebug -Message "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
-
-foreach ($generatedAppProperty in $generatedApp.GetEnumerator()) {
-    Write-Host " - $($generatedAppProperty.Name): $($generatedAppProperty.Value)"
-}
