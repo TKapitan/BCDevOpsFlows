@@ -13,7 +13,4 @@ if ($ENV:AL_NUGETINITIALIZED) {
     
     $packageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
     Remove-Item $packageCachePath -Recurse -Include *.*
-
-    RemoveNugetPackageSource -sourceName "MSSymbols"
-    RemoveNugetPackageSource -sourceName "AppSourceSymbols"
 }
