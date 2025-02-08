@@ -4,7 +4,7 @@ function DownloadNugetPackage() {
         [string] $packageVersion
     )
 
-    $settings = $ENV:AL_SETTINGS
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $nugetPackageBasePath = $settings.nugetSharedFolder
     if (!$nugetPackageBasePath) {
         $nugetPackageBasePath = $settings.appArtifactSharedFolder

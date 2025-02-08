@@ -1,11 +1,10 @@
 Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "InitNuget.Helper.ps1" -Resolve)
 
-$settings = $ENV:AL_SETTINGS
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 if (!$settings) {
     Write-Error "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
 }
-Write-Host "Settings: $($settings | ConvertTo-Json -Depth 99)"
 if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
