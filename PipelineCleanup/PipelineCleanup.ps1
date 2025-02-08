@@ -9,8 +9,7 @@ Remove-Bccontainer $containerName
 
 # Clean Nuget
 if ($ENV:AL_NUGETINITIALIZED) {
-    $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-    $packageCachePath = "$baseRepoFolder\App\.alpackages"
+    $packageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
     Remove-Item $packageCachePath -Recurse -Include *.*
 
     RemoveNugetPackageSource -sourceName "MSSymbols"
