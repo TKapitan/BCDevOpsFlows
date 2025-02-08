@@ -2,6 +2,9 @@ Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "InitNuget.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS
+if ($settings -eq '') {
+    Write-Error "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
+}
 if ($settings.nugetBCDevToolsVersion -eq '') {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
