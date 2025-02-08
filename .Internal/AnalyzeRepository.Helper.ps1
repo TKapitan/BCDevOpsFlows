@@ -52,15 +52,15 @@ function AnalyzeRepo {
         Write-Host "Reading apps #$folderTypeNumber"
         
         if ($appFolder) {
-            $folders = @($settings.appFolders)
+            $folders = [System.Collections.ArrayList]@($settings.appFolders)
             $descr = "App folder"
         }
         elseif ($testFolder) {
-            $folders = @($settings.testFolders)
+            $folders = [System.Collections.ArrayList]@($settings.testFolders)
             $descr = "Test folder"
         }
         elseif ($bcptTestFolder) {
-            $folders = @($settings.bcptTestFolders)
+            $folders = [System.Collections.ArrayList]@($settings.bcptTestFolders)
             $descr = "Bcpt Test folder"
         }
         else {
