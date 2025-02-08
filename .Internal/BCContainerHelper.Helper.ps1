@@ -7,6 +7,7 @@
 #
 function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App")) {
     if ("$ENV:AL_BCCONTAINERHELPERPATH" -and (Test-Path -Path $ENV:AL_BCCONTAINERHELPERPATH -PathType Leaf)) {
+        OutputDebug -Message "Reusing BcContainerHelper from ($ENV:AL_BCCONTAINERHELPERPATH)"
         return
     }
 
@@ -65,6 +66,7 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
 #
 function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
     if ("$ENV:AL_BCCONTAINERHELPERPATH" -and (Test-Path -Path $ENV:AL_BCCONTAINERHELPERPATH -PathType Leaf)) {
+        OutputDebug -Message "Reusing BcContainerHelper from ($ENV:AL_BCCONTAINERHELPERPATH)"
         return $ENV:AL_BCCONTAINERHELPERPATH
     }
 
