@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+
 function DownloadNugetPackage() {
     Param(
         [string] $packageName,
