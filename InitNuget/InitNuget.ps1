@@ -13,7 +13,6 @@ if (!$settings.nugetBCDevToolsVersion) {
 $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
 $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
-InstallAndRegisterNugetPackageProvider
 DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
 AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
