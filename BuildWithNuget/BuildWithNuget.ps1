@@ -11,7 +11,7 @@ $AppFileName = (("{0}_{1}_{2}.app" -f $appFileJson.publisher, $appFileJson.name,
 $ParametersList = @()
 $ParametersList += @(("/project:`"$baseAppFolder`" "))
 $ParametersList += @(("/packagecachepath:$packageCachePath"))   
-$ParametersList += @(("/out:`"{0}`"" -f "$ENV:BUILD_ARTIFACTSTAGINGDIRECTORY\$AppFileName"))
+$ParametersList += @(("/out:`"{0}`"" -f "$(Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output")\$AppFileName"))
 $ParametersList += @(("/loglevel:Warning"))
  
 Write-Host "Using parameters:"
