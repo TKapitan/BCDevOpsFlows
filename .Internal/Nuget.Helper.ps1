@@ -13,6 +13,7 @@ function DownloadNugetPackage() {
 
         Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
         New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
+        OutputDebug -Message "Downloading Nuget package $nugetUrl to $nugetPackagePath/$packageName.$packageVersion.zip"
         Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
 
         # Unzip the package
@@ -46,9 +47,11 @@ function AddNugetPackageSource() {
         [string] $sourceUrl
     )
 
-    Write-Host "Adding Nuget source $sourceName"
     if (!(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue)) {
+        Write-Host "Adding Nuget source $sourceName"
         Register-PackageSource -Name $sourceName -Location $sourceUrl -ProviderName NuGet | Out-null
+    } else {
+        OutputDebug -Message "Nuget source $sourceName already exists"
     }
 }
 function RemoveNugetPackageSource() {
@@ -56,8 +59,10 @@ function RemoveNugetPackageSource() {
         [string] $sourceName
     )
 
-    Write-Host "Removing Nuget source $sourceName"
     if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue) {
+        Write-Host "Removing Nuget source $sourceName"
         Unregister-PackageSource -Source $sourceName | Out-null
+    } else {
+        OutputDebug -Message "Nuget source $sourceName not found"
     }
 }
