@@ -46,7 +46,7 @@ function AddNugetPackageSource() {
     )
 
     Write-Host "Adding Nuget source $sourceName"
-    nuget add source $sourceUrl -Name $sourceName
+    nuget add source $sourceUrl --name $sourceName
 }
 function RemoveNugetPackageSource() {
     Param(
@@ -54,5 +54,5 @@ function RemoveNugetPackageSource() {
     )
 
     Write-Host "Removing Nuget source $sourceName"
-    nuget remove source -Name $sourceName
+    nuget remove source $sourceName
 }
