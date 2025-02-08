@@ -5,6 +5,7 @@ $settings = $ENV:AL_SETTINGS
 if (!$settings) {
     Write-Error "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
 }
+Write-Host "Settings: $($settings | ConvertTo-Json -Depth 99)"
 if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
