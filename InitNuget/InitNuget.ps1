@@ -1,5 +1,6 @@
 Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "InitNuget.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 if (!$settings) {
@@ -15,6 +16,11 @@ $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
 AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+
+$bcDevToolsFolder = Join-Path -Path (GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion) -ChildPath "Tools\net8.0\any"
+$ENV:AL_BCDEVTOOLSFOLDER = $bcDevToolsFolder
+Write-Host "##vso[task.setvariable variable=AL_BCDEVTOOLSFOLDER;]$bcDevToolsFolder"
+OutputDebug -Message "Set environment variable AL_BCDEVTOOLSFOLDER to ($ENV:AL_BCDEVTOOLSFOLDER)"
 
 $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
 $baseAppFolder = "$baseRepoFolder\App"
@@ -34,6 +40,10 @@ foreach ($Dependency in $manifestObject.dependencies) {
     nuget install $PackageName -outputDirectory $packageCachePath 
 }
 
+$ENV:AL_NUGETINITIALIZED = $true
+Write-Host "##vso[task.setvariable variable=AL_NUGETINITIALIZED;]$true"
+OutputDebug -Message "Set environment variable AL_NUGETINITIALIZED to ($ENV:AL_NUGETINITIALIZED)"
+
 $AppFileName = (("{0}_{1}_{2}.app" -f $manifestObject.publisher, $manifestObject.name, $manifestObject.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
 $ParametersList = @()
 $ParametersList += @(("/project:`"$baseAppFolder`" "))
@@ -47,9 +57,6 @@ foreach ($Parameter in $ParametersList) {
 }
        
 Push-Location
-
-$nugetPackagePath = GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
-Set-Location "$nugetPackagePath\Tools\net8.0\any"
+Set-Location $ENV:AL_BCDEVTOOLSFOLDER
 .\alc.exe $ParametersList
-
 Pop-Location
