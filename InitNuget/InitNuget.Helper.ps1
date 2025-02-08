@@ -30,3 +30,14 @@ function DownloadNugetPackage() {
     }
     return $nugetPackagePath
 }
+function AddNugetPackageSource() {
+    Param(
+        [string] $sourceName,
+        [string] $sourceUrl
+    )
+
+    if (-not $(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Ignore))
+    {
+        nuget source add -Name $sourceName -source $sourceUrl
+    }
+}

@@ -9,9 +9,8 @@ if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
 DownloadNugetPackage -packageName "Microsoft.Dynamics.BusinessCentral.Development.Tools" -packageVersion $settings.nugetBCDevToolsVersion
-
-nuget source add -Name MSSymbols -source "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
-nuget source add -Name AppSourceSymbols -source "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"  
+AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
+AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
 
 $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
 $baseAppFolder = "$baseRepoFolder\App"
