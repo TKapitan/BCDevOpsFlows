@@ -6,9 +6,9 @@ function DownloadNugetPackage() {
 
     $settings = $ENV:AL_SETTINGS
     $nugetPackageBasePath = $settings.nugetSharedFolder
-    if ($nugetPackageBasePath -eq '') {
+    if (!$nugetPackageBasePath) {
         $nugetPackageBasePath = $settings.appArtifactSharedFolder
-        if ($nugetPackageBasePath -eq '') {
+        if (!$nugetPackageBasePath) {
             $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
         }    
     }
