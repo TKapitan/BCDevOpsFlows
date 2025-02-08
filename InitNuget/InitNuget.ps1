@@ -8,7 +8,11 @@ if (!$settings) {
 if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
-DownloadNugetPackage -packageName "Microsoft.Dynamics.BusinessCentral.Development.Tools" -packageVersion $settings.nugetBCDevToolsVersion
+
+$bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
+$bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
+
+DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
 AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
 
@@ -43,6 +47,9 @@ foreach ($Parameter in $ParametersList) {
 }
        
 Push-Location
-Set-Location .\alc\Tools\net8.0\any
+
+$nugetPackagePath = GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
+Set-Location "$nugetPackagePath\Tools\net8.0\any"
 .\alc.exe $ParametersList
+
 Pop-Location

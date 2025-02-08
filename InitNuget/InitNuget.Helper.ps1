@@ -6,15 +6,7 @@ function DownloadNugetPackage() {
         [string] $packageVersion
     )
 
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-    $nugetPackageBasePath = $settings.nugetSharedFolder
-    if (!$nugetPackageBasePath) {
-        $nugetPackageBasePath = $settings.appArtifactSharedFolder
-        if (!$nugetPackageBasePath) {
-            $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
-        }    
-    }
-    $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
+    $nugetPackagePath = GetNugetPackagePath -packageName $packageName -packageVersion $packageVersion
     OutputDebug -Message "Using Nuget package path: $nugetPackagePath"
     if (-not (Test-Path -Path $nugetPackagePath)) {
         $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
@@ -30,14 +22,29 @@ function DownloadNugetPackage() {
     }
     return $nugetPackagePath
 }
+function GetNugetPackagePath() {
+    Param(
+        [string] $packageName,
+        [string] $packageVersion
+    )
+
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $nugetPackageBasePath = $settings.nugetSharedFolder
+    if (!$nugetPackageBasePath) {
+        $nugetPackageBasePath = $settings.appArtifactSharedFolder
+        if (!$nugetPackageBasePath) {
+            $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
+        }    
+    }
+    $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
+    return $nugetPackagePath
+}
 function AddNugetPackageSource() {
     Param(
         [string] $sourceName,
         [string] $sourceUrl
     )
 
-    if (-not $(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction Ignore)) {
-        Write-Host "Adding Nuget source $sourceName"
-        nuget source add -Name $sourceName -source $sourceUrl
-    }
+    Write-Host "Adding Nuget source $sourceName"
+    nuget source add -Name $sourceName -source $sourceUrl
 }
