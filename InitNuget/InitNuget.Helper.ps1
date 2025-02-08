@@ -1,3 +1,4 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 function DownloadNugetPackage() {
@@ -21,38 +22,4 @@ function DownloadNugetPackage() {
         Remove-Item -Path "$nugetPackagePath/$packageName.$packageVersion.zip"
     }
     return $nugetPackagePath
-}
-function GetNugetPackagePath() {
-    Param(
-        [string] $packageName,
-        [string] $packageVersion
-    )
-
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-    $nugetPackageBasePath = $settings.nugetSharedFolder
-    if (!$nugetPackageBasePath) {
-        $nugetPackageBasePath = $settings.appArtifactSharedFolder
-        if (!$nugetPackageBasePath) {
-            $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
-        }    
-    }
-    $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
-    return $nugetPackagePath
-}
-function AddNugetPackageSource() {
-    Param(
-        [string] $sourceName,
-        [string] $sourceUrl
-    )
-
-    Write-Host "Adding Nuget source $sourceName"
-    nuget add source $sourceUrl --name $sourceName
-}
-function RemoveNugetPackageSource() {
-    Param(
-        [string] $sourceName
-    )
-
-    Write-Host "Removing Nuget source $sourceName"
-    nuget remove source $sourceName
 }

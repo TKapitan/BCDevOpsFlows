@@ -9,6 +9,8 @@ Remove-Bccontainer $containerName
 
 # Clean Nuget
 if ($ENV:AL_NUGETINITIALIZED) {
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
+    
     $packageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
     Remove-Item $packageCachePath -Recurse -Include *.*
 
