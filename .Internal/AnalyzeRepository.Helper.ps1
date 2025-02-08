@@ -66,89 +66,90 @@ function AnalyzeRepo {
         else {
             Write-Error "Internal error"
         }
+        if ($folders.Count -ne 0) {
+            $folders | ForEach-Object {
+                $folderName = $_
+                $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
+                Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
+                $appJsonFile = Join-Path $folder "app.json"
+                $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
+                $enumerate = $true
 
-        $folders | ForEach-Object {
-            $folderName = $_
-            $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
-            Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
-            $appJsonFile = Join-Path $folder "app.json"
-            $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
-            $enumerate = $true
-
-            # Check if there are any folders matching $folder
-            if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
-            }
-            elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
-            }
-            elseif ($bcptTestFolder -and (-not (Test-Path $bcptSuiteFile -PathType Leaf))) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
-                $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
-                $enumerate = $false
-            }
-
-            if ($enumerate) {
-                if ($dependencies.Contains($folderName)) {
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
+                # Check if there are any folders matching $folder
+                if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
+                    OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
                 }
-                $dependencies.Add($folderName, @())
-                try {
-                    $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-                    if ($appIdFolders.Contains($appJson.Id)) {
-                        Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders."$($appJson.Id)"))"
+                elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
+                    OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
+                }
+                elseif ($bcptTestFolder -and (-not (Test-Path $bcptSuiteFile -PathType Leaf))) {
+                    OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
+                    $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
+                    $enumerate = $false
+                }
+
+                if ($enumerate) {
+                    if ($dependencies.Contains($folderName)) {
+                        Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
                     }
-                    $appIdFolders.Add($appJson.Id, $folderName)
-                    if ($appJson.PSObject.Properties.Name -eq 'Dependencies') {
-                        $appJson.dependencies | ForEach-Object {
-                            if ($_.PSObject.Properties.Name -eq "AppId") {
-                                $id = $_.AppId
-                            }
-                            else {
-                                $id = $_.Id
-                            }
-                            if ($id -eq $applicationAppId) {
-                                if ([Version]$_.Version -gt [Version]$settings.applicationDependency) {
-                                    $settings.applicationDependency = $appDep
+                    $dependencies.Add($folderName, @())
+                    try {
+                        $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
+                        if ($appIdFolders.Contains($appJson.Id)) {
+                            Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders."$($appJson.Id)"))"
+                        }
+                        $appIdFolders.Add($appJson.Id, $folderName)
+                        if ($appJson.PSObject.Properties.Name -eq 'Dependencies') {
+                            $appJson.dependencies | ForEach-Object {
+                                if ($_.PSObject.Properties.Name -eq "AppId") {
+                                    $id = $_.AppId
+                                }
+                                else {
+                                    $id = $_.Id
+                                }
+                                if ($id -eq $applicationAppId) {
+                                    if ([Version]$_.Version -gt [Version]$settings.applicationDependency) {
+                                        $settings.applicationDependency = $appDep
+                                    }
+                                }
+                                else {
+                                    $dependencies."$folderName" += @( [ordered]@{ "id" = $id; "version" = $_.version } )
                                 }
                             }
-                            else {
-                                $dependencies."$folderName" += @( [ordered]@{ "id" = $id; "version" = $_.version } )
+                        }
+                        if ($appJson.PSObject.Properties.Name -eq 'Application') {
+                            $appDep = $appJson.application
+                            if ([Version]$appDep -gt [Version]$settings.applicationDependency) {
+                                $settings.applicationDependency = $appDep
                             }
                         }
-                    }
-                    if ($appJson.PSObject.Properties.Name -eq 'Application') {
-                        $appDep = $appJson.application
-                        if ([Version]$appDep -gt [Version]$settings.applicationDependency) {
-                            $settings.applicationDependency = $appDep
-                        }
-                    }
-                    if ($appFolder) {
-                        $mainAppId = $appJson.id
-                        if ($appJson.PSObject.Properties.Name -eq 'Version') {
-                            $settings.appJsonVersion = $appJson.version
-                        }
+                        if ($appFolder) {
+                            $mainAppId = $appJson.id
+                            if ($appJson.PSObject.Properties.Name -eq 'Version') {
+                                $settings.appJsonVersion = $appJson.version
+                            }
 
-                        $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
-                        if ($foundAppDependencies) {
-                            $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
+                            $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                            if ($foundAppDependencies) {
+                                $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
+                            }
+                            Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                         }
-                        Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
-                    }
-                    elseif ($testFolder) {
-                        $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
-                        if ($foundTestDependencies) {
-                            $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
+                        elseif ($testFolder) {
+                            $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                            if ($foundTestDependencies) {
+                                $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
+                            }
+                            Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
                         }
-                        Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
                     }
-                }
-                catch {
-                    Write-Host $_.Exception -ForegroundColor Red
-                    Write-Host $_.ScriptStackTrace
-                    Write-Host $_.PSMessageDetails
+                    catch {
+                        Write-Host $_.Exception -ForegroundColor Red
+                        Write-Host $_.ScriptStackTrace
+                        Write-Host $_.PSMessageDetails
 
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
+                        Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
+                    }
                 }
             }
         }
