@@ -6,6 +6,10 @@
 # baseFolder is the repository baseFolder
 #
 function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App")) {
+    if ("$ENV:AL_BCCONTAINERHELPERPATH" -and (Test-Path -Path $ENV:AL_BCCONTAINERHELPERPATH -PathType Leaf)) {
+        return
+    }
+
     $params = @{ "ExportTelemetryFunctions" = $true }
     $repoSettingsPath = Join-Path $baseFolder $repoSettingsFile
 
