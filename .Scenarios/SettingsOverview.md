@@ -29,7 +29,7 @@ Settings can be defined in Azure Devops variables or in various settings file. W
 | <a id="doNotRunpageScriptingTests"></a>doNotRunpageScriptingTests | When true, this setting forces the pipeline to NOT run the page scripting tests specified in pageScriptingTests. Note this setting can be set in a [workflow specific settings file](#where-are-the-settings-located) to only apply to that workflow | false |
 | <a id="restoreDatabases"></a>restoreDatabases | restoreDatabases should be an array of events, indicating when you want to start with clean databases in the container. Possible events are: `BeforeBcpTests`, `BeforePageScriptingTests`, `BeforeEachTestApp`, `BeforeEachBcptTestApp`, `BeforeEachPageScriptingTest` | [ ] |
 | <a id="preprocessorSymbols"></a>preprocessorSymbols | List of preprocessor symbols to use when building the apps. This setting can be specified in [workflow specific settings files](https://aka.ms/algosettings#where-are-the-settings-located) or in [conditional settings](https://aka.ms/algosettings#conditional-settings). | [ ] |
-| <a id="appArtifactSharedFolder"></a>appArtifactSharedFolder | Shared folder specifies a folder, where all generated app files are stored. This folder is used to load dependencies and find previous app versions to run upgrade tests. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
+| <a id="writableFolderPath"></a>writableFolderPath | Specifies a folder used by pipelines to store/cache build configuration, nuget packages or to build local app file library. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
 
 ## AppSource specific basic project settings
 
@@ -149,10 +149,6 @@ Which will ensure that for all repositories named `bcsamples-*` in this organiza
 | <a id="doNotRunBcptTests"></a>doNotRunBcptTests | This setting forces the pipeline to NOT run the performance tests in testFolders. Performance tests are still being built and published. Note this setting can be set in a [workflow specific settings file](#where-are-the-settings-located) to only apply to that workflow | false |
 | <a id="memoryLimit"></a>memoryLimit | Specifies the memory limit for the build container. By default, this is left to BcContainerHelper to handle and will currently be set to 8G | 8G |
 | <a id="BcContainerHelperVersion"></a>BcContainerHelperVersion | This setting can be set to a specific version (ex. 3.0.8) of BcContainerHelper to force BCDevOps Flows to use this version. **latest** means that BCDevOps Flows will use the latest released version. **preview** means that BCDevOps Flows will use the latest preview version. **dev** means that BCDevOps Flows will use the dev branch of containerhelper. | latest |
-
-## Nuget settings (limited support, preview)
-
-| <a id="nugetSharedFolder"></a>nugetSharedFolder | Shared folder specifies a folder, where the nuget packages are stored. This includes primarily the Business Central Development Tools (for example compiler). If the field is blank, system will try to use [appArtifactSharedFolder](#appArtifactSharedFolder). If this is also blank, system will use the predefined environment variable **PIPELINE_WORKSPACE**. It is recommended to define shared folder instead of pipeline-specific folder to cache downloaded packages and to avoid redownloading the packages for every build and every agent. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
 
 ______________________________________________________________________
 

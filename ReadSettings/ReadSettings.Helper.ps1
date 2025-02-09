@@ -109,8 +109,7 @@ function ReadSettings {
         "cacheImageName"                                = ""
         "cacheKeepDays"                                 = 3
         "buildModes"                                    = @()
-        "appArtifactSharedFolder"                       = ""
-        "nugetSharedFolder"                             = ""
+        "writableFolderPath"                            = ""
         "nugetBCDevToolsVersion"                        = "15.0.18.19684-beta"   
     }
 
