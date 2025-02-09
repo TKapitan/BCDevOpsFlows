@@ -111,6 +111,7 @@ function ReadSettings {
         "buildModes"                                    = @()
         "writableFolderPath"                            = ""
         "nugetBCDevToolsVersion"                        = "15.0.18.19684-beta"   
+        "artifactUrlCacheKeepHours"                     = 6
     }
 
     # Read settings from files and merge them into the settings object

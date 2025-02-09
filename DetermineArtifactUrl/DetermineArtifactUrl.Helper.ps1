@@ -3,6 +3,8 @@ function DetermineArtifactUrl {
         [hashtable] $settings
     )
 
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\CacheArtifactUrl.Helper.ps1" -Resolve)
+
     $artifact = $settings.artifact
     if ($artifact.Contains('{INSIDERSASTOKEN}')) {
         $artifact = $artifact.replace('{INSIDERSASTOKEN}', '')
@@ -20,6 +22,15 @@ function DetermineArtifactUrl {
             }
         }
     }
+
+    if ($artifact -ne "") {
+        $artifactUrlFromCache = GetArtifactUrlFromCache -artifact $artifact
+        if ($artifactUrlFromCache) {
+            $artifact = $artifactUrlFromCache;
+            $artifactUrlFromCache = $true
+        }
+    }
+
 
     if ($artifact -like "https://*") {
         $artifactUrl = $artifact
@@ -58,6 +69,12 @@ function DetermineArtifactUrl {
                 Write-Error "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
             }
         }
+
+        if (!$artifactUrlFromCache) {
+            # Do not cache if the current artifact is from cache
+            AddArtifactUrlToCache -artifact $artifact -ArtifactUrl $artifactUrl
+        }
+
         $version = $artifactUrl.Split('/')[4]
         $storageAccount = $artifactUrl.Split('/')[2]
     }
