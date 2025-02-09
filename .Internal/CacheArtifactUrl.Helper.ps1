@@ -5,7 +5,7 @@ function AddArtifactUrlToCache {
         [Parameter(Mandatory = $true)]
         [string] $artifact,
         [Parameter(Mandatory = $true)]
-        [string] $ArtifactUrl
+        [string] $artifactUrl
     )
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
@@ -29,18 +29,18 @@ function AddArtifactUrlToCache {
     $existingItem = $artifactUrlCacheContent | Where-Object { $_.artifact -eq $artifact }
 
     if ($existingItem) {
-        $existingItem.artifactUrl = $ArtifactUrl
+        Write-Host "Updating cached artifact URL '$artifactUrl' for artifact $artifact"
+        $existingItem.artifactUrl = $artifactUrl
         $existingItem.updatedAt = $currentDateTime
-        Write-Host "Updating cached artifact URL '$ArtifactUrl' for artifact $artifact"
     }
     else {
+        Write-Host "Caching artifact URL '$artifactUrl' for artifact $artifact"
         $newItem = @{
             artifact    = $artifact
-            artifactUrl = $ArtifactUrl
+            artifactUrl = $artifactUrl
             updatedAt   = $currentDateTime
         }
-        $artifactUrlCacheContent += $newItem
-        Write-Host "Caching artifact URL '$ArtifactUrl' for artifact $artifact"
+        $artifactUrlCacheContent = @($artifactUrlCacheContent) + $newItem
     }
     $artifactUrlCacheContent | ConvertTo-Json | Set-Content $artifactUrlCacheFile
 }
