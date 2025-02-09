@@ -48,6 +48,7 @@ You can use the following documentation of supported scripts to build your own p
 BCDevOps Flows supports limited set of steps for working with NuGet packages. Microsoft Dynamics 365 Business Central does not support NuGet yet (still WIP). There may be breaking changes more often than in other sections.
 
 - [InitNuget](./InitNuget/README.md)
+- [DetermineNugetPackages](./DetermineNugetPackages/README.md)
 - [BuildWithNuget](./BuildWithNuget/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
 
