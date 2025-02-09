@@ -29,12 +29,12 @@ function AddArtifactUrlToCache {
     $existingItem = $artifactUrlCacheContent | Where-Object { $_.artifact -eq $artifact }
 
     if ($existingItem) {
-        Write-Host "Updating cached artifact URL '$artifactUrl' for artifact $artifact"
+        Write-Host "Updating cached artifact URL '$artifactUrl' for artifact $artifact, setting updatedAt to $currentDateTime"
         $existingItem.artifactUrl = $artifactUrl
         $existingItem.updatedAt = $currentDateTime
     }
     else {
-        Write-Host "Caching artifact URL '$artifactUrl' for artifact $artifact"
+        Write-Host "Caching artifact URL '$artifactUrl' for artifact $artifact, setting updatedAt to $currentDateTime"
         $newItem = @{
             artifact    = $artifact
             artifactUrl = $artifactUrl
@@ -82,7 +82,7 @@ function GetArtifactUrlFromCache {
     $expiryTime = $updatedAt.AddHours($settings.artifactUrlCacheKeepHours)
     
     if ((Get-Date).ToUniversalTime() -gt $expiryTime) {
-        Write-Host "Cached artifact URL for artifact $artifact has expired"
+        Write-Host "Cached artifact URL for artifact $artifact has expired at $expiryTime (current time: $($(Get-Date).ToUniversalTime()))"
         return
     }
     Write-Host "Using cached artifact URL '$($cachedItem.artifactUrl)' for artifact $artifact"
