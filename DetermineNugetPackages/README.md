@@ -1,6 +1,6 @@
 # Determine Nuget Packages
 
-Initialize variables and system for Nuget. This step must be run before any steps that involve nuget are called.
+Initialize variables and system for Nuget. This step must be run before any steps that involve NuGet are called.
 
 ## INPUT Parameters
 

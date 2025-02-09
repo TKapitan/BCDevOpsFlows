@@ -1,6 +1,6 @@
 # Initialize Nuget
 
-Initialize variables and system for Nuget. This step must be run before any steps that involve nuget are called.
+Initialize variables and system for Nuget. This step must be run before any steps that involve NuGet are called.
 
 ## INPUT Parameters
 
@@ -18,4 +18,4 @@ No input parameters.
 | Name                  | Description                                                                                   |
 | :--                   | :--                                                                                           |
 | AL_BCDEVTOOLSFOLDER   | Specifies the folder used where the Business Central Developer Tools from Nuget are stored.   |
-| AL_NUGETINITIALIZED   | Set to true once the initialization is completed. This variable is used in other steps to verify/run code for nuget-only logic. |
+| AL_NUGETINITIALIZED   | Set to true once the initialization is completed. This variable is used in other steps to verify/run code for NuGet-only logic. |
