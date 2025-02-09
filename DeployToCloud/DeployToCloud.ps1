@@ -87,7 +87,7 @@ try {
     Write-Host "- $([System.IO.Path]::GetFileName($appFile))"
 
     if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-        $dependenciesToDeploy = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
+        $dependenciesToDeploy = Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview $includeAppsInPreview
         if ($dependenciesToDeploy) {
             $dependencies += $dependenciesToDeploy
         }

@@ -4,7 +4,7 @@ function Get-AppTargetFilePathForNewApp {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [string] $appArtifactSharedFolder,
+        [string] $writableFolderPath,
         [Parameter(Mandatory)]
         $appFileJson,
         [switch] $isPreview
@@ -16,7 +16,7 @@ function Get-AppTargetFilePathForNewApp {
     }
     
     $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
-    $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$($appFileJson.id)\$($appFileJson.version)-BC$($appFileJson.application)\"
+    $targetFilePath = "$writableFolderPath\apps\$releaseTypeFolder\$($appFileJson.id)\$($appFileJson.version)-BC$($appFileJson.application)\"
     Write-Host "Using '$targetFilePath' regardless if the extension exists or not"
     return $targetFilePath
 }

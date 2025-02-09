@@ -3,6 +3,8 @@ function DetermineArtifactUrl {
         [hashtable] $settings
     )
 
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\CacheArtifactUrl.Helper.ps1" -Resolve)
+
     $artifact = $settings.artifact
     if ($artifact.Contains('{INSIDERSASTOKEN}')) {
         $artifact = $artifact.replace('{INSIDERSASTOKEN}', '')
@@ -21,6 +23,16 @@ function DetermineArtifactUrl {
         }
     }
 
+    $artifact = AddArtifactDefaultValues -artifact $artifact
+    if ($artifact -ne "" -and $artifact -notlike "https://*") {
+        # Check if the artifact is in the cache
+        $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -artifact $artifact
+        if ($artifactUrlFromCacheUrl) {
+            # If found, the value is https url
+            $artifact = $artifactUrlFromCacheUrl;
+        }
+    }
+
     if ($artifact -like "https://*") {
         $artifactUrl = $artifact
         $storageAccount = ("$artifactUrl////".Split('/')[2])
@@ -29,12 +41,12 @@ function DetermineArtifactUrl {
         $country = ("$artifactUrl////".Split('?')[0].Split('/')[5])
     }
     else {
-        $segments = "$artifact/////".Split('/')
+        $segments = $artifact.Split('/')
         $storageAccount = $segments[0];
-        $artifactType = $segments[1]; if ($artifactType -eq "") { $artifactType = 'Sandbox' }
+        $artifactType = $segments[1];
         $version = $segments[2]
-        $country = $segments[3]; if ($country -eq "") { $country = $settings.country }
-        $select = $segments[4]; if ($select -eq "") { $select = "latest" }
+        $country = $segments[3];
+        $select = $segments[4];
         if ($version -eq '*') {
             $version = "$(([Version]$settings.applicationDependency).Major).$(([Version]$settings.applicationDependency).Minor)"
             $allArtifactUrls = @(Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select all -accept_insiderEula | Where-Object { [Version]$_.Split('/')[4] -ge [Version]$settings.applicationDependency })
@@ -58,6 +70,8 @@ function DetermineArtifactUrl {
                 Write-Error "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
             }
         }
+
+        AddArtifactUrlToCache -artifact $artifact -ArtifactUrl $artifactUrl
         $version = $artifactUrl.Split('/')[4]
         $storageAccount = $artifactUrl.Split('/')[2]
     }
@@ -90,6 +104,25 @@ function DetermineArtifactUrl {
         $artifactUrl = $artifactUrl.Replace($artifactUrl.Split('/')[4], $atArtifactUrl.Split('/')[4])
     }
     return $artifactUrl
+}
+
+function AddArtifactDefaultValues {
+    Param(
+        [string] $artifact
+    )
+
+    if ($artifact -like "https://*") {
+        return $artifact
+    }
+    $segments = "$artifact/////".Split('/')
+
+    $storageAccount = $segments[0];
+    $artifactType = $segments[1]; if ($artifactType -eq "") { $artifactType = 'Sandbox' }
+    $version = $segments[2]
+    $country = $segments[3]; if ($country -eq "") { $country = $settings.country }
+    $select = $segments[4]; if ($select -eq "") { $select = "latest" }
+
+    return "$storageAccount/$artifactType/$version/$country/$select"
 }
 
 # Copy a HashTable to ensure non case sensitivity (Issue #385)

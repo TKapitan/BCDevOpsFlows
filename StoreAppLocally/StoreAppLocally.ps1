@@ -30,14 +30,14 @@ foreach ($folderTypeNumber in 1..2) {
             Write-Host "Cannot find '$appFilePath' application file for test app. Skipping."
         }
         else {
-            Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.appArtifactSharedFolder))"
+            Write-Host "Saving '$appJsonFilePath' app in to shared local folder ($($settings.writableFolderPath))"
 
             # Find app.json & target path
             $appTargetFilePathForNewAppParam = @{}
             if ($isPreview -eq $true) {
                 $appTargetFilePathForNewAppParam = @{ "isPreview" = $true }
             }
-            $targetPath = Get-AppTargetFilePathForNewApp -appArtifactSharedFolder $settings.appArtifactSharedFolder -appFile $appJsonContent @appTargetFilePathForNewAppParam
+            $targetPath = Get-AppTargetFilePathForNewApp -writableFolderPath $settings.writableFolderPath -appFile $appJsonContent @appTargetFilePathForNewAppParam
             $targetPathAppJsonFile = $targetPath + 'app.json'
             $targetPathAppFile = $targetPath + (Get-AppFileName -publisher $appJsonContent.publisher -name $appJsonContent.name -version $appJsonContent.version);
     
