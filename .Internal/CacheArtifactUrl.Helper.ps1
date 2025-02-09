@@ -31,6 +31,7 @@ function AddArtifactUrlToCache {
     if ($existingItem) {
         $existingItem.artifactUrl = $ArtifactUrl
         $existingItem.updatedAt = $currentDateTime
+        Write-Host "Updating cached artifact URL '$ArtifactUrl' for artifact $artifact"
     }
     else {
         $newItem = @{
@@ -39,6 +40,7 @@ function AddArtifactUrlToCache {
             updatedAt   = $currentDateTime
         }
         $artifactUrlCacheContent += $newItem
+        Write-Host "Caching artifact URL '$ArtifactUrl' for artifact $artifact"
     }
     $artifactUrlCacheContent | ConvertTo-Json | Set-Content $artifactUrlCacheFile
 }

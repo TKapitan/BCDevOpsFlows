@@ -23,10 +23,11 @@ function DetermineArtifactUrl {
         }
     }
 
+    $artifactUrlFromCache = $false
     if ($artifact -ne "" -and $artifact -notlike "https://*") {
-        $artifactUrlFromCache = GetArtifactUrlFromCache -artifact $artifact
-        if ($artifactUrlFromCache) {
-            $artifact = $artifactUrlFromCache;
+        $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -artifact $artifact
+        if ($artifactUrlFromCacheUrl) {
+            $artifact = $artifactUrlFromCacheUrl;
             $artifactUrlFromCache = $true
         }
     }
