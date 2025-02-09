@@ -31,13 +31,10 @@ function GetNugetPackagePath() {
     )
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-    $nugetPackageBasePath = $settings.nugetSharedFolder
+    $nugetPackageBasePath = $settings.writableFolderPath
     if (!$nugetPackageBasePath) {
-        $nugetPackageBasePath = $settings.appArtifactSharedFolder
-        if (!$nugetPackageBasePath) {
-            $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
-        }    
-    }
+        $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
+    }    
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     return $nugetPackagePath
 }
@@ -50,7 +47,8 @@ function AddNugetPackageSource() {
     if (!(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue)) {
         Write-Host "Adding Nuget source $sourceName"
         Register-PackageSource -Name $sourceName -Location $sourceUrl -ProviderName NuGet | Out-null
-    } else {
+    }
+    else {
         OutputDebug -Message "Nuget source $sourceName already exists"
     }
 }
@@ -62,7 +60,8 @@ function RemoveNugetPackageSource() {
     if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue) {
         Write-Host "Removing Nuget source $sourceName"
         Unregister-PackageSource -Source $sourceName | Out-null
-    } else {
+    }
+    else {
         OutputDebug -Message "Nuget source $sourceName not found"
     }
 }

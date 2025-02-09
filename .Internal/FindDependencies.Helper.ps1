@@ -1,6 +1,5 @@
 function Get-AppDependencies {
     Param (
-        [string]$appArtifactSharedFolder,
         $appJsonFilePath,
         $excludeExtensionID = $null,
         [version] $minBcVersion,
@@ -22,14 +21,13 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            $dependencies = @(Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam)
+            $dependencies = @(Get-AllBCDependencies -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam)
             Write-Host "App dependencies: $dependencies"
 
             return $dependencies
         }
     }
 }
-
 function Get-AppJsonFile {
     [CmdletBinding()]
     Param (
@@ -55,26 +53,6 @@ function Get-AppJsonFile {
     }
     return $appFile;
 }
-function Get-BCDependencies {
-    [CmdletBinding()]
-    Param (
-        $appFile,
-        [string] $appArtifactSharedFolder
-    )
-
-    ## Lookup dependencies
-    $dependencies = $appFile.dependencies;
-    if ($dependencies) {
-        $listOfDependencies = '';
-        foreach ($dependency in $dependencies) {
-            if ($listOfDependencies -ne '') {
-                $listOfDependencies += ',';
-            }
-            $listOfDependencies += $appArtifactSharedFolder + $dependency.id + '_' + $dependency.version + '.app';        
-        }
-    }
-    Write-Host "List of dependencies = $listOfDependencies"
-}
 function Get-AppSourceFileLocation {
     [CmdletBinding()]
     Param (
@@ -96,7 +74,6 @@ function Get-AppFileName {
 function Get-AppTargetFilePath {
     [CmdletBinding()]
     Param (
-        [string] $appArtifactSharedFolder,
         [string] $extensionID,
         [string] $extensionVersion,
         [switch] $includeAppsInPreview,
@@ -104,10 +81,13 @@ function Get-AppTargetFilePath {
         [string] $findExisting = $true
     )
 
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $basePath = $settings.writableFolderPath
+
     $releaseTypeFolderParam = @{}
     if ($skipAppsInPreview -eq $true) {
-        [version]$latestPreviewVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'preview'
-        [version]$latestPublicVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
+        [version]$latestPreviewVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'preview'
+        [version]$latestPublicVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
         $latestExistingVersion = $latestPublicVersion
         if ($latestPreviewVersion -gt $latestPublicVersion) {
             $skipAppsInPreview = $false
@@ -118,21 +98,21 @@ function Get-AppTargetFilePath {
     $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
 
     if ($findExisting -ne 'true') {
-        $targetFilePath = "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
+        $targetFilePath = "$basePath\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
         OutputDebug -Message "Using '$targetFilePath' regardless if the extension exists or not"
         return $targetFilePath
     }
         
-    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID") -PathType Container)) {
+    if (-not (Test-Path -Path ("$basePath\apps\$releaseTypeFolder\$extensionID") -PathType Container)) {
         # if no extension found found, use the previous file structure, throw error if not found in that function
-        return Get-AppTargetFilePathWithoutReleaseType -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -extensionVersion $extensionVersion
+        return Get-AppTargetFilePathWithoutReleaseType -extensionID $extensionID -extensionVersion $extensionVersion
     }
 
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
     OutputDebug -Message "Using version $latestExistingVersion for extension $extensionID";
-    return "$appArtifactSharedFolder\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
+    return "$basePath\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
 }
 function Get-ReleaseTypeFolderName {
     [CmdletBinding()]
@@ -149,21 +129,23 @@ function Get-ReleaseTypeFolderName {
 function Get-LatestVersion {
     [CmdletBinding()]
     Param (
-        [string] $appArtifactSharedFolder,
         [string] $extensionID,
         [version] $minBcVersion = '0.0.0.0',
         [string] $releaseType
     )
+
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $basePath = $settings.writableFolderPath
     
     OutputDebug -Message "Searching for latest version of $extensionID in '$releaseType' folder";
     $minVersion = '0.0.0.0';
-    if (-not (Test-Path -Path ("$appArtifactSharedFolder\apps\$releaseType\$extensionID") -PathType Container)) {
-        Write-Host "Can not find $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
+    if (-not (Test-Path -Path ("$basePath\apps\$releaseType\$extensionID") -PathType Container)) {
+        Write-Host "Can not find $basePath\apps\$releaseType\$extensionID\ folder"
         return $minVersion
     }
 
-    OutputDebug -Message "Scanning $appArtifactSharedFolder\apps\$releaseType\$extensionID\ folder"
-    $sourceDirectoryContent = Get-ChildItem ("$appArtifactSharedFolder\apps\$releaseType\$extensionID\") -Directory
+    OutputDebug -Message "Scanning $basePath\apps\$releaseType\$extensionID\ folder"
+    $sourceDirectoryContent = Get-ChildItem ("$basePath\apps\$releaseType\$extensionID\") -Directory
     foreach ($currDir in $sourceDirectoryContent) {
         if ($currDir -contains '-BC') {
             [string]$folderAppVersion = $currDir -split '-BC' | Select-Object -First 1
@@ -187,23 +169,25 @@ function Get-LatestVersion {
 function Get-AppTargetFilePathWithoutReleaseType {
     [CmdletBinding()]
     Param (
-        [string] $appArtifactSharedFolder,
         [string] $extensionID,
         [string] $extensionVersion
     )
+    
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $basePath = $settings.writableFolderPath
 
     Write-Warning 'Using obsoleted Get-AppTargetFilePathWithoutReleaseType as the app was not found in the preview/public folder'
 
-    if (-not (Test-Path -Path ($appArtifactSharedFolder + "\apps\" + $extensionID) -PathType Container)) {
-        Write-Error $appArtifactSharedFolder + "\apps\" + $extensionID + " does not exists."
+    if (-not (Test-Path -Path ($basePath + "\apps\" + $extensionID) -PathType Container)) {
+        Write-Error $basePath + "\apps\" + $extensionID + " does not exists."
     }
 
-    $latestExistingVersion = Get-LatestVersion -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $extensionID -releaseType ''
+    $latestExistingVersion = Get-LatestVersion -extensionID $extensionID -releaseType ''
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
     Write-Host "Using version $latestExistingVersion for extension $extensionID";
-    return "$appArtifactSharedFolder\apps\$extensionID\$latestExistingVersion\";
+    return "$basePath\apps\$extensionID\$latestExistingVersion\";
 }
 
 # FOR LEGACY REASON ONLY <-
@@ -211,7 +195,6 @@ function Get-AppTargetFilePathWithoutReleaseType {
 function Get-AllBCDependencies {
     [CmdletBinding()]
     Param (
-        [string] $appArtifactSharedFolder,
         [string] $excludeExtensionID = "",
         [switch] $includeAppsInPreview,
         [version] $minBcVersion,
@@ -236,10 +219,10 @@ function Get-AllBCDependencies {
                     $allBCDependencies = @{ "includeAppsInPreview" = $true }
                 }
 
-                OutputDebug -Message "Path: $appArtifactSharedFolder , id: $($dependency.id) , name: $($dependency.name) , version: $($dependency.version)"
-                $appsLocation = Get-AppTargetFilePath -appArtifactSharedFolder $appArtifactSharedFolder -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
+                OutputDebug -Message "Verifying id: $($dependency.id) , name: $($dependency.name) , version: $($dependency.version)"
+                $appsLocation = Get-AppTargetFilePath -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
                 $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $innerDependencies = Get-AllBCDependencies -appArtifactSharedFolder $appArtifactSharedFolder -appFile $dependencyAppJsonContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
+                $innerDependencies = Get-AllBCDependencies -appFile $dependencyAppJsonContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
                 
                 # Add dependencies from the apps (found recursively)
                 if ($innerDependencies -ne @()) {
