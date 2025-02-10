@@ -19,6 +19,18 @@ This section describes how to start using BCDevOps Flows.
 1. [Add BCDevOps Flows to Existing Project](.Scenarios/AddBCDevOpsFlowsToExistingProject.md)
 1. [Configure Pipelines](.Scenarios/ConfigurePipelines.md)
 
+## Important/Interesting setting
+
+The list of supported configuration is available in [Settings Overview](.Scenarios/SettingsOverview.md). Below is a list of the most important setting you should know about or that is different from AL-Go.
+
+- [country](/.Scenarios/SettingsOverview.md#country)
+- [artifact](/.Scenarios/SettingsOverview.md#artifact)
+- [versioningStrategy](/.Scenarios/SettingsOverview.md#versioningStrategy)
+- [writableFolderPath](/.Scenarios/SettingsOverview.md#writableFolderPath)
+- [artifactUrlCacheKeepHours](/.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
+- [preprocessorSymbols](/.Scenarios/SettingsOverview.md#preprocessorSymbols)
+- [removeInternalsVisibleTo](/.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
+
 ## Supported pipeline steps
 We strongly recommend to not change any of the standard pipeline or standard scripts. It's highly likely that customized scripts and/or pipelines will be broken in a future update.
 
@@ -27,9 +39,17 @@ You can use the following documentation of supported scripts to build your own p
 - [WorkflowInitialize](./WorkflowInitialize/README.md)
 - [ReadSettings](./ReadSettings/README.md)
 - [DetermineArtifactUrl](./DetermineArtifactUrl/README.md)
+- [IncreaseVersion](./IncreaseVersion/README.md)
 - [RunPipeline](./RunPipeline/README.md)
 - [StoreAppLocally](./StoreAppLocally/README.md)
 - [DeployToCloud](./DeployToCloud/README.md)
+- [PipelineCleanup](./PipelineCleanup/README.md)
+
+BCDevOps Flows supports limited set of steps for working with NuGet packages. Microsoft Dynamics 365 Business Central does not support NuGet yet (still WIP). There may be breaking changes more often than in other sections.
+
+- [InitNuget](./InitNuget/README.md)
+- [DetermineNugetPackages](./DetermineNugetPackages/README.md)
+- [BuildWithNuget](./BuildWithNuget/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
 
 ## Obsoletion

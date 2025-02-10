@@ -34,6 +34,9 @@ function AnalyzeRepo {
         if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
             Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
+        if (!$settings.Contains('removeInternalsVisibleTo')) {
+            $settings.Add('removeInternalsVisibleTo', $true)
+        }
     }
     else {
         Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
@@ -49,21 +52,20 @@ function AnalyzeRepo {
         Write-Host "Reading apps #$folderTypeNumber"
         
         if ($appFolder) {
-            $folders = @($settings.appFolders)
+            $folders = [System.Collections.ArrayList]@($settings.appFolders)
             $descr = "App folder"
         }
         elseif ($testFolder) {
-            $folders = @($settings.testFolders)
+            $folders = [System.Collections.ArrayList]@($settings.testFolders)
             $descr = "Test folder"
         }
         elseif ($bcptTestFolder) {
-            $folders = @($settings.bcptTestFolders)
+            $folders = [System.Collections.ArrayList]@($settings.bcptTestFolders)
             $descr = "Bcpt Test folder"
         }
         else {
             Write-Error "Internal error"
         }
-
         $folders | ForEach-Object {
             $folderName = $_
             $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
@@ -126,14 +128,14 @@ function AnalyzeRepo {
                             $settings.appJsonVersion = $appJson.version
                         }
 
-                        $foundAppDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                        $foundAppDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
                         if ($foundAppDependencies) {
                             $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
-                        $foundTestDependencies = Get-AppDependencies -appArtifactSharedFolder $settings.appArtifactSharedFolder -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview
+                        $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
                         if ($foundTestDependencies) {
                             $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
                         }
@@ -148,22 +150,23 @@ function AnalyzeRepo {
                     Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
-                    
-            Write-Host "Analyzing Test App Dependencies"
-            if ($settings.testFolders) { $settings.installTestRunner = $true }
-            if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
-            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
-
-            $foundAppDependencies + $foundTestDependencies | ForEach-Object {
-                $dependency = $_
-                if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
-                if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
-                if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
-                if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
-            }
-            Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
         }
     }
+
+    Write-Host "Analyzing Test App Dependencies"
+    if ($settings.testFolders) { $settings.installTestRunner = $true }
+    if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
+    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
+
+    $foundAppDependencies + $foundTestDependencies | ForEach-Object {
+        $dependency = $_
+        if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
+        if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
+        if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
+        if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
+    }
+    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
+    
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
 
@@ -207,6 +210,6 @@ function Get-DependenciesAsTextString {
         [array] $dependencies
     )
     return ($dependencies | ForEach-Object {
-        $_.appFile
-    }) -join ","
+            $_.appFile
+        }) -join ","
 }
