@@ -7,8 +7,7 @@ function DetermineArtifactUrl {
 
     $artifact = $settings.artifact
     if ($artifact.Contains('{INSIDERSASTOKEN}')) {
-        $artifact = $artifact.replace('{INSIDERSASTOKEN}', '')
-        Write-Host "::Warning::Please update your artifact setting and remove {INSIDERSASTOKEN} from the setting. This is no longer needed."
+        Write-Error "{INSIDERSASTOKEN} is no longer supported in the artifact setting."
     }
 
     Write-Host "Checking artifact setting for repository"
