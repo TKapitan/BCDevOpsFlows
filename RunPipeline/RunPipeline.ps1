@@ -235,11 +235,42 @@ try {
         else {
             if ($appFileJson.internalsVisibleTo.Count -eq 0) {
                 OutputDebug -Message "'internalsVisibleTo' is blank - nothing to remove"
-            } else {
+            }
+            else {
                 $appFileJson.internalsVisibleTo = @()
                 Write-Host "Removing 'internalsVisibleTo' from app.json by replacing with empty array"
             }
         }
+        Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
+    }
+
+    if ($settings.overrideResourceExposurePolicy) {
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+        $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        
+        $resourceExposurePolicySpecified = [bool] ($appFileJson.PSObject.Properties.Name -eq 'resourceExposurePolicy')
+        if (!$resourceExposurePolicySpecified) {
+            $resourceExposurePolicy = @()
+            OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline. No existing setting found in app.json"
+        }
+        else {
+            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy
+            OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline and existing app.json setting"
+        }
+
+        if ($settings.Contains('allowDebugging')) {
+            $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
+        }
+        if ($settings.Contains('allowDownloadingSource')) {
+            $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
+        }
+        if ($settings.Contains('includeSourceInSymbolFile')) {
+            $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
+        }
+        if ($settings.Contains('applyToDevExtension')) {
+            $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
+        }
+        $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
