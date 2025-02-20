@@ -257,13 +257,13 @@ try {
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline. No existing setting found in app.json"
         }
         else {
-            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy | ConvertTo-HashTable
+            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline and existing app.json setting"
         }
 
         if ($settings.Contains('allowDebugging')) {
-            if (!$resourceExposurePolicy.Contains('allowDebugging')) {
-                $resourceExposurePolicy.Add('allowDebugging', $settings.allowDebugging)
+            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('allowDebugging')) {
+                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDebugging' -Value $settings.allowDebugging
             }
             else {
                 $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
@@ -271,8 +271,8 @@ try {
             OutputDebug -Message "Setting 'allowDebugging' from $($appFileJson.resourceExposurePolicy.allowDebugging) to $($settings.allowDebugging)"
         }
         if ($settings.Contains('allowDownloadingSource')) {
-            if (!$resourceExposurePolicy.Contains('allowDownloadingSource')) {
-                $resourceExposurePolicy.Add('allowDownloadingSource', $settings.allowDownloadingSource)
+            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('allowDownloadingSource')) {
+                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDownloadingSource' -Value $settings.allowDownloadingSource
             }
             else {
                 $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
@@ -280,8 +280,8 @@ try {
             OutputDebug -Message "Setting 'allowDownloadingSource' from $($appFileJson.resourceExposurePolicy.allowDownloadingSource) to $($settings.allowDownloadingSource)"
         }
         if ($settings.Contains('includeSourceInSymbolFile')) {
-            if (!$resourceExposurePolicy.Contains('includeSourceInSymbolFile')) {
-                $resourceExposurePolicy.Add('includeSourceInSymbolFile', $settings.includeSourceInSymbolFile)
+            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('includeSourceInSymbolFile')) {
+                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'includeSourceInSymbolFile' -Value $settings.includeSourceInSymbolFile
             }
             else {
                 $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
@@ -289,8 +289,8 @@ try {
             OutputDebug -Message "Setting 'includeSourceInSymbolFile' from $($appFileJson.resourceExposurePolicy.includeSourceInSymbolFile) to $($settings.includeSourceInSymbolFile)"
         }
         if ($settings.Contains('applyToDevExtension')) {
-            if (!$resourceExposurePolicy.Contains('applyToDevExtension')) {
-                $resourceExposurePolicy.Add('applyToDevExtension', $settings.applyToDevExtension)
+            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('applyToDevExtension')) {
+                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'applyToDevExtension' -Value $settings.applyToDevExtension
             }
             else {
                 $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
@@ -299,11 +299,12 @@ try {
         }
         
         if (-not ($appFileJson.PSObject.Properties.Name -contains 'resourceExposurePolicy')) {
-            $appFileJson.Add('resourceExposurePolicy', $resourceExposurePolicy)
+            $appFileJson | Add-Member -MemberType NoteProperty -Name 'resourceExposurePolicy' -Value $resourceExposurePolicy
         }
         else {
             $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
         }
+        Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
