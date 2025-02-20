@@ -262,49 +262,23 @@ try {
         }
 
         if ($settings.Contains('allowDebugging')) {
-            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('allowDebugging')) {
-                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDebugging' -Value $settings.allowDebugging
-            }
-            else {
-                $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
-            }
+            $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDebugging' -Value $settings.allowDebugging -Force
             OutputDebug -Message "Setting 'allowDebugging' from $($appFileJson.resourceExposurePolicy.allowDebugging) to $($settings.allowDebugging)"
         }
         if ($settings.Contains('allowDownloadingSource')) {
-            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('allowDownloadingSource')) {
-                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDownloadingSource' -Value $settings.allowDownloadingSource
-            }
-            else {
-                $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
-            }
+            $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'allowDownloadingSource' -Value $settings.allowDownloadingSource -Force
             OutputDebug -Message "Setting 'allowDownloadingSource' from $($appFileJson.resourceExposurePolicy.allowDownloadingSource) to $($settings.allowDownloadingSource)"
         }
         if ($settings.Contains('includeSourceInSymbolFile')) {
-            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('includeSourceInSymbolFile')) {
-                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'includeSourceInSymbolFile' -Value $settings.includeSourceInSymbolFile
-            }
-            else {
-                $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
-            }
+            $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'includeSourceInSymbolFile' -Value $settings.includeSourceInSymbolFile -Force
             OutputDebug -Message "Setting 'includeSourceInSymbolFile' from $($appFileJson.resourceExposurePolicy.includeSourceInSymbolFile) to $($settings.includeSourceInSymbolFile)"
         }
         if ($settings.Contains('applyToDevExtension')) {
-            if (-not $resourceExposurePolicy.PSObject.Properties.Name.Contains('applyToDevExtension')) {
-                $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'applyToDevExtension' -Value $settings.applyToDevExtension
-            }
-            else {
-                $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
-            }
+            $resourceExposurePolicy | Add-Member -MemberType NoteProperty -Name 'applyToDevExtension' -Value $settings.applyToDevExtension -Force
             OutputDebug -Message "Setting 'applyToDevExtension' from $($appFileJson.resourceExposurePolicy.applyToDevExtension) to $($settings.applyToDevExtension)"
         }
         
-        if (-not ($appFileJson.PSObject.Properties.Name -contains 'resourceExposurePolicy')) {
-            $appFileJson | Add-Member -MemberType NoteProperty -Name 'resourceExposurePolicy' -Value $resourceExposurePolicy
-        }
-        else {
-            $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
-        }
-        Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
+        $appFileJson | Add-Member -MemberType NoteProperty -Name 'resourceExposurePolicy' -Value $resourceExposurePolicy -Force
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
