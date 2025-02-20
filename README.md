@@ -30,6 +30,7 @@ The list of supported configuration is available in [Settings Overview](.Scenari
 - [artifactUrlCacheKeepHours](/.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
 - [preprocessorSymbols](/.Scenarios/SettingsOverview.md#preprocessorSymbols)
 - [removeInternalsVisibleTo](/.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
+- [overrideResourceExposurePolicy](/.Scenarios/SettingsOverview.md#overrideResourceExposurePolicy)
 
 ## Supported pipeline steps
 We strongly recommend to not change any of the standard pipeline or standard scripts. It's highly likely that customized scripts and/or pipelines will be broken in a future update.
