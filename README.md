@@ -43,6 +43,7 @@ You can use the following documentation of supported scripts to build your own p
 - [IncreaseVersion](./IncreaseVersion/README.md)
 - [RunPipeline](./RunPipeline/README.md)
 - [StoreAppLocally](./StoreAppLocally/README.md)
+- [PushBackToDevOps](./PushBackToDevOps/README.md)
 - [DeployToCloud](./DeployToCloud/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
 

@@ -19,6 +19,37 @@ function Invoke-GitAdd {
     OutputDebug -Message "Staging changes for $appFilePath"
     invoke-git add $appFilePath
 }
+function Invoke-GitCommit {
+    Param(
+        [string] $commitMessage
+    )
+
+    if ($commitMessage -eq '') {
+        $commitMessage = "BCDevOps Flows Update [skip azurepipelines]"
+    }
+    else {
+        $commitMessage = "$commitMessage [skip azurepipelines]"
+    }
+    OutputDebug -Message "Committing changes with message: $commitMessage"
+    invoke-git commit -m $commitMessage
+}
+function Invoke-GitPush {
+    Param(
+        [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
+    )
+
+    OutputDebug -Message "Pushing changes to $targetBranch"
+    invoke-git push origin $targetBranch
+}
+function Invoke-GitAddCommit {
+    Param(
+        [string] $appFilePath,
+        [string] $commitMessage
+    )
+
+    Invoke-GitAdd -appFilePath $appFilePath
+    Invoke-GitCommit -commitMessage $commitMessage
+}
 function Invoke-GitAddCommitPush {
     Param(
         [string] $appFilePath,
@@ -26,15 +57,6 @@ function Invoke-GitAddCommitPush {
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
-    Invoke-GitAdd -appFilePath $appFilePath
-    if ($commitMessage -eq '') {
-        $commitMessage = "BCDevOps Flows Update [skip azurepipelines]"
-    }
-    else {
-        $commitMessage = "$commitMessage [skip azurepipelines]"
-    }
-    OutputDebug -Message "Committing changes for $appFilePath with message: $commitMessage"
-    invoke-git commit -m $commitMessage
-    OutputDebug -Message "Pushing changes for $appFilePath to $targetBranch"
-    invoke-git push origin $targetBranch
+    Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage $commitMessage
+    Invoke-GitPush -targetBranch $targetBranch
 }

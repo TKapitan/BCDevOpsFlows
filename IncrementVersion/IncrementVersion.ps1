@@ -73,9 +73,9 @@ try {
     # Set version in app manifests (app.json file)
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
-    # Commit and push changes
+    # Commit changes
     Invoke-GitAdd -appFilePath $repositorySettingsPath
-    Invoke-GitAddCommitPush -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
+    Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }
 catch {
     Write-Host $_.Exception -ForegroundColor Red
