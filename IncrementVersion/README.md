@@ -1,6 +1,6 @@
 # Determine Artifact URL
 
-Increment app version in app.json, BCDevOps Flows setting and also in DevOps repository. Supports absolute and relative changes.
+Increment app version in app.json, BCDevOps Flows setting and also in DevOps repository. Supports absolute and relative changes. All changes are stagged and commited and must be pushed back to the original repository using [PushBackToRepo step](../PushBackToRepo/README.md)
 
 ## INPUT Parameters
 
