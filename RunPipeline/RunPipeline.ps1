@@ -86,8 +86,10 @@ try {
     Write-Host "Trusted NuGet feeds not supported, skipping"
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
 
-    # TODO test
-    $bcContainerHelperConfig.useSslForWinRmSession = $false
+    # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $bcContainerHelperConfig.useSslForWinRmSession = $false
+    }
 
     $installApps = $settings.installApps
     $installTestApps = $settings.installTestApps
