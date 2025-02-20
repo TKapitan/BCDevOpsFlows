@@ -82,7 +82,12 @@ function GetArtifactUrlFromCache {
     }
 
     try {
-        $updatedAt = [DateTime]::ParseExact($cachedItem.updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture)
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            $updatedAt = $cachedItem.updatedAt
+        }
+        else {
+            $updatedAt = [DateTime]::ParseExact($cachedItem.updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture)
+        }
         $expiryTime = $updatedAt.AddHours($settings.artifactUrlCacheKeepHours)
         
         if ([DateTime]::UtcNow -gt $expiryTime) {
@@ -96,4 +101,5 @@ function GetArtifactUrlFromCache {
         Write-Warning "Error processing cache entry for artifact $($artifact): $_"
         return
     }
+    Write-Error "STOP"
 }
