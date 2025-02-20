@@ -253,7 +253,7 @@ try {
         
         $resourceExposurePolicySpecified = [bool] ($appFileJson.PSObject.Properties.Name -eq 'resourceExposurePolicy')
         if (!$resourceExposurePolicySpecified) {
-            $resourceExposurePolicy = @()
+            $resourceExposurePolicy = [PSCustomObject]@{}
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline. No existing setting found in app.json"
         }
         else {
