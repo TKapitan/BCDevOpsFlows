@@ -253,11 +253,11 @@ try {
         
         $resourceExposurePolicySpecified = [bool] ($appFileJson.PSObject.Properties.Name -eq 'resourceExposurePolicy')
         if (!$resourceExposurePolicySpecified) {
-            $resourceExposurePolicy = @() | ConvertFrom-Json | ConvertTo-HashTable
+            $resourceExposurePolicy = @()
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline. No existing setting found in app.json"
         }
         else {
-            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy | ConvertFrom-Json | ConvertTo-HashTable
+            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy | ConvertTo-HashTable
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline and existing app.json setting"
         }
 
