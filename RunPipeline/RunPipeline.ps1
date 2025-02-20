@@ -257,7 +257,7 @@ try {
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline. No existing setting found in app.json"
         }
         else {
-            $resourceExposurePolicy = $appFileJson.resourceExposurePolicy
+            $resourceExposurePolicy = (($appFileJson.resourceExposurePolicy | ConvertTo-Json -Depth 99) | ConvertFrom-Json)
             OutputDebug -Message "Setting 'resourceExposurePolicy' using settings from pipeline and existing app.json setting"
         }
 
