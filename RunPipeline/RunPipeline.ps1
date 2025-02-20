@@ -86,6 +86,9 @@ try {
     Write-Host "Trusted NuGet feeds not supported, skipping"
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
 
+    # TODO test
+    $bcContainerHelperConfig.useSslForWinRmSession = $false
+
     $installApps = $settings.installApps
     $installTestApps = $settings.installTestApps
 
