@@ -98,8 +98,7 @@ function GetArtifactUrlFromCache {
         return $cachedItem.artifactUrl
     }
     catch {
-        Write-Warning "Error processing cache entry for artifact $($artifact): $_"
+        Write-Warning "Error processing cache entry for artifact $($artifact): $_. Skipping cache."
         return
     }
-    Write-Error "STOP"
 }
