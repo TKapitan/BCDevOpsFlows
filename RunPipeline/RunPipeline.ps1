@@ -245,7 +245,7 @@ try {
     }
 
     Write-Host "OLD"
-    Write-Host $appFileJson
+    Write-Host $appFileJson | ConvertTo-Json
 
     if ($settings.overrideResourceExposurePolicy) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
@@ -282,7 +282,7 @@ try {
     }
 
     Write-Host "NEW"
-    Write-Host $appFileJson
+    Write-Host $appFileJson | ConvertTo-Json
     Write-Error "STOP"
 
     "enableTaskScheduler",
