@@ -297,9 +297,8 @@ try {
             }
             OutputDebug -Message "Setting 'applyToDevExtension' from $($appFileJson.resourceExposurePolicy.applyToDevExtension) to $($settings.applyToDevExtension)"
         }
-
         
-        if (!$appFileJson.Contains('resourceExposurePolicy')) {
+        if (-not ($appFileJson.PSObject.Properties.Name -contains 'resourceExposurePolicy')) {
             $appFileJson.Add('resourceExposurePolicy', $resourceExposurePolicy)
         }
         else {
