@@ -244,6 +244,9 @@ try {
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
+    Write-Host "OLD"
+    Write-Host $appFileJson
+
     if ($settings.overrideResourceExposurePolicy) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
         $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
@@ -260,19 +263,27 @@ try {
 
         if ($settings.Contains('allowDebugging')) {
             $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
+            OutputDebug -Message "Setting 'allowDebugging' from $($appFileJson.resourceExposurePolicy.allowDebugging) to $($settings.allowDebugging)"
         }
         if ($settings.Contains('allowDownloadingSource')) {
             $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
+            OutputDebug -Message "Setting 'allowDownloadingSource' from $($appFileJson.resourceExposurePolicy.allowDownloadingSource) to $($settings.allowDownloadingSource)"
         }
         if ($settings.Contains('includeSourceInSymbolFile')) {
             $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
+            OutputDebug -Message "Setting 'includeSourceInSymbolFile' from $($appFileJson.resourceExposurePolicy.includeSourceInSymbolFile) to $($settings.includeSourceInSymbolFile)"
         }
         if ($settings.Contains('applyToDevExtension')) {
             $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
+            OutputDebug -Message "Setting 'applyToDevExtension' from $($appFileJson.resourceExposurePolicy.applyToDevExtension) to $($settings.applyToDevExtension)"
         }
         $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
+
+    Write-Host "NEW"
+    Write-Host $appFileJson
+    Write-Error "STOP"
 
     "enableTaskScheduler",
     "assignPremiumPlan",
