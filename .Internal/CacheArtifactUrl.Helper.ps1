@@ -18,14 +18,14 @@ function AddArtifactUrlToCache {
         return
     }
 
-    $artifactUrlCacheFile = "$($settings.writableFolderPath)\ArtifactUrlCache.json"
+    $artifactUrlCacheFile = Join-Path -Path $settings.writableFolderPath -ChildPath "ArtifactUrlCache.json"
     $artifactUrlCacheContent = @()
     if (Test-Path $artifactUrlCacheFile) {
         $artifactUrlCacheContent = Get-Content $artifactUrlCacheFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
-        if (!$artifactUrlCacheContent) { $artifactUrlCacheContent = @() }
+        if ($null -eq $artifactUrlCacheContent) { $artifactUrlCacheContent = @() }
     }
 
-    $currentDateTime = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+    $currentDateTime = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
     $existingItem = $artifactUrlCacheContent | Where-Object { $_.artifact -eq $artifact }
 
     if ($existingItem) {
@@ -35,15 +35,18 @@ function AddArtifactUrlToCache {
     }
     else {
         Write-Host "Caching artifact URL '$artifactUrl' for artifact $artifact, setting updatedAt to $currentDateTime"
-        $newItem = @{
+        $newItem = [ordered]@{
             artifact    = $artifact
             artifactUrl = $artifactUrl
             updatedAt   = $currentDateTime
         }
         $artifactUrlCacheContent = @($artifactUrlCacheContent) + $newItem
     }
-    $artifactUrlCacheContent | ConvertTo-Json | Set-Content $artifactUrlCacheFile
+    
+    $jsonOutput = $artifactUrlCacheContent | ConvertTo-Json -Depth 99
+    [System.IO.File]::WriteAllText($artifactUrlCacheFile, $jsonOutput)
 }
+
 function GetArtifactUrlFromCache {
     param(
         [Parameter(Mandatory = $true)]
@@ -60,7 +63,7 @@ function GetArtifactUrlFromCache {
         return
     }
 
-    $artifactUrlCacheFile = "$($settings.writableFolderPath)\ArtifactUrlCache.json"
+    $artifactUrlCacheFile = Join-Path -Path $settings.writableFolderPath -ChildPath "ArtifactUrlCache.json"
     if (!(Test-Path $artifactUrlCacheFile)) {
         OutputDebug -Message "Artifact URL cache file not found"
         return
@@ -78,13 +81,19 @@ function GetArtifactUrlFromCache {
         return
     }
 
-    $updatedAt = [DateTime]::ParseExact($cachedItem.updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture)
-    $expiryTime = $updatedAt.AddHours($settings.artifactUrlCacheKeepHours)
-    
-    if ((Get-Date).ToUniversalTime() -gt $expiryTime) {
-        Write-Host "Cached artifact URL for artifact $artifact has expired at $expiryTime (current time: $($(Get-Date).ToUniversalTime()))"
+    try {
+        $updatedAt = [DateTime]::ParseExact($cachedItem.updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture)
+        $expiryTime = $updatedAt.AddHours($settings.artifactUrlCacheKeepHours)
+        
+        if ([DateTime]::UtcNow -gt $expiryTime) {
+            Write-Host "Cached artifact URL for artifact $artifact has expired at $expiryTime (current time: $([DateTime]::UtcNow))"
+            return
+        }
+        Write-Host "Using cached artifact URL '$($cachedItem.artifactUrl)' for artifact $artifact"
+        return $cachedItem.artifactUrl
+    }
+    catch {
+        Write-Warning "Error processing cache entry for artifact $($artifact): $_"
         return
     }
-    Write-Host "Using cached artifact URL '$($cachedItem.artifactUrl)' for artifact $artifact"
-    return $cachedItem.artifactUrl
 }

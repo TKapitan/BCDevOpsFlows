@@ -37,11 +37,18 @@ function Get-AppJsonFile {
 
     ## Find app.json
     $appFile = '';
-    $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $encoding = 'utf8'
+        $PSDefaultParameterValues['*:Encoding'] = $encoding
+    }
+    else {
+        $encoding = 'UTF8'
+        $PSDefaultParameterValues['*:Encoding'] = $encoding
+    }
     foreach ($appFilePath in $sourceAppJsonFilePath) {
         if (Test-Path -Path $appFilePath -PathType Leaf) {
             OutputDebug -Message "Trying to load json file: $appFilePath"
-            $appFile = (Get-Content $appFilePath | ConvertFrom-Json);
+            $appFile = (Get-Content $appFilePath -Encoding $encoding | ConvertFrom-Json);
             break;
         }
     }
@@ -89,7 +96,7 @@ function Get-AppTargetFilePath {
         [version]$latestPreviewVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'preview'
         [version]$latestPublicVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
         $latestExistingVersion = $latestPublicVersion
-        if ($latestPreviewVersion -gt $latestPublicVersion) {
+        if ([version]::Parse($latestPreviewVersion) -gt [version]::Parse($latestPublicVersion)) {
             $skipAppsInPreview = $false
             $latestExistingVersion = $latestPreviewVersion
             $releaseTypeFolderParam = @{ "isPreview" = $true }
@@ -150,13 +157,13 @@ function Get-LatestVersion {
         if ($currDir.Name -like '*-BC*') {
             [string]$folderAppVersion = $currDir.Name -split '-BC' | Select-Object -First 1
             [string]$folderMinBcVersion = $currDir.Name -split '-BC' | Select-Object -Last 1
-            if ([version]$folderMinBcVersion -ge [version]$minBcVersion -and [version]$folderAppVersion -gt [version]$minVersion) {
+            if ([version]$folderMinBcVersion -ge [version]$minBcVersion -and [version]::Parse($folderAppVersion) -gt [version]::Parse($minVersion)) {
                 $minVersion = $folderAppVersion
             }
         }
         else {
             [string]$folderAppVersion = $currDir.Name
-            if ([version]$folderAppVersion -gt [version]$minVersion) {
+            if ([version]::Parse($folderAppVersion) -gt [version]::Parse($minVersion)) {
                 $minVersion = $folderAppVersion
             }
         }
@@ -249,7 +256,7 @@ function Get-DependencyObject {
     )
 
     $newDependency = [PSCustomObject]@{
-        id = ''
+        id      = ''
         appFile = ''
     }
     $newDependency.id = $dependencyAppJsonContent.id

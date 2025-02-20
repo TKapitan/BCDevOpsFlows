@@ -5,7 +5,7 @@
 function AnalyzeRepo {
     [CmdletBinding()]
     Param(
-        [hashTable] $settings,
+        [hashtable] $settings,
         [switch] $skipAppsInPreview,
         [version] $minBcVersion = [version]'0.0.0.0'
     )
@@ -31,7 +31,7 @@ function AnalyzeRepo {
         if (!$settings.Contains('enableAppSourceCop')) {
             $settings.Add('enableAppSourceCop', $true)
         }
-        if ($settings.enableAppSourceCop -and (-not ($settings.appSourceCopMandatoryAffixes))) {
+        if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
             Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
         if (!$settings.Contains('removeInternalsVisibleTo')) {
@@ -52,36 +52,44 @@ function AnalyzeRepo {
         Write-Host "Reading apps #$folderTypeNumber"
         
         if ($appFolder) {
-            $folders = [System.Collections.ArrayList]@($settings.appFolders)
+            $folders = @()
+            if ($settings.appFolders) {
+                $folders = @($settings.appFolders)
+            }
             $descr = "App folder"
         }
         elseif ($testFolder) {
-            $folders = [System.Collections.ArrayList]@($settings.testFolders)
+            $folders = @()
+            if ($settings.testFolders) {
+                $folders = @($settings.testFolders)
+            }
             $descr = "Test folder"
         }
         elseif ($bcptTestFolder) {
-            $folders = [System.Collections.ArrayList]@($settings.bcptTestFolders)
+            $folders = @()
+            if ($settings.bcptTestFolders) {
+                $folders = @($settings.bcptTestFolders)
+            }
             $descr = "Bcpt Test folder"
         }
         else {
             Write-Error "Internal error"
-        }
-        $folders | ForEach-Object {
-            $folderName = $_
-            $folder = "$ENV:PIPELINE_WORKSPACE/App/$folderName"
+        }     
+        foreach ($folderName in $folders) {
+            $folder = Join-Path $ENV:PIPELINE_WORKSPACE "App" $folderName
             Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
             $appJsonFile = Join-Path $folder "app.json"
             $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
             $enumerate = $true
 
-            # Check if there are any folders matching $folder
-            if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist" 
+            # More compatible folder existence check
+            if (!(Test-Path $folder -PathType Container)) {
+                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist"
             }
-            elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
+            elseif (!(Test-Path $appJsonFile -PathType Leaf)) {
                 OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
             }
-            elseif ($bcptTestFolder -and (-not (Test-Path $bcptSuiteFile -PathType Leaf))) {
+            elseif ($bcptTestFolder -and (!(Test-Path $bcptSuiteFile -PathType Leaf))) {
                 OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
                 $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
                 $enumerate = $false
@@ -91,20 +99,21 @@ function AnalyzeRepo {
                 if ($dependencies.Contains($folderName)) {
                     Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
                 }
-                $dependencies.Add($folderName, @())
+                $dependencies[$folderName] = @()
                 try {
                     $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
                     if ($appIdFolders.Contains($appJson.Id)) {
-                        Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders."$($appJson.Id)"))"
+                        Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders[$appJson.Id]))"
                     }
-                    $appIdFolders.Add($appJson.Id, $folderName)
-                    if ($appJson.PSObject.Properties.Name -eq 'Dependencies') {
+                    $appIdFolders[$appJson.Id] = $folderName
+
+                    if ($null -ne (Get-Member -InputObject $appJson -Name 'Dependencies')) {
                         $appJson.dependencies | ForEach-Object {
-                            if ($_.PSObject.Properties.Name -eq "AppId") {
-                                $id = $_.AppId
+                            $id = if ($null -ne (Get-Member -InputObject $_ -Name 'AppId')) { 
+                                $_.AppId 
                             }
-                            else {
-                                $id = $_.Id
+                            else { 
+                                $_.Id 
                             }
                             if ($id -eq $applicationAppId) {
                                 if ([Version]$_.Version -gt [Version]$settings.applicationDependency) {
@@ -116,7 +125,7 @@ function AnalyzeRepo {
                             }
                         }
                     }
-                    if ($appJson.PSObject.Properties.Name -eq 'Application') {
+                    if ($null -ne (Get-Member -InputObject $appJson -Name 'Application')) {
                         $appDep = $appJson.application
                         if ([Version]$appDep -gt [Version]$settings.applicationDependency) {
                             $settings.applicationDependency = $appDep
@@ -143,10 +152,11 @@ function AnalyzeRepo {
                     }
                 }
                 catch {
-                    Write-Host $_.Exception -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor Red
                     Write-Host $_.ScriptStackTrace
-                    Write-Host $_.PSMessageDetails
-
+                    if ($null -ne $_.ErrorDetails) {
+                        Write-Host $_.ErrorDetails.Message
+                    }
                     Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
                 }
             }
@@ -176,7 +186,7 @@ function AnalyzeRepo {
         $version = $artifactUrl.Split('/')[4]
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
         $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
-        if (-not ($folders)) {
+        if (!($folders)) {
             Write-Error "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
         }
         $settings.artifact = $artifactUrl
@@ -187,15 +197,15 @@ function AnalyzeRepo {
     }
     Write-Host "::endgroup::"
 
-    if (!$settings.doNotRunBcptTests -and -not $settings.bcptTestFolders) {
+    if (!$settings.doNotRunBcptTests -and !$settings.bcptTestFolders) {
         Write-Host "No performance test apps found in bcptTestFolders in $repoSettingsFile"
         $settings.doNotRunBcptTests = $true
     }
-    if (!$settings.doNotRunTests -and -not $settings.testFolders) {
+    if (!$settings.doNotRunTests -and !$settings.testFolders) {
         OutputWarning -Message "No test apps found in testFolders in $repoSettingsFile" 
         $settings.doNotRunTests = $true
     }
-    if (-not $settings.appFolders) {
+    if (!$settings.appFolders) {
         OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" 
     }
 
