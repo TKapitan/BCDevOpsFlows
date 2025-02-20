@@ -262,22 +262,49 @@ try {
         }
 
         if ($settings.Contains('allowDebugging')) {
-            $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
+            if (!$resourceExposurePolicy.Contains('allowDebugging')) {
+                $resourceExposurePolicy.Add('allowDebugging', $settings.allowDebugging)
+            }
+            else {
+                $resourceExposurePolicy.allowDebugging = $settings.allowDebugging
+            }
             OutputDebug -Message "Setting 'allowDebugging' from $($appFileJson.resourceExposurePolicy.allowDebugging) to $($settings.allowDebugging)"
         }
         if ($settings.Contains('allowDownloadingSource')) {
-            $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
+            if (!$resourceExposurePolicy.Contains('allowDownloadingSource')) {
+                $resourceExposurePolicy.Add('allowDownloadingSource', $settings.allowDownloadingSource)
+            }
+            else {
+                $resourceExposurePolicy.allowDownloadingSource = $settings.allowDownloadingSource
+            }
             OutputDebug -Message "Setting 'allowDownloadingSource' from $($appFileJson.resourceExposurePolicy.allowDownloadingSource) to $($settings.allowDownloadingSource)"
         }
         if ($settings.Contains('includeSourceInSymbolFile')) {
-            $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
+            if (!$resourceExposurePolicy.Contains('includeSourceInSymbolFile')) {
+                $resourceExposurePolicy.Add('includeSourceInSymbolFile', $settings.includeSourceInSymbolFile)
+            }
+            else {
+                $resourceExposurePolicy.includeSourceInSymbolFile = $settings.includeSourceInSymbolFile
+            }
             OutputDebug -Message "Setting 'includeSourceInSymbolFile' from $($appFileJson.resourceExposurePolicy.includeSourceInSymbolFile) to $($settings.includeSourceInSymbolFile)"
         }
         if ($settings.Contains('applyToDevExtension')) {
-            $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
+            if (!$resourceExposurePolicy.Contains('applyToDevExtension')) {
+                $resourceExposurePolicy.Add('applyToDevExtension', $settings.applyToDevExtension)
+            }
+            else {
+                $resourceExposurePolicy.applyToDevExtension = $settings.applyToDevExtension
+            }
             OutputDebug -Message "Setting 'applyToDevExtension' from $($appFileJson.resourceExposurePolicy.applyToDevExtension) to $($settings.applyToDevExtension)"
         }
-        $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
+
+        
+        if (!$appFileJson.Contains('resourceExposurePolicy')) {
+            $appFileJson.Add('resourceExposurePolicy', $resourceExposurePolicy)
+        }
+        else {
+            $appFileJson.resourceExposurePolicy = $resourceExposurePolicy
+        }
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
