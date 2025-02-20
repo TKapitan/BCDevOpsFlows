@@ -76,7 +76,7 @@ function AnalyzeRepo {
             Write-Error "Internal error"
         }     
         foreach ($folderName in $folders) {
-            $folder = Join-Path $ENV:PIPELINE_WORKSPACE "App" $folderName
+            $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $folderName
             Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
             $appJsonFile = Join-Path $folder "app.json"
             $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
