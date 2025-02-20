@@ -147,15 +147,15 @@ function Get-LatestVersion {
     OutputDebug -Message "Scanning $basePath\apps\$releaseType\$extensionID\ folder"
     $sourceDirectoryContent = Get-ChildItem ("$basePath\apps\$releaseType\$extensionID\") -Directory
     foreach ($currDir in $sourceDirectoryContent) {
-        if ($currDir -contains '-BC') {
-            [string]$folderAppVersion = $currDir -split '-BC' | Select-Object -First 1
-            [string]$folderMinBcVersion = $currDir -split '-BC' | Select-Object -Last 1
+        if ($currDir.Name -like '*-BC*') {
+            [string]$folderAppVersion = $currDir.Name -split '-BC' | Select-Object -First 1
+            [string]$folderMinBcVersion = $currDir.Name -split '-BC' | Select-Object -Last 1
             if ([version]$folderMinBcVersion -ge [version]$minBcVersion -and [version]$folderAppVersion -gt [version]$minVersion) {
                 $minVersion = $folderAppVersion
             }
         }
         else {
-            [string]$folderAppVersion = $currDir
+            [string]$folderAppVersion = $currDir.Name
             if ([version]$folderAppVersion -gt [version]$minVersion) {
                 $minVersion = $folderAppVersion
             }
