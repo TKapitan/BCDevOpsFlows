@@ -244,9 +244,6 @@ try {
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
 
-    Write-Host "OLD"
-    Write-Host ($appFileJson | ConvertTo-Json -Depth 99)
-
     if ($settings.overrideResourceExposurePolicy) {
         $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
         $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
@@ -281,10 +278,6 @@ try {
         $appFileJson | Add-Member -MemberType NoteProperty -Name 'resourceExposurePolicy' -Value $resourceExposurePolicy -Force
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
-
-    Write-Host "NEW"
-    Write-Host ($appFileJson | ConvertTo-Json -Depth 99)
-    Write-Error "STOP"
 
     "enableTaskScheduler",
     "assignPremiumPlan",
