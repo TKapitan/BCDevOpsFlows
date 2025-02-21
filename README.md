@@ -39,6 +39,7 @@ You can use the following documentation of supported scripts to build your own p
 
 - [WorkflowInitialize](./WorkflowInitialize/README.md)
 - [ReadSettings](./ReadSettings/README.md)
+- [VerifyAuthContext](./VerifyAuthContext/README.md)
 - [DetermineArtifactUrl](./DetermineArtifactUrl/README.md)
 - [IncreaseVersion](./IncreaseVersion/README.md)
 - [RunPipeline](./RunPipeline/README.md)
