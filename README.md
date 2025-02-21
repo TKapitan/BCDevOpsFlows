@@ -30,6 +30,7 @@ The list of supported configuration is available in [Settings Overview](.Scenari
 - [artifactUrlCacheKeepHours](/.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
 - [preprocessorSymbols](/.Scenarios/SettingsOverview.md#preprocessorSymbols)
 - [removeInternalsVisibleTo](/.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
+- [overrideResourceExposurePolicy](/.Scenarios/SettingsOverview.md#overrideResourceExposurePolicy)
 
 ## Supported pipeline steps
 We strongly recommend to not change any of the standard pipeline or standard scripts. It's highly likely that customized scripts and/or pipelines will be broken in a future update.
@@ -38,10 +39,12 @@ You can use the following documentation of supported scripts to build your own p
 
 - [WorkflowInitialize](./WorkflowInitialize/README.md)
 - [ReadSettings](./ReadSettings/README.md)
+- [VerifyAuthContext](./VerifyAuthContext/README.md)
 - [DetermineArtifactUrl](./DetermineArtifactUrl/README.md)
 - [IncreaseVersion](./IncreaseVersion/README.md)
 - [RunPipeline](./RunPipeline/README.md)
 - [StoreAppLocally](./StoreAppLocally/README.md)
+- [PushBackToRepo](./PushBackToRepo/README.md)
 - [DeployToCloud](./DeployToCloud/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
 

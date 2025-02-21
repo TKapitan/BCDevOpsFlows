@@ -17,7 +17,14 @@ function DownloadNugetPackage() {
         Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
 
         # Unzip the package
-        Expand-Archive -Path "$nugetPackagePath/$packageName.$packageVersion.zip" -DestinationPath "$nugetPackagePath"
+        try {
+            Expand-Archive -Path "$nugetPackagePath/$packageName.$packageVersion.zip" -DestinationPath "$nugetPackagePath" -Force
+        }
+        catch {
+            # Fallback for any compatibility issues
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$nugetPackagePath/$packageName.$packageVersion.zip", "$nugetPackagePath")
+        }
         # Remove the zip file
         Remove-Item -Path "$nugetPackagePath/$packageName.$packageVersion.zip"
     }
