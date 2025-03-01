@@ -30,6 +30,7 @@ if ($matchingEnvironments.Count -eq 0) {
 }
 Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 
+$environmentUrls = @{} | ConvertTo-Json
 foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"
 
@@ -69,10 +70,8 @@ foreach ($environmentName in $matchingEnvironments) {
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
     
-        # TODO What if multiple environments specified
-        $ENV:AL_ENVIRONMENTURL = $environmentUrl
-        Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
-        OutputDebug -Message "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
+        $environmentUrls | Add-Member -NotePropertyName $environmentName -NotePropertyValue $environmentUrl -Force
+        OutputDebug -Message "Adding $environmentName with URL ($environmentUrl) to environmentUrls"
     
         Write-Host "EnvironmentUrl: $environmentUrl"
         $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
@@ -187,3 +186,7 @@ foreach ($environmentName in $matchingEnvironments) {
         Write-Error "Deployment to environment ($environmentName) failed. See previous lines for details."
     }
 }
+
+$ENV:AL_ENVIRONMENTURLS = $environmentUrls | ConvertTo-Json -Compress
+Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURLS;]$($ENV:AL_ENVIRONMENTURLS)"
+OutputDebug -Message "Set environment variable AL_ENVIRONMENTURLS to ($ENV:AL_ENVIRONMENTURLS)"
