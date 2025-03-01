@@ -13,6 +13,13 @@ Param(
 
 DownloadAndImportBcContainerHelper
 
+$authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+$appToDeploy = $ENV:AL_APPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
+if (!$appToDeploy) {
+    throw "No app to deploy settings found."
+}
+
 $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
 $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $deployToEnvironmentsNameFilter } | Select-Object -ExpandProperty Key)
 Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ')"
@@ -26,21 +33,14 @@ foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"
 
     try {
-        $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
         $deploymentSettings = $deploymentEnvironments."$environmentName"
         if (!$deploymentSettings) {
             throw "No deployment settings found for environment '$environmentName'."
-        }
-        $appToDeploy = $ENV:AL_APPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
-        if (!$appToDeploy) {
-            throw "No app to deploy settings found."
         }
         $buildMode = $deploymentSettings.buildMode
         if ($null -eq $buildMode -or $buildMode -eq 'default') {
             $buildMode = ''
         }
-        $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-        $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
         $authContext = $null
         $authContextVariableName = $deploymentSettings.authContextVariableName
@@ -68,6 +68,7 @@ foreach ($environmentName in $matchingEnvironments) {
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
     
+        # TODO What if multiple environments specified
         $ENV:AL_ENVIRONMENTURL = $environmentUrl
         Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURL;]$environmentUrl"
         OutputDebug -Message "Set environment variable AL_ENVIRONMENTURL to ($ENV:AL_ENVIRONMENTURL)"
