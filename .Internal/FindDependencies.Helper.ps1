@@ -21,7 +21,7 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            [HashSet[PSCustomObject]] $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
+            [System.Collections.Generic.HashSet[PSCustomObject]] $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
             $dependencies = $dependenciesAsHashSet.ToArray()
             Write-Host "App dependencies: $dependencies"
             return $dependencies
@@ -202,7 +202,7 @@ function Get-AppTargetFilePathWithoutReleaseType {
 function Get-AllBCDependencies {
     [CmdletBinding()]
     Param (
-        [HashSet[PSCustomObject]] $dependencies = $null,
+        [System.Collections.Generic.HashSet[PSCustomObject]] $dependencies = $null,
         [string] $excludeExtensionID = "",
         [switch] $includeAppsInPreview,
         [version] $minBcVersion,
@@ -210,7 +210,7 @@ function Get-AllBCDependencies {
     )
 
     if ($null -eq $dependencies) {
-        $dependencies = [HashSet[PSCustomObject]]::new()
+        $dependencies = [System.Collections.Generic.HashSet[PSCustomObject]]::new()
     }
     
     $appTargetFilePathParam = @{}
@@ -231,7 +231,7 @@ function Get-AllBCDependencies {
                 OutputDebug -Message "Adding dependency: $($dependencyObject.id) from $($dependencyObject.appFile)"
 
                 # Process inner dependencies first
-                [HashSet[PSCustomObject]] $dependencies = Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
+                [System.Collections.Generic.HashSet[PSCustomObject]] $dependencies = Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
             }
             else {
                 OutputDebug -Message "Dependency already exists: $($dependencyObject.id) from $($dependencyObject.appFile)"
