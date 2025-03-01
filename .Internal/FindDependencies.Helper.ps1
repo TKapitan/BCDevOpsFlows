@@ -21,7 +21,7 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
+            [System.Collections.Generic.HashSet[PSCustomObject]] $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
             $dependencies = $dependenciesAsHashSet.ToArray()
             Write-Host "App dependencies: $dependencies"
             return $dependencies
