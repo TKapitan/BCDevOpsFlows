@@ -1,5 +1,5 @@
 Param(
-    [Parameter(HelpMessage = "Name of environment to deploy to", Mandatory = $true)]
+    [Parameter(HelpMessage = "Name of environment to deploy to OR regex filter of environment names to deploy to", Mandatory = $true)]
     [string] $deployToEnvironmentsNameFilter,
     [Parameter(HelpMessage = "Type of deployment (CD or Publish)", Mandatory = $false)]
     [ValidateSet('CD', 'Publish')]

@@ -6,7 +6,7 @@ Use existing artifact and deploy the app to the cloud environment
 
 | Name                  | Required  | Description                                                                                       | Default value         |
 | :--                   | :-:       | :--                                                                                               | :--                   |
-| environmentName       | Yes       | Name of environment to deploy to                                                                  |                       |
+| deployToEnvironmentsNameFilter       | Yes       | Name of environment to deploy to. You can also use RegEx to specify filter for environment names to deploy to.    |                       |
 | deploymentType        | No        | Type of delivery (CD or Release)                                                                  | CD                    |
 
 ## ENV INPUT variables

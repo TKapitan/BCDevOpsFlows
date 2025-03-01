@@ -1,5 +1,5 @@
 Param(
-    [Parameter(HelpMessage = "Name of environment to deploy to", Mandatory = $true)]
+    [Parameter(HelpMessage = "Name of environment to verify authcontext OR regex filter of environment names to verify authcontext", Mandatory = $true)]
     [string] $environmentsNameFilter
 )
 
