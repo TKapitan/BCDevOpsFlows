@@ -235,8 +235,8 @@ function Get-AllBCDependencies {
             $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json')
             
             $dependencyObject = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
-            Write-Host "Checking if $($dependencies | ConvertTo-Json) constains $dependencyObject"
-            if ($dependencies.Add($dependencyObject)) {
+            if (-not ($dependencies | Where-Object { $_.appFile -eq $dependencyObject.appFile })) {
+                $dependencies.Add($dependencyObject)
                 OutputDebug -Message "Adding dependency: $($dependencyObject.id) from $($dependencyObject.appFile)"
 
                 # Process inner dependencies first
