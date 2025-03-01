@@ -20,6 +20,8 @@ if ($matchingEnvironments.Count -eq 0) {
     throw "No environments found matching filter '$deployToEnvironmentsNameFilter'"
 }
 
+Write-Error 'Debug ERROR - STOP'
+
 foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"
 
