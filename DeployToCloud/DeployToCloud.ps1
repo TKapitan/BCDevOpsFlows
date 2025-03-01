@@ -15,6 +15,9 @@ DownloadAndImportBcContainerHelper
 
 $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+if (!$ENV:AL_APPDETAILS) {
+    throw "No app to deploy settings found."
+}
 $appToDeploy = $ENV:AL_APPDETAILS | ConvertFrom-Json | ConvertTo-HashTable
 if (!$appToDeploy) {
     throw "No app to deploy settings found."
