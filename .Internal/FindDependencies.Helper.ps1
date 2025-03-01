@@ -21,9 +21,9 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            $dependencies = @(Get-AllBCDependencies -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam)
+            $dependenciesAsHashSet = Get-AllBCDependencies -appFile $appFileContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependenciesParam
+            $dependencies = $dependenciesAsHashSet.ToArray()
             Write-Host "App dependencies: $dependencies"
-
             return $dependencies
         }
     }
@@ -202,51 +202,35 @@ function Get-AppTargetFilePathWithoutReleaseType {
 function Get-AllBCDependencies {
     [CmdletBinding()]
     Param (
+        [System.Collections.Generic.HashSet[PSCustomObject]] $dependencies = $null,
         [string] $excludeExtensionID = "",
         [switch] $includeAppsInPreview,
         [version] $minBcVersion,
         $appFile
     )
 
-    $listOfDependencies = @()
+    if ($null -eq $dependencies) {
+        $dependencies = [System.Collections.Generic.HashSet[PSCustomObject]]::new()
+    }
+    
+    $appTargetFilePathParam = @{}
+    $allBCDependencies = @{}
+    if ($includeAppsInPreview) {
+        $appTargetFilePathParam = @{ "includeAppsInPreview" = $true }
+        $allBCDependencies = @{ "includeAppsInPreview" = $true }
+    }
+
     foreach ($dependency in $appFile.dependencies) {
-        if ($dependency.publisher -ne 'Microsoft') {
-            OutputDebug -Message "Searching for dependencies for app $($dependency.name) ($($dependency.id))"
-            if ($excludeExtensionID -ne '' -and $excludeExtensionID -ne $null) {
-                OutputDebug -Message "Verifying the dependency is not to be excluded ($excludeExtensionID)"
-            }
-            if ($dependency.id -eq $excludeExtensionID) {
-                Write-Host "Skipping dependency $($dependency.name) ($($dependency.id))"
-            }
-            else {
-                $appTargetFilePathParam = @{}
-                $allBCDependencies = @{}
-                if ($includeAppsInPreview -eq $true) {
-                    $appTargetFilePathParam = @{ "includeAppsInPreview" = $true }
-                    $allBCDependencies = @{ "includeAppsInPreview" = $true }
-                }
-
-                OutputDebug -Message "Verifying id: $($dependency.id) , name: $($dependency.name) , version: $($dependency.version)"
-                $appsLocation = Get-AppTargetFilePath -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
-                $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json');
-                $innerDependencies = Get-AllBCDependencies -appFile $dependencyAppJsonContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
-                
-                Write-Host "No. of inner dependencies $($innerDependencies.Count)"
-                # Add dependencies from the apps (found recursively)
-                if ($innerDependencies -ne @() -and $innerDependencies.Count -gt 0) {
-                    $listOfDependencies += $innerDependencies
-                    OutputDebug -Message "Adding previously found dependencies $innerDependencies"
-                }
-
-                # Add the current app
-                $currentFileInfo = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
-                if ($listOfDependencies.id -notcontains $currentFileInfo.id) {
-                    $listOfDependencies += $currentFileInfo
-                }
-            }
+        $dependencyObject = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
+        if ($dependency.publisher -ne 'Microsoft' -and $dependency.id -ne $excludeExtensionID -and $dependencies.Add($dependencyObject)) {
+            OutputDebug -Message "Processing dependency: $($dependency.name) ($($dependency.id))"
+            $appsLocation = Get-AppTargetFilePath -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
+            $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json')
+            
+            # Process inner dependencies first
+            Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
         }
     }
-    return $listOfDependencies;
 }
 
 function Get-DependencyObject {
