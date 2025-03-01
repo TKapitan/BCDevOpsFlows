@@ -188,5 +188,5 @@ foreach ($environmentName in $matchingEnvironments) {
 }
 
 $ENV:AL_ENVIRONMENTURLS = $environmentUrls | ConvertTo-Json -Compress
-Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURLS;]$($ENV:AL_ENVIRONMENTURLS)"
+Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURLS;]$($environmentUrls | ConvertTo-Json -Compress)"
 OutputDebug -Message "Set environment variable AL_ENVIRONMENTURLS to ($ENV:AL_ENVIRONMENTURLS)"
