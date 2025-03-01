@@ -8,12 +8,10 @@ Param(
 $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
 $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
 $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 if ($matchingEnvironments.Count -eq 0) {
     throw "No environments found matching filter '$environmentsNameFilter'"
 }
-
-Write-Error 'STOP ERROR'
+Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 
 foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"

@@ -25,10 +25,10 @@ if (!$appToDeploy) {
 
 $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
 $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $deployToEnvironmentsNameFilter } | Select-Object -ExpandProperty Key)
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ')"
 if ($matchingEnvironments.Count -eq 0) {
-    throw "No environments found matching filter '$deployToEnvironmentsNameFilter'"
+    throw "No environments found matching filter '$environmentsNameFilter'"
 }
+Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 
 foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"
