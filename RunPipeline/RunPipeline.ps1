@@ -320,8 +320,6 @@ try {
         $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
-    Write-Error 'STOP'
-
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `
