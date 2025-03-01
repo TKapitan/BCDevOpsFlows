@@ -232,7 +232,7 @@ function Get-AllBCDependencies {
                 $innerDependencies = Get-AllBCDependencies -appFile $dependencyAppJsonContent -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion @allBCDependencies
                 
                 # Add dependencies from the apps (found recursively)
-                if ($innerDependencies -ne @() -and $listOfDependencies -notcontains $innerDependencies) {
+                if ($innerDependencies -ne @() -and $innerDependencies.Count -gt 0) {
                     $listOfDependencies += $innerDependencies
                     OutputDebug -Message "Adding previously found dependencies $innerDependencies"
                 }
