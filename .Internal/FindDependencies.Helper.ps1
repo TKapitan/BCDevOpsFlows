@@ -6,7 +6,7 @@ function Get-AppDependencies {
         [string] $excludeExtensionID = $null,
         [Parameter(Mandatory = $true)]
         [version] $minBcVersion,
-        [switch] $includeAppsInPreview
+        [switch] $skipAppsInPreview
     )
     Process {
         Write-Host "Identifying App dependencies..."
@@ -21,8 +21,8 @@ function Get-AppDependencies {
             
             # Get all dependencies for specific extension
             $allBCDependenciesParam = @{}
-            if ($includeAppsInPreview -eq $true) {
-                $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
+            if ($skipAppsInPreview -eq $true) {
+                $allBCDependenciesParam = @{ "skipAppsInPreview" = $true }
             }
             $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
 
@@ -91,7 +91,7 @@ function Get-AppTargetFilePath {
     Param (
         [string] $extensionID,
         [string] $extensionVersion,
-        [switch] $includeAppsInPreview,
+        [switch] $skipAppsInPreview,
         [version] $minBcVersion,
         [string] $findExisting = $true
     )
@@ -212,7 +212,7 @@ function Get-AllBCDependencies {
     Param (
         [System.Collections.Generic.HashSet[PSCustomObject]] $dependencies = $null,
         [string] $excludeExtensionID = "",
-        [switch] $includeAppsInPreview,
+        [switch] $skipAppsInPreview,
         [version] $minBcVersion,
         $appFile
     )
@@ -223,9 +223,9 @@ function Get-AllBCDependencies {
     
     $appTargetFilePathParam = @{}
     $allBCDependencies = @{}
-    if ($includeAppsInPreview) {
-        $appTargetFilePathParam = @{ "includeAppsInPreview" = $true }
-        $allBCDependencies = @{ "includeAppsInPreview" = $true }
+    if ($skipAppsInPreview) {
+        $appTargetFilePathParam = @{ "skipAppsInPreview" = $true }
+        $allBCDependencies = @{ "skipAppsInPreview" = $true }
     }
 
     foreach ($dependency in $appFile.dependencies) {

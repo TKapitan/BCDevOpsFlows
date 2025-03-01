@@ -131,20 +131,27 @@ function AnalyzeRepo {
                             $settings.applicationDependency = $appDep
                         }
                     }
+
+
+                    $allBCDependenciesParam = @{}
+                    if ($skipAppsInPreview -eq $true) {
+                        $allBCDependenciesParam = @{ "skipAppsInPreview" = $true }
+                    }
+
                     if ($appFolder) {
                         $mainAppId = $appJson.id
                         if ($appJson.PSObject.Properties.Name -eq 'Version') {
                             $settings.appJsonVersion = $appJson.version
                         }
 
-                        $foundAppDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
+                        $foundAppDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion @allBCDependenciesParam)
                         if ($foundAppDependencies) {
                             $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
                     }
                     elseif ($testFolder) {
-                        $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion -includeAppsInPreview !$skipAppsInPreview)
+                        $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion @allBCDependenciesParam)
                         if ($foundTestDependencies) {
                             $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
                         }
