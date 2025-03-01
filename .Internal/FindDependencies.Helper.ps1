@@ -21,7 +21,7 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            Get-AllBCDependencies -dependencies $dependenciesAsHashSet -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
+            $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
             $dependencies = $dependenciesAsHashSet.ToArray()
             Write-Host "App dependencies: $dependencies"
             return $dependencies
@@ -228,9 +228,10 @@ function Get-AllBCDependencies {
             $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json')
             
             # Process inner dependencies first
-            Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
+            $dependencies = Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
         }
     }
+    return $dependencies
 }
 
 function Get-DependencyObject {
