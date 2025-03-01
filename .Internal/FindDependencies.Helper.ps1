@@ -21,7 +21,7 @@ function Get-AppDependencies {
             if ($includeAppsInPreview -eq $true) {
                 $allBCDependenciesParam = @{ "includeAppsInPreview" = $true }
             }
-            [System.Collections.Generic.HashSet[PSCustomObject]] $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
+            $dependenciesAsHashSet = Get-AllBCDependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $appFileContent  @allBCDependenciesParam
             $dependencies = $dependenciesAsHashSet.ToArray()
             Write-Host "App dependencies: $dependencies"
             return $dependencies
@@ -221,14 +221,21 @@ function Get-AllBCDependencies {
     }
 
     foreach ($dependency in $appFile.dependencies) {
-        $dependencyObject = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
-        if ($dependency.publisher -ne 'Microsoft' -and $dependency.id -ne $excludeExtensionID -and $dependencies.Add($dependencyObject)) {
+        if ($dependency.publisher -ne 'Microsoft' -and $dependency.id -ne $excludeExtensionID) {
             OutputDebug -Message "Processing dependency: $($dependency.name) ($($dependency.id))"
             $appsLocation = Get-AppTargetFilePath -extensionID $dependency.id -extensionVersion $dependency.version -minBcVersion $minBcVersion @appTargetFilePathParam
             $dependencyAppJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appsLocation + 'app.json')
             
-            # Process inner dependencies first
-            $dependencies = Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
+            $dependencyObject = Get-DependencyObject -dependencyFolder $appsLocation -dependencyAppJsonContent $dependencyAppJsonContent
+            if ($dependencies.Add($dependencyObject)) {
+                OutputDebug -Message "Adding dependency: $($dependencyObject.id) from $($dependencyObject.appFile)"
+
+                # Process inner dependencies first
+                $dependencies = Get-AllBCDependencies -dependencies $dependencies -excludeExtensionID $excludeExtensionID -minBcVersion $minBcVersion -appFile $dependencyAppJsonContent @allBCDependencies 
+            }
+            else {
+                OutputDebug -Message "Dependency already exists: $($dependencyObject.id) from $($dependencyObject.appFile)"
+            }
         }
     }
     return $dependencies
@@ -247,6 +254,6 @@ function Get-DependencyObject {
     }
     $newDependency.id = $dependencyAppJsonContent.id
     $newDependency.appFile = $dependencyFolder + (Get-AppFileName -publisher $dependencyAppJsonContent.publisher -name $dependencyAppJsonContent.name -version $dependencyAppJsonContent.version)
-    OutputDebug -Message "Adding dependency: $($newDependency.id), $($newDependency.name) from $($newDependency.appFile)"
+    OutputDebug -Message "Creating app object: $($newDependency.id), $($newDependency.name) from $($newDependency.appFile)"
     return $newDependency
 }
