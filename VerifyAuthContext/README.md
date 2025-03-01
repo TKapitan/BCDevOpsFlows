@@ -6,7 +6,7 @@ Verify configuration of auth context and deploy to cloud settings
 
 | Name                  | Required  | Description                                                                                       | Default value         |
 | :--                   | :-:       | :--                                                                                               | :--                   |
-| environmentName       | Yes       | Name of environment to deploy to                                                                  |                       |
+| environmentsNameFilter       | Yes       | Name of environment where to verify authcontext. You can also use RegEx to specify filter for environment names where to verify authcontext    |                       |
 
 ## ENV INPUT variables
 
