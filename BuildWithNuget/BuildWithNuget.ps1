@@ -1,25 +1,26 @@
-if (!$ENV:AL_NUGETINITIALIZED) {
-    Write-Error "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
-}
+Param()
 
-$baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-$baseAppFolder = "$baseRepoFolder\App"
-$packageCachePath = "$baseRepoFolder\.alpackages"
-$appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+. (Join-Path -Path $PSScriptRoot -ChildPath "BuildWithNuget.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
 
-$AppFileName = (("{0}_{1}_{2}.app" -f $appFileJson.publisher, $appFileJson.name, $appFileJson.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
-$ParametersList = @()
-$ParametersList += @(("/project:`"$baseAppFolder`" "))
-$ParametersList += @(("/packagecachepath:$packageCachePath"))   
-$ParametersList += @(("/out:`"{0}`"" -f "$(Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output")\$AppFileName"))
-$ParametersList += @(("/loglevel:Warning"))
- 
-Write-Host "Using parameters:"
-foreach ($Parameter in $ParametersList) {
-    Write-Host "  $($Parameter)"
+try {
+    Assert-Prerequisites
+    
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+    Update-AppJson -settings $settings
+
+    $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
+    $baseAppFolder = "$baseRepoFolder\App"
+    $packageCachePath = "$baseRepoFolder\.alpackages"
+    $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+
+    $buildParameters = Get-BuildParameters -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $packageCachePath -appFileJson $appFileJson
+    Invoke-AlCompiler -Parameters $buildParameters
 }
-       
-Push-Location
-Set-Location $ENV:AL_BCDEVTOOLSFOLDER
-.\alc.exe $ParametersList
-Pop-Location
+catch {
+    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace
+    Write-Host $_.PSMessageDetails
+
+    Write-Error "NuGet build failed. See previous lines for details."
+}
