@@ -1,5 +1,6 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "WriteSettings.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "FindDependencies.Helper.ps1" -Resolve)
 
 function Update-AppJson {
     Param(
