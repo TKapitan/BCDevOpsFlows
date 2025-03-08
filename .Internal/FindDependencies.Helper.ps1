@@ -136,8 +136,14 @@ function Get-AppTargetFilePath {
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
-    OutputDebug -Message "Using version $latestExistingVersion for extension $extensionID";
-    return "$basePath\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
+
+    OutputDebug -Message "Looking for version $latestExistingVersion for extension $extensionID for all BC versions";
+    $versionFolder = Get-ChildItem ("$basePath\apps\$releaseTypeFolder\$extensionID\") -Directory | Where-Object { $_.Name.StartsWith($latestExistingVersion) } | Select-Object -First 1
+    if (-not $versionFolder) {
+        Write-Error "Cannot find version folder starting with $latestExistingVersion for $extensionID in $basePath\apps\$releaseTypeFolder\$extensionID\"
+    }
+    OutputDebug -Message "Using version $($versionFolder.Name) for extension $extensionID";
+    return "$basePath\apps\$releaseTypeFolder\$extensionID\$($versionFolder.Name)\"
 }
 function Get-ReleaseTypeFolderName {
     [CmdletBinding()]
