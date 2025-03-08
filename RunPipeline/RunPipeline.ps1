@@ -119,6 +119,9 @@ try {
         }
     }
 
+    Write-Host "Previous version $($settings.previousRelease)"
+    Write-Error "DEBUG STOP"
+
     $additionalCountries = $settings.additionalCountries
 
     $imageName = $settings.cacheImageName
