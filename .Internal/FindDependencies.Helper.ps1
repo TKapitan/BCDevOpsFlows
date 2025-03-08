@@ -151,7 +151,7 @@ function Get-ReleaseTypeFolderName {
         [switch] $isPreview
     )
 
-    $releaseTypeFolder = 'stable'
+    $releaseTypeFolder = 'public'
     if ($isPreview -eq $true) {
         $releaseTypeFolder = 'preview'
     }
