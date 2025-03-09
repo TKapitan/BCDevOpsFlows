@@ -194,6 +194,35 @@ function AnalyzeRepo {
     #     }
     # }
 
+    Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
+    if ($settings.appDependenciesNuGet) {
+        $settings.appDependenciesNuGet | ForEach-Object {
+            $packageName = $_
+            $appFile = Get-BcNugetPackage -packageName $packageName
+            if ($appFile) {
+                if (!$settings.appDependencies) {
+                    $settings.appDependencies = @()
+                }
+                $settings.appDependencies += $appFile
+                Write-Host "Adding app dependency $packageName"
+            }
+        }
+    }
+
+    if ($settings.testDependenciesNuGet) {
+        $settings.testDependenciesNuGet | ForEach-Object {
+            $packageName = $_
+            $appFile = Get-BcNugetPackage -packageName $packageName
+            if ($appFile) {
+                if (!$settings.testDependencies) {
+                    $settings.testDependencies = @()
+                }
+                $settings.testDependencies += $appFile
+                Write-Host "Adding test dependency $packageName"
+            }
+        }
+    }
+
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }

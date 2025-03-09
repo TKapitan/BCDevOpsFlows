@@ -69,8 +69,10 @@ function ReadSettings {
         "appRevision"                     = 0
         "additionalCountries"             = @()
         "appDependencies"                 = @()
+        "appDependenciesNuGet"            = @()
         "appFolders"                      = @()
         "testDependencies"                = @()
+        "testDependenciesNuGet"           = @()
         "testFolders"                     = @()
         "bcptTestFolders"                 = @()
         "pageScriptingTests"              = @()
