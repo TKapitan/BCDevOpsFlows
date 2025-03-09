@@ -225,6 +225,31 @@ function AnalyzeRepo {
         }
     }
 
+    if (!$settings.skipUpgrade) {
+        Write-Host "Locating previous release"     
+        if ($settings.appFolders) {
+            $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
+            $appJsonFile = Join-Path $folder "app.json"
+            if (Test-Path $appJsonFile) {
+                $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
+                $packageId = Get-BcNugetPackageId -publisher $appJson.publisher -name $appJson.name
+                $appFile = Get-BcNugetPackage -packageName $packageId
+                if ($appFile) {
+                    if (!$settings.previousRelease) {
+                        $settings.previousRelease = @()
+                    }
+                    $settings.previousRelease += $appFile
+                    Write-Host "Adding previous release from NuGet: $packageId"
+                }
+            }
+            else {
+                Write-Error  "No app.json file found in $folder"
+            }
+        }
+    }
+
+    Write-Error "DEBUG STOP"
+
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
