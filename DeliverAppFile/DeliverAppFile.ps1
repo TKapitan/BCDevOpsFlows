@@ -27,30 +27,33 @@ try {
     }
     $deliverToContext = $authContexts."$contextVariableName"
 
-    $isPreviewParam = @{}
-    if ($isPreview -eq $true) {
-        $isPreviewParam = @{ "isPreview" = $true }
-    }
     
     $generatedApp = @{}
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
+        
+        $versionSuffix = ''
         if ($appFolder) {
             $folders = @($settings.appFolders)
+            if ($isPreview -eq $true) {
+                $versionSuffix = 'preview'
+            }
         }
         elseif ($testFolder) {
             $folders = @($settings.testFolders)
+            $versionSuffix = 'tests'
         }
 
         foreach ($folderName in $folders) {
-            Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.serverUrl -accessToken $deliverToContext.PATToken -isPreview:$isPreviewParam.isPreview
+            Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.serverUrl -accessToken $deliverToContext.PATToken @versionSuffix
 
             if ($appFolder) {
                 $generatedApp = @{
                     "appFile"            = $targetPathAppFile
                     "appJsonFile"        = $targetPathAppJsonFile
                     "applicationVersion" = $appJsonContent.application
+                    "githubRepository"   = $ENV:BUILD_REPOSITORY_URI
                 }
             }
         }
