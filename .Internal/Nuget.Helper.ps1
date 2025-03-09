@@ -85,3 +85,27 @@ function New-NuGetFeedConfig {
         "token" = $token
     }
 }
+function Initialize-BCCTrustedNuGetFeeds {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$fromTrustedNuGetFeeds,
+        [Parameter(Mandatory = $false)]
+        [bool]$trustMicrosoftNuGetFeeds = $true
+    )
+
+    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
+    if ($fromTrustedNuGetFeeds) {
+        $trustedNuGetFeeds = $fromTrustedNuGetFeeds | ConvertFrom-Json
+        if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
+            Write-Host "Adding trusted NuGet feeds from environment variable"
+            $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
+                $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
+                $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
+            })
+        }
+    }
+    if ($trustMicrosoftNuGetFeeds) {
+        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+        $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
+    }
+}

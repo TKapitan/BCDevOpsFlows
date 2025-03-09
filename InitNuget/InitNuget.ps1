@@ -1,6 +1,5 @@
 Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
@@ -11,28 +10,10 @@ if (!$settings.nugetBCDevToolsVersion) {
     Write-Error "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
 }
 
-DownloadAndImportBcContainerHelper
-
 $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
 $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
 DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
-
-$bcContainerHelperConfig.TrustedNuGetFeeds = @()
-if ($ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL) {
-    $trustedNuGetFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
-    if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
-        Write-Host "Adding trusted NuGet feeds from environment variable"
-        $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-            $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
-            $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
-        })
-    }
-}
-if ($settings.trustMicrosoftNuGetFeeds) {
-    $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
-    $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
-}
 
 $bcDevToolsFolder = Join-Path -Path (GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion) -ChildPath "Tools\net8.0\any"
 $ENV:AL_BCDEVTOOLSFOLDER = $bcDevToolsFolder

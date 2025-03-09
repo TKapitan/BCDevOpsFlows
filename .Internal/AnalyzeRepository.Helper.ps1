@@ -194,6 +194,7 @@ function AnalyzeRepo {
     #     }
     # }
 
+    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {
