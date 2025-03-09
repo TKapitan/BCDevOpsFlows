@@ -232,7 +232,7 @@ function AnalyzeRepo {
             $appJsonFile = Join-Path $folder "app.json"
             if (Test-Path $appJsonFile) {
                 $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-                $packageId = Get-BcNugetPackageId -publisher $appJson.publisher -name $appJson.name
+                $packageId = Get-BcNugetPackageId -id $appJson.id -name $appJson.name -publisher $appJson.publisher
                 $appFile = Get-BcNugetPackage -packageName $packageId
                 if ($appFile) {
                     if (!$settings.previousRelease) {
