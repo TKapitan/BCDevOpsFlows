@@ -83,34 +83,21 @@ try {
     }
 
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
-    if ($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds')) {
-        Write-Host "Reading TrustedNuGetFeeds"
-        foreach($trustedNuGetFeed in $bcContainerHelperConfig.TrustedNuGetFeeds) {
-            if ($trustedNuGetFeed.PSObject.Properties.Name -eq 'Token') {
-                if ($trustedNuGetFeed.Token -ne '') {
-                    OutputWarning -message "Auth token for NuGet feed is defined in settings. This is not recommended. Use a secret instead and specify the secret name in the AuthTokenSecret property"
-                }
-            }
-            else {
-                $trustedNuGetFeed | Add-Member -MemberType NoteProperty -Name 'Token' -Value ''
-            }
-            if ($trustedNuGetFeed.PSObject.Properties.Name -eq 'AuthTokenSecret' -and $trustedNuGetFeed.AuthTokenSecret) {
-                $authTokenSecret = $trustedNuGetFeed.AuthTokenSecret
-                if ($secrets.Keys -notcontains $authTokenSecret) {
-                    OutputWarning -message "Secret $authTokenSecret needed for trusted NuGetFeeds cannot be found"
-                }
-                else {
-                    $trustedNuGetFeed.Token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$authTokenSecret"))
+    if ($ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL) {
+        $trustedNuGetFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
+        if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
+            Write-Host "Adding trusted NuGet feeds from environment variable"
+            $bcContainerHelperConfig.TrustedNuGetFeeds = $trustedNuGetFeeds | ForEach-Object {
+                [PSCustomObject]@{
+                    url   = $_.serverUrl
+                    token = $_.token
                 }
             }
         }
     }
-    else {
-        $bcContainerHelperConfig.TrustedNuGetFeeds = @()
-    }
     if ($settings.trustMicrosoftNuGetFeeds) {
         $bcContainerHelperConfig.TrustedNuGetFeeds += @([PSCustomObject]@{
-            "url" = "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+            "url"   = "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
             "token" = ''
         })
     }
@@ -275,13 +262,13 @@ try {
                 $parameters.missingDependencies | ForEach-Object {
                     $appid = $_.Split(':')[0]
                     $appName = $_.Split(':')[1]
-                    $version = $appName.SubString($appName.LastIndexOf('_')+1)
-                    $version = [System.Version]$version.SubString(0,$version.Length-4)
+                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
+                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
                     $publishParams = @{
                         "nuGetServerUrl" = $gitHubPackagesCredential.serverUrl
-                        "nuGetToken" = $gitHubPackagesCredential.token
-                        "packageName" = $appId
-                        "version" = $version
+                        "nuGetToken"     = $gitHubPackagesCredential.token
+                        "packageName"    = $appId
+                        "version"        = $version
                     }
                     if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
                         $publishParams += @{

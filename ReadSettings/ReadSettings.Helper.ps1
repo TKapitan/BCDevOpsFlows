@@ -111,6 +111,7 @@ function ReadSettings {
         "buildModes"                      = @()
         "writableFolderPath"              = ""
         "nugetBCDevToolsVersion"          = "15.0.18.19684-beta"   
+        "trustMicrosoftNuGetFeeds"        = $true
         "artifactUrlCacheKeepHours"       = 6
         "overrideResourceExposurePolicy"  = $false
         "previousRelease"                 = ""
