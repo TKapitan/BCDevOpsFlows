@@ -196,14 +196,11 @@ function AnalyzeRepo {
     # }
 
     Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-
-    
-    $appSymbolsFolder = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Download-BcNuGetPackageToFolder -packageName $packageName -folder $appSymbolsFolder
+            $appFile = Get-BcNugetPackage -packageName $packageName
             if ($appFile) {
                 if (!$settings.appDependencies) {
                     $settings.appDependencies = @()
@@ -217,7 +214,7 @@ function AnalyzeRepo {
     if ($settings.testDependenciesNuGet) {
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Download-BcNuGetPackageToFolder -packageName $packageName -folder $appSymbolsFolder
+            $appFile = Get-BcNugetPackage -packageName $packageName
             if ($appFile) {
                 if (!$settings.testDependencies) {
                     $settings.testDependencies = @()
