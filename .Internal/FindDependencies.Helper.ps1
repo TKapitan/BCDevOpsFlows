@@ -28,13 +28,26 @@ function Get-AppDependencies {
 
             $dependencies = if ($dependenciesAsHashSet -is [System.Collections.Generic.HashSet[PSCustomObject]]) {
                 $dependenciesAsHashSet.ToArray()
-            } else {
+            }
+            else {
                 @($dependenciesAsHashSet)
             }
             Write-Host "App dependencies: $dependencies"
             return $dependencies
         }
     }
+}
+function Get-LatestRelease {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string] $appId
+    )
+
+    $appFolder = Get-AppTargetFilePath -extensionID $appId -skipAppsInPreview
+    $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appFolder + 'app.json')
+    $appFilePath = $appFolder + (Get-AppFileName -publisher $appJsonContent.publisher -name $appJsonContent.name -version $appJsonContent.version)
+    return $appFilePath
 }
 function Get-AppJsonFile {
     [CmdletBinding()]
@@ -89,45 +102,48 @@ function Get-AppFileName {
 function Get-AppTargetFilePath {
     [CmdletBinding()]
     Param (
+        [Parameter(Mandatory = $true)]
         [string] $extensionID,
-        [string] $extensionVersion,
-        [switch] $skipAppsInPreview,
-        [version] $minBcVersion,
-        [string] $findExisting = $true
+        [version] $minBcVersion = '0.0.0.0',
+        [version] $extensionVersion = '0.0.0.0',
+        [switch] $skipAppsInPreview
     )
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $basePath = $settings.writableFolderPath
 
+    [version]$latestPublicVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
+    $latestExistingVersion = $latestPublicVersion
+
     $releaseTypeFolderParam = @{}
-    if ($skipAppsInPreview -eq $true) {
+    if ($skipAppsInPreview -eq $false) {
         [version]$latestPreviewVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'preview'
-        [version]$latestPublicVersion = Get-LatestVersion -extensionID $extensionID -minBcVersion $minBcVersion -releaseType 'public'
-        $latestExistingVersion = $latestPublicVersion
         if ([version]::Parse($latestPreviewVersion) -gt [version]::Parse($latestPublicVersion)) {
-            $skipAppsInPreview = $false
             $latestExistingVersion = $latestPreviewVersion
             $releaseTypeFolderParam = @{ "isPreview" = $true }
         }
     }
     $releaseTypeFolder = Get-ReleaseTypeFolderName @releaseTypeFolderParam
 
-    if ($findExisting -ne 'true') {
-        $targetFilePath = "$basePath\apps\$releaseTypeFolder\$extensionID\$extensionVersion-BC$minBcVersion\"
-        OutputDebug -Message "Using '$targetFilePath' regardless if the extension exists or not"
-        return $targetFilePath
-    }
-        
     if (-not (Test-Path -Path ("$basePath\apps\$releaseTypeFolder\$extensionID") -PathType Container)) {
         # if no extension found found, use the previous file structure, throw error if not found in that function
         return Get-AppTargetFilePathWithoutReleaseType -extensionID $extensionID -extensionVersion $extensionVersion
     }
 
+    if ([version]$latestExistingVersion -eq [version]'0.0.0.0') {
+        Write-Error "Cannot find any version for $extensionID."
+    }
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }
-    OutputDebug -Message "Using version $latestExistingVersion for extension $extensionID";
-    return "$basePath\apps\$releaseTypeFolder\$extensionID\$latestExistingVersion\";
+
+    OutputDebug -Message "Looking for version $latestExistingVersion for extension $extensionID for all BC versions";
+    $versionFolder = Get-ChildItem ("$basePath\apps\$releaseTypeFolder\$extensionID\") -Directory | Where-Object { $_.Name.StartsWith($latestExistingVersion) } | Select-Object -First 1
+    if (-not $versionFolder) {
+        Write-Error "Cannot find version folder starting with $latestExistingVersion for $extensionID in $basePath\apps\$releaseTypeFolder\$extensionID\"
+    }
+    OutputDebug -Message "Using version $($versionFolder.Name) for extension $extensionID";
+    return "$basePath\apps\$releaseTypeFolder\$extensionID\$($versionFolder.Name)\"
 }
 function Get-ReleaseTypeFolderName {
     [CmdletBinding()]
@@ -135,7 +151,7 @@ function Get-ReleaseTypeFolderName {
         [switch] $isPreview
     )
 
-    $releaseTypeFolder = 'stable'
+    $releaseTypeFolder = 'public'
     if ($isPreview -eq $true) {
         $releaseTypeFolder = 'preview'
     }
@@ -185,7 +201,7 @@ function Get-AppTargetFilePathWithoutReleaseType {
     [CmdletBinding()]
     Param (
         [string] $extensionID,
-        [string] $extensionVersion
+        [version] $extensionVersion = '0.0.0.0'
     )
     
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
@@ -198,6 +214,9 @@ function Get-AppTargetFilePathWithoutReleaseType {
     }
 
     $latestExistingVersion = Get-LatestVersion -extensionID $extensionID -releaseType ''
+    if ([version]$latestExistingVersion -eq [version]'0.0.0.0') {
+        Write-Error "Cannot find any version for $extensionID."
+    }
     if ([version]$latestExistingVersion -lt [version]$extensionVersion) {
         Write-Error "Cannot find version $extensionVersion for $extensionID. Latest existing version is $latestExistingVersion."
     }

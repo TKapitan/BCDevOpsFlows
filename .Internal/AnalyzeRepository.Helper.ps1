@@ -149,6 +149,30 @@ function AnalyzeRepo {
                             $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
                         }
                         Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
+
+                        if (!$settings.skipUpgrade) {
+                            Write-Host "Locating previous release"      
+                            try {
+                                $latestRelease = Get-LatestRelease -appId $mainAppId 
+                                if ($latestRelease) {
+                                    Write-Host "Using $latestRelease as previous release"
+                                    $settings.previousRelease += $latestRelease
+                                }
+                                else {
+                                    OutputWarning -message "No previous release found"
+                                }
+                            }
+                            catch {
+                                Write-Host $_.Exception -ForegroundColor Red
+                                Write-Host $_.ScriptStackTrace
+                                Write-Host $_.PSMessageDetails
+    
+                                Write-Error "Error trying to locate previous release. See previous lines for details."
+                            }
+                        }
+                        else {
+                            Write-Host "Skipping upgrade check"
+                        }
                     }
                     elseif ($testFolder) {
                         $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion @allBCDependenciesParam)

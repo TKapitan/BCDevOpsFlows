@@ -110,9 +110,13 @@ try {
 
     $previousApps = @()
     if (!$settings.skipUpgrade) {
-        Write-Host "::group::Locating previous release"
-        Write-Host "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
-        Write-Host "::endgroup::"
+        if ($settings.previousRelease) {
+            Write-Host "Using $($settings.previousRelease) as previous release"
+            $previousApps = $settings.previousRelease
+        }
+        else {
+            OutputWarning -message "No previous release found"
+        }
     }
 
     $additionalCountries = $settings.additionalCountries

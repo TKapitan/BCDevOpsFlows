@@ -6,7 +6,7 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 
 | Name                  | Required  | Description                                                       | Default value |
 | :--                   | :-:       | :--                                                               | :--           |
-| isPreview             | No        | Specifies whether the app to store is preview or stable release   | No            |
+| isPreview             | No        | Specifies whether the app to store is preview or public release   | No            |
 
 ## ENV INPUT variables
 

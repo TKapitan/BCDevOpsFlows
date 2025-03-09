@@ -10,7 +10,7 @@ Run the Business Central app using BCCOntainerHelper Run-ALPipeline
 | buildMode | | Specifies a mode to use for the build step. Supported values are Default, Translated. Translated creates the translation file during the build. | Default |
 | installAppsJson | | A JSON-formatted list of apps to install | [] |
 | installTestAppsJson | | A JSON-formatted list of test apps to install | [] |
-| skipAppsInPreview | | If specified, build will use only stable/public releases as dependencies. This value is used only when the artifact has not been determined in previous steps or when determined artifact is different from the one provided as the parameter. | [] |
+| skipAppsInPreview | | If specified, build will use only public releases as dependencies. This value is used only when the artifact has not been determined in previous steps or when determined artifact is different from the one provided as the parameter. | [] |
 
 ## ENV INPUT variables
 

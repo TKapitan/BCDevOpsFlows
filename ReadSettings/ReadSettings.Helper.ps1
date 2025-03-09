@@ -113,6 +113,7 @@ function ReadSettings {
         "nugetBCDevToolsVersion"          = "15.0.18.19684-beta"   
         "artifactUrlCacheKeepHours"       = 6
         "overrideResourceExposurePolicy"  = $false
+        "previousRelease"                 = ""
     }
 
     # Read settings from files and merge them into the settings object
