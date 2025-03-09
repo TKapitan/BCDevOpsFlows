@@ -88,20 +88,14 @@ try {
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
             $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                $feed = $_
-                OutputDebug -Message "Adding trusted NuGet feed $($feed.serverUrl)"
-                [PSCustomObject]@{
-                    url   = $feed.serverUrl
-                    token = $feed.token
-                }
+                $feedConfig = New-NuGetFeedConfig -url $_.serverUrl -token $_.token
+                $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
             })
         }
     }
     if ($settings.trustMicrosoftNuGetFeeds) {
-        $bcContainerHelperConfig.TrustedNuGetFeeds += @([PSCustomObject]@{
-            "url"   = "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
-            "token" = ''
-        })
+        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+        $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
     }
 
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
@@ -287,8 +281,6 @@ try {
             }
         }
     }
-
-    Write-Error "DEBUG STOP"
 
     Update-AppJson -settings $settings
 

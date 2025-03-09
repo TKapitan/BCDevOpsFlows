@@ -42,157 +42,157 @@ function AnalyzeRepo {
         Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
 
-    Write-Host "Checking appFolders, testFolders and bcptTestFolders"
-    $dependencies = [ordered]@{}
-    $appIdFolders = [ordered]@{}
-    foreach ($folderTypeNumber in 1..3) {
-        $appFolder = $folderTypeNumber -eq 1
-        $testFolder = $folderTypeNumber -eq 2
-        $bcptTestFolder = $folderTypeNumber -eq 3
-        Write-Host "Reading apps #$folderTypeNumber"
+    # Write-Host "Checking appFolders, testFolders and bcptTestFolders"
+    # $dependencies = [ordered]@{}
+    # $appIdFolders = [ordered]@{}
+    # foreach ($folderTypeNumber in 1..3) {
+    #     $appFolder = $folderTypeNumber -eq 1
+    #     $testFolder = $folderTypeNumber -eq 2
+    #     $bcptTestFolder = $folderTypeNumber -eq 3
+    #     Write-Host "Reading apps #$folderTypeNumber"
         
-        if ($appFolder) {
-            $folders = @()
-            if ($settings.appFolders) {
-                $folders = @($settings.appFolders)
-            }
-            $descr = "App folder"
-        }
-        elseif ($testFolder) {
-            $folders = @()
-            if ($settings.testFolders) {
-                $folders = @($settings.testFolders)
-            }
-            $descr = "Test folder"
-        }
-        elseif ($bcptTestFolder) {
-            $folders = @()
-            if ($settings.bcptTestFolders) {
-                $folders = @($settings.bcptTestFolders)
-            }
-            $descr = "Bcpt Test folder"
-        }
-        else {
-            Write-Error "Internal error"
-        }     
-        foreach ($folderName in $folders) {
-            $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $folderName
-            Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
-            $appJsonFile = Join-Path $folder "app.json"
-            $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
-            $enumerate = $true
+    #     if ($appFolder) {
+    #         $folders = @()
+    #         if ($settings.appFolders) {
+    #             $folders = @($settings.appFolders)
+    #         }
+    #         $descr = "App folder"
+    #     }
+    #     elseif ($testFolder) {
+    #         $folders = @()
+    #         if ($settings.testFolders) {
+    #             $folders = @($settings.testFolders)
+    #         }
+    #         $descr = "Test folder"
+    #     }
+    #     elseif ($bcptTestFolder) {
+    #         $folders = @()
+    #         if ($settings.bcptTestFolders) {
+    #             $folders = @($settings.bcptTestFolders)
+    #         }
+    #         $descr = "Bcpt Test folder"
+    #     }
+    #     else {
+    #         Write-Error "Internal error"
+    #     }     
+    #     foreach ($folderName in $folders) {
+    #         $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $folderName
+    #         Write-Host "Analyzing dependencies for '$folderName' in '$folder'"
+    #         $appJsonFile = Join-Path $folder "app.json"
+    #         $bcptSuiteFile = Join-Path $folder "bcptSuite.json"
+    #         $enumerate = $true
 
-            # More compatible folder existence check
-            if (!(Test-Path $folder -PathType Container)) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist"
-            }
-            elseif (!(Test-Path $appJsonFile -PathType Leaf)) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
-            }
-            elseif ($bcptTestFolder -and (!(Test-Path $bcptSuiteFile -PathType Leaf))) {
-                OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
-                $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
-                $enumerate = $false
-            }
+    #         # More compatible folder existence check
+    #         if (!(Test-Path $folder -PathType Container)) {
+    #             OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not exist"
+    #         }
+    #         elseif (!(Test-Path $appJsonFile -PathType Leaf)) {
+    #             OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain the source code for an app (no app.json file)" 
+    #         }
+    #         elseif ($bcptTestFolder -and (!(Test-Path $bcptSuiteFile -PathType Leaf))) {
+    #             OutputWarning -Message "$descr $folderName, specified in $repoSettingsFile, does not contain a BCPT Suite (bcptSuite.json)" 
+    #             $settings.bcptTestFolders = @($settings.bcptTestFolders | Where-Object { $_ -ne $folderName })
+    #             $enumerate = $false
+    #         }
 
-            if ($enumerate) {
-                if ($dependencies.Contains($folderName)) {
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
-                }
-                $dependencies[$folderName] = @()
-                try {
-                    $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-                    if ($appIdFolders.Contains($appJson.Id)) {
-                        Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders[$appJson.Id]))"
-                    }
-                    $appIdFolders[$appJson.Id] = $folderName
+    #         if ($enumerate) {
+    #             if ($dependencies.Contains($folderName)) {
+    #                 Write-Error "$descr $folderName, specified in $repoSettingsFile, is specified more than once."
+    #             }
+    #             $dependencies[$folderName] = @()
+    #             try {
+    #                 $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
+    #                 if ($appIdFolders.Contains($appJson.Id)) {
+    #                     Write-Error "$descr $folderName contains a duplicate AppId ($($appIdFolders[$appJson.Id]))"
+    #                 }
+    #                 $appIdFolders[$appJson.Id] = $folderName
 
-                    if ($null -ne (Get-Member -InputObject $appJson -Name 'Dependencies')) {
-                        $appJson.dependencies | ForEach-Object {
-                            $id = if ($null -ne (Get-Member -InputObject $_ -Name 'AppId')) { 
-                                $_.AppId 
-                            }
-                            else { 
-                                $_.Id 
-                            }
-                            if ($id -eq $applicationAppId) {
-                                if ([Version]$_.Version -gt [Version]$settings.applicationDependency) {
-                                    $settings.applicationDependency = $appDep
-                                }
-                            }
-                            else {
-                                $dependencies."$folderName" += @( [ordered]@{ "id" = $id; "version" = $_.version } )
-                            }
-                        }
-                    }
-                    if ($null -ne (Get-Member -InputObject $appJson -Name 'Application')) {
-                        $appDep = $appJson.application
-                        if ([Version]$appDep -gt [Version]$settings.applicationDependency) {
-                            $settings.applicationDependency = $appDep
-                        }
-                    }
+    #                 if ($null -ne (Get-Member -InputObject $appJson -Name 'Dependencies')) {
+    #                     $appJson.dependencies | ForEach-Object {
+    #                         $id = if ($null -ne (Get-Member -InputObject $_ -Name 'AppId')) { 
+    #                             $_.AppId 
+    #                         }
+    #                         else { 
+    #                             $_.Id 
+    #                         }
+    #                         if ($id -eq $applicationAppId) {
+    #                             if ([Version]$_.Version -gt [Version]$settings.applicationDependency) {
+    #                                 $settings.applicationDependency = $appDep
+    #                             }
+    #                         }
+    #                         else {
+    #                             $dependencies."$folderName" += @( [ordered]@{ "id" = $id; "version" = $_.version } )
+    #                         }
+    #                     }
+    #                 }
+    #                 if ($null -ne (Get-Member -InputObject $appJson -Name 'Application')) {
+    #                     $appDep = $appJson.application
+    #                     if ([Version]$appDep -gt [Version]$settings.applicationDependency) {
+    #                         $settings.applicationDependency = $appDep
+    #                     }
+    #                 }
 
 
-                    $allBCDependenciesParam = @{}
-                    if ($skipAppsInPreview -eq $true) {
-                        $allBCDependenciesParam = @{ "skipAppsInPreview" = $true }
-                    }
+    #                 $allBCDependenciesParam = @{}
+    #                 if ($skipAppsInPreview -eq $true) {
+    #                     $allBCDependenciesParam = @{ "skipAppsInPreview" = $true }
+    #                 }
 
-                    if ($appFolder) {
-                        $mainAppId = $appJson.id
-                        if ($appJson.PSObject.Properties.Name -eq 'Version') {
-                            $settings.appJsonVersion = $appJson.version
-                        }
+    #                 if ($appFolder) {
+    #                     $mainAppId = $appJson.id
+    #                     if ($appJson.PSObject.Properties.Name -eq 'Version') {
+    #                         $settings.appJsonVersion = $appJson.version
+    #                     }
 
-                        $foundAppDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion @allBCDependenciesParam)
-                        if ($foundAppDependencies) {
-                            $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
-                        }
-                        Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
+    #                     $foundAppDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -minBcVersion $minBcVersion @allBCDependenciesParam)
+    #                     if ($foundAppDependencies) {
+    #                         $settings.appDependencies += Get-DependenciesAsTextString -dependencies $foundAppDependencies
+    #                     }
+    #                     Write-Host "Adding newly found APP dependencies: $($settings.appDependencies)"
 
-                        if (!$settings.skipUpgrade) {
-                            Write-Host "Locating previous release"      
-                            try {
-                                $latestRelease = Get-LatestRelease -appId $mainAppId 
-                                if ($latestRelease) {
-                                    Write-Host "Using $latestRelease as previous release"
-                                    $settings.previousRelease += $latestRelease
-                                }
-                                else {
-                                    OutputWarning -message "No previous release found"
-                                }
-                            }
-                            catch {
-                                Write-Host $_.Exception -ForegroundColor Red
-                                Write-Host $_.ScriptStackTrace
-                                Write-Host $_.PSMessageDetails
+    #                     if (!$settings.skipUpgrade) {
+    #                         Write-Host "Locating previous release"      
+    #                         try {
+    #                             $latestRelease = Get-LatestRelease -appId $mainAppId 
+    #                             if ($latestRelease) {
+    #                                 Write-Host "Using $latestRelease as previous release"
+    #                                 $settings.previousRelease += $latestRelease
+    #                             }
+    #                             else {
+    #                                 OutputWarning -message "No previous release found"
+    #                             }
+    #                         }
+    #                         catch {
+    #                             Write-Host $_.Exception -ForegroundColor Red
+    #                             Write-Host $_.ScriptStackTrace
+    #                             Write-Host $_.PSMessageDetails
     
-                                Write-Error "Error trying to locate previous release. See previous lines for details."
-                            }
-                        }
-                        else {
-                            Write-Host "Skipping upgrade check"
-                        }
-                    }
-                    elseif ($testFolder) {
-                        $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion @allBCDependenciesParam)
-                        if ($foundTestDependencies) {
-                            $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
-                        }
-                        Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
-                    }
-                }
-                catch {
-                    Write-Host $_.Exception.Message -ForegroundColor Red
-                    Write-Host $_.ScriptStackTrace
-                    if ($null -ne $_.ErrorDetails) {
-                        Write-Host $_.ErrorDetails.Message
-                    }
-                    Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
-                }
-            }
-        }
-    }
+    #                             Write-Error "Error trying to locate previous release. See previous lines for details."
+    #                         }
+    #                     }
+    #                     else {
+    #                         Write-Host "Skipping upgrade check"
+    #                     }
+    #                 }
+    #                 elseif ($testFolder) {
+    #                     $foundTestDependencies = @(Get-AppDependencies -appJsonFilePath $appJsonFile -excludeExtensionID $mainAppId -minBcVersion $minBcVersion @allBCDependenciesParam)
+    #                     if ($foundTestDependencies) {
+    #                         $settings.testDependencies += Get-DependenciesAsTextString -dependencies $foundTestDependencies
+    #                     }
+    #                     Write-Host "Adding newly found TEST dependencies: $($settings.testDependencies)"
+    #                 }
+    #             }
+    #             catch {
+    #                 Write-Host $_.Exception.Message -ForegroundColor Red
+    #                 Write-Host $_.ScriptStackTrace
+    #                 if ($null -ne $_.ErrorDetails) {
+    #                     Write-Host $_.ErrorDetails.Message
+    #                 }
+    #                 Write-Error "$descr $folderName, specified in $repoSettingsFile, contains a corrupt app.json file. See the error details above."
+    #             }
+    #         }
+    #     }
+    # }
 
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
