@@ -25,7 +25,7 @@ try {
     if (!$authContexts."$contextVariableName") {
         Write-Error "Auth context '$contextVariableName' not found in auth configuration."
     }
-    $deliverToContext = $authContexts[$contextVariableName]
+    $deliverToContext = $authContexts."$contextVariableName"
 
     $isPreviewParam = @{}
     if ($isPreview -eq $true) {
