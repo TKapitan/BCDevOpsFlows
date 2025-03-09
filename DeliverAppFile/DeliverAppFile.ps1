@@ -11,11 +11,11 @@ if ([string]::IsNullOrEmpty($settings.deliveryTarget)) {
     Write-Host "deliveryTarget setting is not specified. Skipping delivery of app files."
     exit
 }
-$deliveryTo = $ENV:AL_DELIVERYTO | ConvertFrom-Json | ConvertTo-HashTable -recurse
-if (-not $deliveryTo.ContainsKey($settings.deliveryTarget)) {
+$deliverTo = $ENV:AL_DELIVERTO | ConvertFrom-Json | ConvertTo-HashTable -recurse
+if (-not $deliverTo.ContainsKey($settings.deliveryTarget)) {
     Write-Error "Delivery target '$($settings.deliveryTarget)' not found in delivery configuration."
 }
-$deliverToConfig = $deliveryTo[$settings.deliveryTarget]
+$deliverToConfig = $deliverTo[$settings.deliveryTarget]
 if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
     Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
 }
