@@ -240,6 +240,8 @@ function AnalyzeRepo {
                     }
                     $settings.previousRelease += $appFile
                     Write-Host "Adding previous release from NuGet: $packageId"
+                } else {
+                    OutputWarning -Message "No previous release found in NuGet for $packageId"
                 }
             }
             else {
