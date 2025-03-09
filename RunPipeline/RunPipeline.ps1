@@ -82,18 +82,19 @@ try {
         exit
     }
 
-    $bcContainerHelperConfig.TrustedNuGetFeeds = @{}
+    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
     if ($ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL) {
         $trustedNuGetFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
-            $bcContainerHelperConfig.TrustedNuGetFeeds = $trustedNuGetFeeds | ForEach-Object {
-                OutputDebug -Message " - adding trusted NuGet feed $($_.serverUrl)"
+            $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
+                $feed = $_
+                OutputDebug -Message "Adding trusted NuGet feed $($feed.serverUrl)"
                 [PSCustomObject]@{
-                    url   = $_.serverUrl
-                    token = $_.token
+                    url   = $feed.serverUrl
+                    token = $feed.token
                 }
-            }
+            })
         }
     }
     if ($settings.trustMicrosoftNuGetFeeds) {
