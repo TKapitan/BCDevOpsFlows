@@ -82,22 +82,6 @@ try {
         exit
     }
 
-    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
-    if ($ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL) {
-        $trustedNuGetFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
-        if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
-            Write-Host "Adding trusted NuGet feeds from environment variable"
-            $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                $feedConfig = New-NuGetFeedConfig -url $_.serverUrl -token $_.token
-                $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
-            })
-        }
-    }
-    if ($settings.trustMicrosoftNuGetFeeds) {
-        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
-        $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
-    }
-
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $bcContainerHelperConfig.useSslForWinRmSession = $false
