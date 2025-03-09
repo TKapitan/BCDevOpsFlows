@@ -114,6 +114,7 @@ function ReadSettings {
         "artifactUrlCacheKeepHours"       = 6
         "overrideResourceExposurePolicy"  = $false
         "previousRelease"                 = ""
+        "deliveryTarget"                  = "AzureDevOps"
     }
 
     # Read settings from files and merge them into the settings object
