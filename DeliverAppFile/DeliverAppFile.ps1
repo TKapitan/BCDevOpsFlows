@@ -20,10 +20,11 @@ if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
     Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
 }
 $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-if (-not $authContexts.ContainsKey($deliverToConfig.contextVariableName)) {
-    Write-Error "Auth context '$($deliverToConfig.contextVariableName)' not found in auth configuration."
+$contextVariableName = $deliverToConfig.contextVariableName
+if (!$authContexts."$contextVariableName") {
+    Write-Error "Auth context '$contextVariableName' not found in auth configuration."
 }
-$deliverToContext = $authContexts[$deliverToConfig.contextVariableName]
+$deliverToContext = $authContexts[$contextVariableName]
 
 $isPreviewParam = @{}
 if ($isPreview -eq $true) {
