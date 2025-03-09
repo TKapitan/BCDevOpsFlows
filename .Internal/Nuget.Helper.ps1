@@ -72,3 +72,16 @@ function RemoveNugetPackageSource() {
         OutputDebug -Message "Nuget source $sourceName not found"
     }
 }
+function New-NuGetFeedConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$url,
+        [Parameter(Mandatory = $false)]
+        [string]$token = ''
+    )
+    OutputDebug -Message "Adding trusted NuGet feed $url"
+    return [PSCustomObject]@{
+        "url"   = $url
+        "token" = $token
+    }
+}
