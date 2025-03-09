@@ -46,7 +46,7 @@ try {
         }
 
         foreach ($folderName in $folders) {
-            Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.serverUrl -accessToken $deliverToContext.PATToken @versionSuffix
+            Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.Url -token $deliverToContext.Token @versionSuffix
 
             if ($appFolder) {
                 $generatedApp = @{

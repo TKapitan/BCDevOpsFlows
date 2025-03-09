@@ -24,7 +24,7 @@ if ($ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL) {
     if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
         Write-Host "Adding trusted NuGet feeds from environment variable"
         $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-            $feedConfig = New-NuGetFeedConfig -url $_.serverUrl -token $_.token
+            $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
             $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
         })
     }

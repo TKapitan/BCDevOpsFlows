@@ -5,9 +5,9 @@ function Push-AppToNuGetFeed {
         [Parameter(HelpMessage = "The name of the folder containing the app file.", Mandatory = $true)]
         [string] $folderName,
         [Parameter(HelpMessage = "The URL of the NuGet server to push the app to.", Mandatory = $true)]
-        [string] $serverUrl,
+        [string] $url,
         [Parameter(HelpMessage = "The NuGet token to use for authentication.", Mandatory = $true)]
-        [string] $accessToken,
+        [string] $token,
         [Parameter(HelpMessage = "Specifies suffix for the version of the app such as preview or tests.", Mandatory = $false)]
         [switch] $versionSuffix
     )
@@ -18,7 +18,7 @@ function Push-AppToNuGetFeed {
     $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
     $appFilePath = Get-AppSourceFileLocation -appFile $appJsonContent
 
-    Write-Host "Saving '$($appJsonContent.name)' app from '$appFilePath' to NuGet feed '$serverUrl'"
+    Write-Host "Saving '$($appJsonContent.name)' app from '$appFilePath' to NuGet feed '$url'"
 
     # Create NuGet package
     $parameters = @{
@@ -26,7 +26,7 @@ function Push-AppToNuGetFeed {
         "appFile"       = $appFilePath
     }
     $package = New-BcNuGetPackage @parameters
-    Push-BcNuGetPackage -nuGetServerUrl $serverUrl -nuGetToken $accessToken -bcNuGetPackage $package
+    Push-BcNuGetPackage -nuGetServerUrl $url -nuGetToken $token -bcNuGetPackage $package
 }
 
 function Get-AppTargetFilePathForNewApp {
