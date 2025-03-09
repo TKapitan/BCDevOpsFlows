@@ -13,8 +13,10 @@ if ($ENV:AL_CONTAINERNAME) {
 if ($ENV:AL_NUGETINITIALIZED) {
     Write-Host "Cleaning Nuget packages"
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
-    
-    Write-Host "Removing Nuget packages from $ENV:PIPELINE_WORKSPACE\App\.alpackages"
-    $packageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
-    Remove-Item $packageCachePath -Recurse -Include *.*
+
+    if (Test-Path -Path "$ENV:PIPELINE_WORKSPACE\App\.alpackages") {
+        Write-Host "Removing Nuget packages from $ENV:PIPELINE_WORKSPACE\App\.alpackages"
+        $packageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.alpackages"
+        Remove-Item $packageCachePath -Recurse -Include *.*
+    }
 }
