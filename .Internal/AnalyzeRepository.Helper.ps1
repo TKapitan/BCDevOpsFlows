@@ -249,9 +249,7 @@ function AnalyzeRepo {
             }
         }
     }
-
-    Write-Error "DEBUG STOP"
-
+    
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
