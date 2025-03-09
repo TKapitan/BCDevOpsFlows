@@ -82,9 +82,38 @@ try {
         exit
     }
 
-    # Trusted NuGet feeds not supported
-    Write-Host "Trusted NuGet feeds not supported, skipping"
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
+    if ($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds')) {
+        Write-Host "Reading TrustedNuGetFeeds"
+        foreach($trustedNuGetFeed in $bcContainerHelperConfig.TrustedNuGetFeeds) {
+            if ($trustedNuGetFeed.PSObject.Properties.Name -eq 'Token') {
+                if ($trustedNuGetFeed.Token -ne '') {
+                    OutputWarning -message "Auth token for NuGet feed is defined in settings. This is not recommended. Use a secret instead and specify the secret name in the AuthTokenSecret property"
+                }
+            }
+            else {
+                $trustedNuGetFeed | Add-Member -MemberType NoteProperty -Name 'Token' -Value ''
+            }
+            if ($trustedNuGetFeed.PSObject.Properties.Name -eq 'AuthTokenSecret' -and $trustedNuGetFeed.AuthTokenSecret) {
+                $authTokenSecret = $trustedNuGetFeed.AuthTokenSecret
+                if ($secrets.Keys -notcontains $authTokenSecret) {
+                    OutputWarning -message "Secret $authTokenSecret needed for trusted NuGetFeeds cannot be found"
+                }
+                else {
+                    $trustedNuGetFeed.Token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$authTokenSecret"))
+                }
+            }
+        }
+    }
+    else {
+        $bcContainerHelperConfig.TrustedNuGetFeeds = @()
+    }
+    if ($settings.trustMicrosoftNuGetFeeds) {
+        $bcContainerHelperConfig.TrustedNuGetFeeds += @([PSCustomObject]@{
+            "url" = "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+            "token" = ''
+        })
+    }
 
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
     if ($PSVersionTable.PSVersion.Major -ge 6) {
@@ -232,6 +261,45 @@ try {
             }
         }
     }
+
+    if (($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds') -and ($bcContainerHelperConfig.TrustedNuGetFeeds.Count -gt 0)) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+        if ($githubPackagesContext) {
+            $gitHubPackagesCredential = $gitHubPackagesContext | ConvertFrom-Json
+        }
+        else {
+            $gitHubPackagesCredential = [PSCustomObject]@{ "serverUrl" = ''; "token" = '' }
+        }
+        $runAlPipelineParams += @{
+            "InstallMissingDependencies" = {
+                Param([Hashtable]$parameters)
+                $parameters.missingDependencies | ForEach-Object {
+                    $appid = $_.Split(':')[0]
+                    $appName = $_.Split(':')[1]
+                    $version = $appName.SubString($appName.LastIndexOf('_')+1)
+                    $version = [System.Version]$version.SubString(0,$version.Length-4)
+                    $publishParams = @{
+                        "nuGetServerUrl" = $gitHubPackagesCredential.serverUrl
+                        "nuGetToken" = $gitHubPackagesCredential.token
+                        "packageName" = $appId
+                        "version" = $version
+                    }
+                    if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
+                        $publishParams += @{
+                            "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
+                        }
+                    }
+                    if ($parameters.ContainsKey('containerName')) {
+                        Publish-BcNuGetPackageToContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Download-BcNuGetPackageToFolder -folder $parameters.appSymbolsFolder @publishParams | Out-Null
+                    }
+                }
+            }
+        }
+    }
+
+    Write-Error "DEBUG STOP"
 
     Update-AppJson -settings $settings
 
