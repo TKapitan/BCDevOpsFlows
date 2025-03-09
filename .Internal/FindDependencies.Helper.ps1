@@ -37,18 +37,6 @@ function Get-AppDependencies {
         }
     }
 }
-function Get-LatestRelease {
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory = $true)]
-        [string] $appId
-    )
-
-    $appFolder = Get-AppTargetFilePath -extensionID $appId -skipAppsInPreview
-    $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath ($appFolder + 'app.json')
-    $appFilePath = $appFolder + (Get-AppFileName -publisher $appJsonContent.publisher -name $appJsonContent.name -version $appJsonContent.version)
-    return $appFilePath
-}
 function Get-AppJsonFile {
     [CmdletBinding()]
     Param (
