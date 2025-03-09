@@ -8,8 +8,8 @@ function Push-AppToNuGetFeed {
         [string] $serverUrl,
         [Parameter(HelpMessage = "The NuGet token to use for authentication.", Mandatory = $true)]
         [string] $accessToken,
-        [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
-        [switch] $isPreview
+        [Parameter(HelpMessage = "Specifies suffix for the version of the app such as preview or tests.", Mandatory = $false)]
+        [switch] $versionSuffix
     )
 
     Write-Host "Delivering apps from folder: $folderName"
@@ -18,16 +18,11 @@ function Push-AppToNuGetFeed {
     $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
     $appFilePath = Get-AppSourceFileLocation -appFile $appJsonContent
 
-    Write-Host "Saving '$($appJsonContent.name)' app to ($serverUrl)"
-
-    $preReleaseTag = @{}
-    if ($isPreview -eq $true) {
-        $preReleaseTag = 'preview'
-    }
+    Write-Host "Saving '$($appJsonContent.name)' app from '$appFilePath' to NuGet feed '$serverUrl'"
 
     # Create NuGet package
     $parameters = @{
-        "preReleaseTag" = $preReleaseTag
+        "preReleaseTag" = $versionSuffix
         "appFile"       = $appFilePath
     }
     $package = New-BcNuGetPackage @parameters
