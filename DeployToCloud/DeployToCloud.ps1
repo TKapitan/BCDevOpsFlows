@@ -82,18 +82,15 @@ foreach ($environmentName in $matchingEnvironments) {
         foreach ($folderName in $folders) {
             $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$folderName\app.json"
             $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
-            $minBcVersion = $appJsonContent.application
             $appFilePath = Get-AppSourceFileLocation -appFile $appJsonContent
 
             Write-Host "Deploying app $($appJsonContent.name) by $($appJsonContent.publisher) to $($deploymentSettings.environmentName)"
             Write-Host "- $([System.IO.Path]::GetFileName($appFilePath))"
 
             if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-                $dependenciesToDeploy = Get-AppDependencies -appJsonFilePath $appJsonFilePath -minBcVersion $minBcVersion
-                if ($dependenciesToDeploy) {
-                    $dependencies += $dependenciesToDeploy
-                }
-    
+                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
+                $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" | Select-Object -ExpandProperty FullName
+                
                 Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
                 if ($dependencies) {
                     $dependencies | ForEach-Object {
@@ -104,6 +101,8 @@ foreach ($environmentName in $matchingEnvironments) {
                     Write-Host "- None"
                 }
             }
+
+            Write-Error "DEBUG STOP"
 
             $sandboxEnvironment = ($response.environmentType -eq 1)
             $scope = $deploymentSettings.Scope
