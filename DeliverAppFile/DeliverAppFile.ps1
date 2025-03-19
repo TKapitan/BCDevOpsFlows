@@ -6,54 +6,55 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeliverAppFile.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-try {
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if ([string]::IsNullOrEmpty($settings.deliveryTarget)) {
-        Write-Host "deliveryTarget setting is not specified. Skipping delivery of app files."
-        exit
-    }
-    $deliverTo = $ENV:AL_DELIVERTO | ConvertFrom-Json | ConvertTo-HashTable -recurse
-    if (-not $deliverTo.ContainsKey($settings.deliveryTarget)) {
-        Write-Error "Delivery target '$($settings.deliveryTarget)' not found in delivery configuration."
-    }
-    $deliverToConfig = $deliverTo[$settings.deliveryTarget]
-    if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
-        Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
-    }
-    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-    $contextVariableName = $deliverToConfig.contextVariableName
-    if (!$authContexts."$contextVariableName") {
-        Write-Error "Auth context '$contextVariableName' not found in auth configuration."
-    }
-    $deliverToContext = $authContexts."$contextVariableName"
+# Initialize trusted NuGet feeds
+Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
 
-    
+try {
     $generatedApp = @{}
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
         
         $versionSuffix = ''
+        $deliverToType = ''
         if ($appFolder) {
             $folders = @($settings.appFolders)
             if ($isPreview -eq $true) {
                 $versionSuffix = 'preview'
             }
+            $deliverToType = 'Apps'
         }
         elseif ($testFolder) {
             $folders = @($settings.testFolders)
             $versionSuffix = 'tests'
+            $deliverToType = 'Tests'
         }
 
-        foreach ($folderName in $folders) {
-            Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.Url -token $deliverToContext.Token @versionSuffix
+        $deliverTo = $ENV:AL_DELIVERTO | ConvertFrom-Json | ConvertTo-HashTable -recurse
+        if (-not $deliverTo.ContainsKey($deliverToType)) {
+            Write-Host "Delivery settings for $deliverToType is not specified, skipping..."
+        }
+        else {
+            $deliverToConfig = $deliverTo[$deliverToType]
+            if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
+                Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
+            }
 
-            if ($appFolder) {
-                $generatedApp = @{
-                    "appFile"            = $targetPathAppFile
-                    "appJsonFile"        = $targetPathAppJsonFile
-                    "applicationVersion" = $appJsonContent.application
-                    "githubRepository"   = $ENV:BUILD_REPOSITORY_URI
+            $trustedFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
+            $deliverToContext = $trustedFeeds | Where-Object { $_.Name -eq $deliverToConfig.NugetFeedName } | Select-Object -First 1
+            if (!$deliverToContext) {
+                Write-Error "NuGet feed '$($deliverToConfig.NugetFeedName)' not found in trusted feeds configuration."
+            }
+
+            foreach ($folderName in $folders) {
+                Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.Url -token $deliverToContext.Token @versionSuffix
+                if ($appFolder) {
+                    $generatedApp = @{
+                        "appFile"            = $targetPathAppFile
+                        "appJsonFile"        = $targetPathAppJsonFile
+                        "applicationVersion" = $appJsonContent.application
+                        "githubRepository"   = $ENV:BUILD_REPOSITORY_URI
+                    }
                 }
             }
         }
