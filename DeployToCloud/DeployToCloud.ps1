@@ -31,6 +31,7 @@ foreach ($environmentName in $matchingEnvironments) {
         if (!$deploymentSettings) {
             throw "No deployment settings found for environment '$environmentName'."
         }
+        OutputDebug -Message "DeploymentSettings for $environmentName : $($deploymentSettings | ConvertTo-Json -Depth 10)"
         $buildMode = $deploymentSettings.buildMode
         if ($null -eq $buildMode -or $buildMode -eq 'default') {
             $buildMode = ''
@@ -102,8 +103,6 @@ foreach ($environmentName in $matchingEnvironments) {
                 }
             }
 
-            Write-Error "DEBUG STOP"
-
             $sandboxEnvironment = ($response.environmentType -eq 1)
             $scope = $deploymentSettings.Scope
             if ($null -eq $scope) {
@@ -126,6 +125,9 @@ foreach ($environmentName in $matchingEnvironments) {
                 if ($dependencies) {
                     InstallOrUpgradeApps -bcAuthContext $bcAuthContext -environment $deploymentSettings.environmentName -Apps $dependencies -installMode $deploymentSettings.dependencyInstallMode
                 }
+
+                Write-Error "DEBUG STOP"
+
                 if ($scope -eq 'Dev') {
                     if (!$sandboxEnvironment) {
                         throw "Scope Dev is only valid for sandbox environments"
