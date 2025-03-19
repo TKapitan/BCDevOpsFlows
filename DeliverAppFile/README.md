@@ -17,6 +17,4 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 
 ## ENV OUTPUT variables
 
-| Name              | Description                                                                                               |
-| :--               | :--                                                                                                       |
-| AL_APPDETAILS     | Compressed Json file with details of stored app file. This is used as the input for DeployToCloud step.   |
+No Environment Output variables

@@ -13,7 +13,6 @@ $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
 
 try {
-    $generatedApp = @{}
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
@@ -51,23 +50,8 @@ try {
 
             foreach ($folderName in $folders) {
                 Push-AppToNuGetFeed -folderName $folderName -url $deliverToContext.Url -token $deliverToContext.Token -versionSuffix $versionSuffix
-                if ($appFolder) {
-                    $generatedApp = @{
-                        "appFile"            = $targetPathAppFile
-                        "appJsonFile"        = $targetPathAppJsonFile
-                        "applicationVersion" = $appJsonContent.application
-                        "githubRepository"   = $ENV:BUILD_REPOSITORY_URI
-                    }
-                }
             }
         }
-    }
-
-    if ($generatedApp -and $generatedApp.Count -gt 0) {
-        $generatedAppJson = $generatedApp | ConvertTo-Json -Compress
-        $ENV:AL_APPDETAILS = $generatedAppJson
-        Write-Host "##vso[task.setvariable variable=AL_APPDETAILS;]$generatedAppJson"
-        OutputDebug -Message "Set environment variable AL_APPDETAILS to ($ENV:AL_APPDETAILS)"
     }
 }
 catch {
