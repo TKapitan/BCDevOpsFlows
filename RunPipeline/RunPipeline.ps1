@@ -84,7 +84,7 @@ try {
     }
 
     # Initialize trusted NuGet feeds
-    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
 
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
     if ($PSVersionTable.PSVersion.Major -ge 6) {

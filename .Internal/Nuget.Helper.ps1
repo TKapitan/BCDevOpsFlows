@@ -90,7 +90,8 @@ function Initialize-BCCTrustedNuGetFeeds {
         [Parameter(Mandatory = $true)]
         [string]$fromTrustedNuGetFeeds,
         [Parameter(Mandatory = $false)]
-        [bool]$trustMicrosoftNuGetFeeds = $true
+        [bool]$trustMicrosoftNuGetFeeds = $true,
+        [switch] $skipSymbolsFeeds
     )
 
     $bcContainerHelperConfig.TrustedNuGetFeeds = @()
@@ -104,8 +105,11 @@ function Initialize-BCCTrustedNuGetFeeds {
             })
         }
     }
-    if ($trustMicrosoftNuGetFeeds) {
+    if ($trustMicrosoftNuGetFeeds -and -not $skipSymbolsFeeds) {
         $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
         $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
+    }
+    if ($skipSymbolsFeeds) {
+        $bcContainerHelperConfig.TrustedNuGetFeeds = @($bcContainerHelperConfig.TrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
     }
 }
