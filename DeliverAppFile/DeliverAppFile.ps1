@@ -50,7 +50,7 @@ try {
             }
 
             foreach ($folderName in $folders) {
-                Push-AppToNuGetFeed -folderName $folderName -serverUrl $deliverToContext.Url -token $deliverToContext.Token @versionSuffix
+                Push-AppToNuGetFeed -folderName $folderName -url $deliverToContext.Url -token $deliverToContext.Token @versionSuffix
                 if ($appFolder) {
                     $generatedApp = @{
                         "appFile"            = $targetPathAppFile
