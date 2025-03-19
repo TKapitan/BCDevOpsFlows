@@ -18,9 +18,9 @@ $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
 $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $deployToEnvironmentsNameFilter } | Select-Object -ExpandProperty Key)
 if ($matchingEnvironments.Count -eq 0) {
-    throw "No environments found matching filter '$environmentsNameFilter'"
+    throw "No environments found matching filter '$deployToEnvironmentsNameFilter'"
 }
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
+Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
 
 $environmentUrls = @{} | ConvertTo-Json
 foreach ($environmentName in $matchingEnvironments) {
