@@ -126,8 +126,6 @@ foreach ($environmentName in $matchingEnvironments) {
                     InstallOrUpgradeApps -bcAuthContext $bcAuthContext -environment $deploymentSettings.environmentName -Apps $dependencies -installMode $deploymentSettings.dependencyInstallMode
                 }
 
-                Write-Error "DEBUG STOP"
-
                 if ($scope -eq 'Dev') {
                     if (!$sandboxEnvironment) {
                         throw "Scope Dev is only valid for sandbox environments"
