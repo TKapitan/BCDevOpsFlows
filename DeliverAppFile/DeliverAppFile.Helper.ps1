@@ -18,6 +18,11 @@ function Push-AppToNuGetFeed {
     $appJsonContent = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
     $appFilePath = Get-AppSourceFileLocation -appFile $appJsonContent
 
+    if (-not (Test-Path -Path $appFilePath) -and $versionSuffix -eq 'tests') {
+        Write-Host "Test App file not found at path: $appFilePath, skipping..."
+        return
+    }
+
     Write-Host "Saving '$($appJsonContent.name)' app from '$appFilePath' to NuGet feed '$url'"
 
     # Create NuGet package
