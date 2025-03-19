@@ -9,7 +9,7 @@ function Push-AppToNuGetFeed {
         [Parameter(HelpMessage = "The NuGet token to use for authentication.", Mandatory = $true)]
         [string] $token,
         [Parameter(HelpMessage = "Specifies suffix for the version of the app such as preview or tests.", Mandatory = $false)]
-        [switch] $versionSuffix
+        [string] $versionSuffix
     )
 
     Write-Host "Delivering apps from folder: $folderName"
