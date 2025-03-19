@@ -7,7 +7,7 @@ try {
     Assert-Prerequisites
     
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    Update-AppJson -settings $settings
+    Update-AppJson -settings $settings -forNuGetBuild
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
     $baseAppFolder = "$baseRepoFolder\App"
