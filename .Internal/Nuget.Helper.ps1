@@ -116,4 +116,5 @@ function Get-BCCTrustedNuGetFeeds {
     if ($skipSymbolsFeeds) {
         $trustedNuGetFeeds = @($trustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
     }
+    return $trustedNuGetFeeds
 }
