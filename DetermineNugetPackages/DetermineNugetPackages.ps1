@@ -31,8 +31,7 @@ try {
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
-         
-        nuget install $PackageName -outputDirectory $packageCachePath 
+        Save-Module -Name $PackageName -Path $packageCachePath
     }
 }
 catch {
