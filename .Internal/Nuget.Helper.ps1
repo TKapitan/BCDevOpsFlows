@@ -97,27 +97,26 @@ function Get-BCCTrustedNuGetFeeds {
         [switch] $skipSymbolsFeeds
     )
 
-    $trustedNuGetFeeds = @()
+    $requiredTrustedNuGetFeeds = @()
     if ($fromTrustedNuGetFeeds) {
         $trustedNuGetFeeds = $fromTrustedNuGetFeeds | ConvertFrom-Json
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
-            $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                    $feedConfig = New-NuGetFeedConfig -name $_.Name -url $_.Url -token $_.Token
-                    $trustedNuGetFeeds += @($feedConfig)
-                })
+            $requiredTrustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
+                New-NuGetFeedConfig -name $_.Name -url $_.Url -token $_.Token
+            })
         }
     }
     if ($trustMicrosoftNuGetFeeds) {
         $feedConfig = New-NuGetFeedConfig -name "MSSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
-        $trustedNuGetFeeds += @($feedConfig)
+        $requiredTrustedNuGetFeeds += @($feedConfig)
         if (-not $skipSymbolsFeeds) {
             $feedConfig = New-NuGetFeedConfig -name "AppSourceSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
-            $trustedNuGetFeeds += @($feedConfig)
+            $requiredTrustedNuGetFeeds += @($feedConfig)
         }
     }
     if ($skipSymbolsFeeds) {
-        $trustedNuGetFeeds = @($trustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
+        $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
     }
-    return $trustedNuGetFeeds
+    return $requiredTrustedNuGetFeeds
 }
