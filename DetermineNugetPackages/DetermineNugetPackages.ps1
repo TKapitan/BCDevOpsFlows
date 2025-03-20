@@ -25,8 +25,7 @@ try {
     mkdir $packageCachePath
  
     nuget install $applicationPackage -outputDirectory $packageCachePath 
- 
-    foreach ($Dependency in $manifestObject.dependencies) {
+    foreach ($Dependency in $manifestObject.dependencies | Where-Object { -not ($_.publisher -eq "Microsoft" -and $_.name.StartsWith("_Exclude")) }) {
         $PackageName = ("{0}.{1}.symbols.{2}" -f $Dependency.publisher, $Dependency.name, $Dependency.id ) -replace ' ', ''
         Write-Host "Get $PackageName"
          
