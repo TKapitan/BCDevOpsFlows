@@ -43,7 +43,7 @@ function AnalyzeRepo {
         Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
 
-    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    $bcContainerHelperConfig.TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {

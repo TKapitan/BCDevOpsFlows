@@ -10,10 +10,10 @@ try {
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
     # Initialize trusted NuGet feeds
-    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-
-    AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
-    AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+    $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    foreach ($feed in $TrustedNuGetFeeds) {
+        AddNugetPackageSource -sourceName $feed.name -sourceUrl $feed.url
+    }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
     $baseAppFolder = "$baseRepoFolder\App"
@@ -26,7 +26,7 @@ try {
  
     $packageCachePath = "$baseRepoFolder\.alpackages"
     mkdir $packageCachePath
- 
+
     nuget install $applicationPackage -outputDirectory $packageCachePath 
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher

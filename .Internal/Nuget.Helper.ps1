@@ -85,7 +85,7 @@ function New-NuGetFeedConfig {
         "token" = $token
     }
 }
-function Initialize-BCCTrustedNuGetFeeds {
+function Get-BCCTrustedNuGetFeeds {
     param(
         [Parameter(Mandatory = $true)]
         [string]$fromTrustedNuGetFeeds,
@@ -94,22 +94,26 @@ function Initialize-BCCTrustedNuGetFeeds {
         [switch] $skipSymbolsFeeds
     )
 
-    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
+    $trustedNuGetFeeds = @()
     if ($fromTrustedNuGetFeeds) {
         $trustedNuGetFeeds = $fromTrustedNuGetFeeds | ConvertFrom-Json
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
             $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
-                $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
-            })
+                    $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
+                    $trustedNuGetFeeds += @($feedConfig)
+                })
         }
     }
-    if ($trustMicrosoftNuGetFeeds -and -not $skipSymbolsFeeds) {
-        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
-        $bcContainerHelperConfig.TrustedNuGetFeeds += @($feedConfig)
+    if ($trustMicrosoftNuGetFeeds) {
+        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
+        $trustedNuGetFeeds += @($feedConfig)
+        if (-not $skipSymbolsFeeds) {
+            $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+            $trustedNuGetFeeds += @($feedConfig)
+        }
     }
     if ($skipSymbolsFeeds) {
-        $bcContainerHelperConfig.TrustedNuGetFeeds = @($bcContainerHelperConfig.TrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
+        $trustedNuGetFeeds = @($trustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
     }
 }
