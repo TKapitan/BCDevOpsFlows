@@ -12,7 +12,7 @@ try {
     # Initialize trusted NuGet feeds
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     foreach ($feed in $TrustedNuGetFeeds) {
-        AddNugetPackageSource -sourceName $feed.name -sourceUrl $feed.url
+        AddNugetPackageSource -feed $feed
     }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"

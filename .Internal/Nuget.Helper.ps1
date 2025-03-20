@@ -47,16 +47,21 @@ function GetNugetPackagePath() {
 }
 function AddNugetPackageSource() {
     Param(
-        [string] $sourceName,
-        [string] $sourceUrl
+        [PSCustomObject]$feed
     )
 
-    if (!(Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue)) {
-        Write-Host "Adding Nuget source $sourceName"
-        Register-PackageSource -Name $sourceName -Location $sourceUrl -ProviderName NuGet | Out-null
+    if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
+        Write-Host "Adding Nuget source $($feed.name)"
+        if ($feed.token) {
+            $secureToken = ConvertTo-SecureString $feed.token -AsPlainText -Force
+            $credentials = New-Object System.Management.Automation.PSCredential($feed.token, $secureToken)
+            Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet -Credential $credentials | Out-Null
+            return
+        }
+        Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet | Out-null
     }
     else {
-        OutputDebug -Message "Nuget source $sourceName already exists"
+        OutputDebug -Message "Nuget source $($feed.name) already exists"
     }
 }
 function RemoveNugetPackageSource() {
