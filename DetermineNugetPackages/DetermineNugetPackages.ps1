@@ -9,6 +9,9 @@ if (!$ENV:AL_NUGETINITIALIZED) {
 try {
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 
+    # Initialize trusted NuGet feeds
+    Initialize-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+
     AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
     AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
 
@@ -25,8 +28,8 @@ try {
     mkdir $packageCachePath
  
     nuget install $applicationPackage -outputDirectory $packageCachePath 
-    foreach ($Dependency in $manifestObject.dependencies | Where-Object { -not ($_.publisher -eq "Microsoft" -and $_.name.StartsWith("_Exclude")) }) {
-        $PackageName = ("{0}.{1}.symbols.{2}" -f $Dependency.publisher, $Dependency.name, $Dependency.id ) -replace ' ', ''
+    foreach ($Dependency in $manifestObject.dependencies) {
+        $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
          
         nuget install $PackageName -outputDirectory $packageCachePath 
