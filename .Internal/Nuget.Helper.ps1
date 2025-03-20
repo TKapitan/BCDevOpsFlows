@@ -75,12 +75,15 @@ function RemoveNugetPackageSource() {
 function New-NuGetFeedConfig {
     param(
         [Parameter(Mandatory = $true)]
+        [string]$name,
+        [Parameter(Mandatory = $true)]
         [string]$url,
         [Parameter(Mandatory = $false)]
         [string]$token = ''
     )
-    OutputDebug -Message "Adding trusted NuGet feed $url"
+    OutputDebug -Message "Adding trusted NuGet feed $name ($url)"
     return [PSCustomObject]@{
+        "name"  = $name
         "url"   = $url
         "token" = $token
     }
@@ -100,16 +103,16 @@ function Get-BCCTrustedNuGetFeeds {
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
             $trustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                    $feedConfig = New-NuGetFeedConfig -url $_.Url -token $_.Token
+                    $feedConfig = New-NuGetFeedConfig -name $_.Name -url $_.Url -token $_.Token
                     $trustedNuGetFeeds += @($feedConfig)
                 })
         }
     }
     if ($trustMicrosoftNuGetFeeds) {
-        $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
+        $feedConfig = New-NuGetFeedConfig -name "MSSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
         $trustedNuGetFeeds += @($feedConfig)
         if (-not $skipSymbolsFeeds) {
-            $feedConfig = New-NuGetFeedConfig -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+            $feedConfig = New-NuGetFeedConfig -name "AppSourceSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
             $trustedNuGetFeeds += @($feedConfig)
         }
     }
