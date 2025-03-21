@@ -108,15 +108,17 @@ function Get-BCCTrustedNuGetFeeds {
         }
     }
     if ($trustMicrosoftNuGetFeeds) {
-        $feedConfig = New-NuGetFeedConfig -name "MSSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
+        $feedConfig = New-NuGetFeedConfig -name "MSApps" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSApps/nuget/v3/index.json"
         $requiredTrustedNuGetFeeds += @($feedConfig)
         if (-not $skipSymbolsFeeds) {
+            $feedConfig = New-NuGetFeedConfig -name "MSSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
+            $requiredTrustedNuGetFeeds += @($feedConfig)
             $feedConfig = New-NuGetFeedConfig -name "AppSourceSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
             $requiredTrustedNuGetFeeds += @($feedConfig)
         }
     }
     if ($skipSymbolsFeeds) {
-        $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
+        $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" -and $_.url -notlike "*MSSymbols*" })
     }
     return $requiredTrustedNuGetFeeds
 }
