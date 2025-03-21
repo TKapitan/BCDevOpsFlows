@@ -11,8 +11,10 @@ try {
 
     # Initialize trusted NuGet feeds
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    $ConfigFile = Get-NugetConfig -TrustedNuGetFeeds $TrustedNuGetFeeds
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json  
     foreach ($feed in $TrustedNuGetFeeds) {
-        AddNugetPackageSource -feed $feed
+        Add-NugetPackageSource -feed $feed -configFile $ConfigFile
     }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
@@ -31,7 +33,7 @@ try {
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
-        Save-Module -Name $PackageName -Path $packageCachePath
+        nuget install $PackageName -outputDirectory $packageCachePath -configFile $ConfigFile
     }
 }
 catch {

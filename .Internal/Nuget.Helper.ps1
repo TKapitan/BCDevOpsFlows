@@ -45,20 +45,17 @@ function GetNugetPackagePath() {
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     return $nugetPackagePath
 }
-function AddNugetPackageSource() {
+function Add-NugetPackageSource() {
     Param(
-        [PSCustomObject]$feed
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$feed,
+        [Parameter(Mandatory = $true)]
+        [string]$configFile
     )
 
     if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
         Write-Host "Adding Nuget source $($feed.name)"
-        if ($feed.token) {
-            $secureToken = ConvertTo-SecureString $feed.token -AsPlainText -Force
-            $credentials = New-Object System.Management.Automation.PSCredential($feed.token, $secureToken)
-            Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet -Credential $credentials | Out-Null
-            return
-        }
-        Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet | Out-null
+        Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet -ConfigFile $configFile | Out-Null
     }
     else {
         OutputDebug -Message "Nuget source $($feed.name) already exists"
@@ -108,8 +105,8 @@ function Get-BCCTrustedNuGetFeeds {
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
             $requiredTrustedNuGetFeeds = @($trustedNuGetFeeds | ForEach-Object {
-                New-NuGetFeedConfig -name $_.Name -url $_.Url -token $_.Token
-            })
+                    New-NuGetFeedConfig -name $_.Name -url $_.Url -token $_.Token
+                })
         }
     }
     if ($trustMicrosoftNuGetFeeds) {
@@ -124,4 +121,38 @@ function Get-BCCTrustedNuGetFeeds {
         $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" })
     }
     return $requiredTrustedNuGetFeeds
+}
+function Get-NugetConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$TrustedNuGetFeeds
+    )
+    
+    $nugetConfig = @"
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+"@
+    foreach ($feed in $TrustedNuGetFeeds) {
+        $nugetConfig += "`n        <add key=`"$($feed.name)`" value=`"$($feed.url)`" />"
+    }
+    $nugetConfig += @"
+    </packageSources>
+    <packageSourceCredentials>
+"@
+    foreach ($feed in $TrustedNuGetFeeds) {
+        if ($feed.token) {
+            $nugetConfig += @"
+        <$($feed.name)>
+            <add key="Username" value="$($feed.token)" />
+            <add key="ClearTextPassword" value="$($feed.token)" />
+        </$($feed.name)>
+"@
+        }
+    }
+    $nugetConfig += @"
+    </packageSourceCredentials>
+</configuration>
+"@
+    return $nugetConfig
 }
