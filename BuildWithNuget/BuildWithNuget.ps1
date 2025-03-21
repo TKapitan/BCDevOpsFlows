@@ -13,18 +13,22 @@ try {
     $baseAppFolder = "$baseRepoFolder\App"
     $packageCachePath = "$baseRepoFolder\.alpackages"
     $dependenciesCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
-    if (Test-Path $dependenciesCachePath) {
-        $dependencies = Get-ChildItem -Path $dependenciesCachePath -Filter "*.app"
+    if (-not (Test-Path $dependenciesCachePath)) {
+        New-Item -Path $dependenciesCachePath -ItemType Directory -Force | Out-Null
+    }
+    if (Test-Path $packageCachePath) {
+        $dependencies = Get-ChildItem -Path $packageCachePath | Where-Object { $_.Name -notlike 'Microsoft.*' }
         foreach ($dependency in $dependencies) {
-            $targetPath = Join-Path $packageCachePath $dependency.Name
+            $targetPath = Join-Path $dependenciesCachePath $dependency.Name
             if (-not (Test-Path $targetPath)) {
                 Copy-Item -Path $dependency.FullName -Destination $targetPath -Force
             }
         }
     }
+
     $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 
-    $buildParameters = Get-BuildParameters -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $packageCachePath -appFileJson $appFileJson
+    $buildParameters = Get-BuildParameters -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $dependenciesCachePath -appFileJson $appFileJson
     Invoke-AlCompiler -Parameters $buildParameters
 }
 catch {
