@@ -27,12 +27,14 @@ try {
  
     $packageCachePath = "$baseRepoFolder\.alpackages"
     mkdir $packageCachePath
-
+    $dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
+    mkdir $dependenciesPackageCachePath
+    
     nuget install $applicationPackage -outputDirectory $packageCachePath 
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
-        nuget install $PackageName -outputDirectory $packageCachePath
+        nuget install $PackageName -outputDirectory $dependenciesPackageCachePath
     }
 }
 catch {

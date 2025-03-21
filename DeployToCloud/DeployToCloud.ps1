@@ -92,8 +92,9 @@ foreach ($environmentName in $matchingEnvironments) {
 
             if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
                 $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
-                $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" | Select-Object -ExpandProperty FullName
-                
+                if (Test-Path $dependenciesFolder) {
+                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" | Select-Object -ExpandProperty FullName
+                }
                 Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
                 if ($dependencies) {
                     $dependencies | ForEach-Object {

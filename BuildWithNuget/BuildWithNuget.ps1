@@ -12,6 +12,16 @@ try {
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
     $baseAppFolder = "$baseRepoFolder\App"
     $packageCachePath = "$baseRepoFolder\.alpackages"
+    $dependenciesCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
+    if (Test-Path $dependenciesCachePath) {
+        $dependencies = Get-ChildItem -Path $dependenciesCachePath -Filter "*.app"
+        foreach ($dependency in $dependencies) {
+            $targetPath = Join-Path $packageCachePath $dependency.Name
+            if (-not (Test-Path $targetPath)) {
+                Copy-Item -Path $dependency.FullName -Destination $targetPath -Force
+            }
+        }
+    }
     $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 
     $buildParameters = Get-BuildParameters -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $packageCachePath -appFileJson $appFileJson
