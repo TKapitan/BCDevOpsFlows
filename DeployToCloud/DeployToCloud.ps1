@@ -22,6 +22,7 @@ if ($matchingEnvironments.Count -eq 0) {
 }
 Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
 
+$noOfValidEnvironments = 0
 $environmentUrls = @{} | ConvertTo-Json
 foreach ($environmentName in $matchingEnvironments) {
     Write-Host "Processing environment: $environmentName"
@@ -69,13 +70,14 @@ foreach ($environmentName in $matchingEnvironments) {
         Write-Host "EnvironmentUrl: $environmentUrl"
         $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
         if ($response.Status -eq "DoesNotExist") {
-            OutputError -message "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context."
-            exit
+            Write-Warning "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context. Skipping..."
+            continue
         }
         if ($response.Status -ne "Ready") {
-            OutputError -message "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status))."
-            exit
+            Write-Warning "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status)). Skipping..."
+            continue
         }
+        $noOfValidEnvironments++
 
         # Deploy app
         $dependencies = @()
@@ -174,6 +176,10 @@ foreach ($environmentName in $matchingEnvironments) {
 
         Write-Error "Deployment to environment ($environmentName) failed. See previous lines for details."
     }
+}
+
+if ($noOfValidEnvironments -eq 0) {
+    Write-Error "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
 }
 
 $ENV:AL_ENVIRONMENTURLS = $environmentUrls | ConvertTo-Json -Compress
