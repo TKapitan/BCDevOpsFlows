@@ -11,10 +11,9 @@ try {
 
     # Initialize trusted NuGet feeds
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-    $ConfigFile = Get-NugetConfig -TrustedNuGetFeeds $TrustedNuGetFeeds
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json  
     foreach ($feed in $TrustedNuGetFeeds) {
-        Add-NugetPackageSource -feed $feed -configFile $ConfigFile
+        Add-NugetPackageSource -feed $feed
     }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
@@ -32,8 +31,23 @@ try {
     nuget install $applicationPackage -outputDirectory $packageCachePath 
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
-        Write-Host "Get $PackageName"
-        nuget install $PackageName -outputDirectory $packageCachePath -configFile $ConfigFile
+        Write-Host "Geting package $PackageName"
+
+        $found = $false
+        foreach ($feed in $TrustedNuGetFeeds) {
+            try {
+                nuget install $PackageName -Source $feed.url -OutputDirectory $packageCachePath -NonInteractive -Verbosity detailed
+                OutputDebug -Message "Package $PackageName found in feed $($feed.Name)"
+                $found = $true
+                break
+            }
+            catch {
+                Write-Host "Package $package not found in feed $($feed.Name)"
+            }
+        }
+        if (-Not $found) {
+            Write-Error "Package $package not found in any feed"
+        }
     }
 }
 catch {

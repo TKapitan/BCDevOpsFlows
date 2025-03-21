@@ -48,14 +48,12 @@ function GetNugetPackagePath() {
 function Add-NugetPackageSource() {
     Param(
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$feed,
-        [Parameter(Mandatory = $true)]
-        [string]$configFile
+        [PSCustomObject]$feed
     )
 
     if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
         Write-Host "Adding Nuget source $($feed.name)"
-        Register-PackageSource -Name $feed.name -Location $feed.url -ProviderName NuGet -ConfigFile $configFile | Out-Null
+        nuget sources add -Name $feed.name -Source $feed.url -Username "AzureDevOps" -Password $feed.token
     }
     else {
         OutputDebug -Message "Nuget source $($feed.name) already exists"
