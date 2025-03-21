@@ -20,7 +20,7 @@ try {
             $targetPath = Join-Path $buildCacheFolder $dependency.Name
             OutputDebug -Message "Copying dependency: $($dependency.Name)"
             if (-not (Test-Path $targetPath)) {
-                Copy-Item -Path $dependency.FullName -Destination $targetPath -Force
+                Copy-Item -Path $dependency.FullName -Destination $targetPath -Force -Recurse
                 OutputDebug -Message "Copied dependency: $($dependency.Name)"
             }
         }
