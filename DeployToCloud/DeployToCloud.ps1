@@ -95,7 +95,7 @@ foreach ($environmentName in $matchingEnvironments) {
                 $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
                 if (Test-Path $dependenciesFolder) {
                     $dependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
-                        $dependencies += Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+                        Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
                     }
                 }
                 # BCContainerHelper dependencies
