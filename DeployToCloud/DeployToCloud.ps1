@@ -91,9 +91,15 @@ foreach ($environmentName in $matchingEnvironments) {
             Write-Host "- $([System.IO.Path]::GetFileName($appFilePath))"
 
             if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
+                # NuGet dependencies
+                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
+                if (Test-Path $dependenciesFolder) {
+                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Where-Object { $_.Name -notlike "Microsoft.*" } | Select-Object -ExpandProperty FullName
+                }
+                # BCContainerHelper dependencies
                 $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
                 if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" | Select-Object -ExpandProperty FullName
+                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
                 }
                 Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
                 if ($dependencies) {
