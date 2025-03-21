@@ -94,7 +94,9 @@ foreach ($environmentName in $matchingEnvironments) {
                 # NuGet dependencies
                 $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
                 if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Where-Object { $_.Name -notlike "Microsoft.*" } | Select-Object -ExpandProperty FullName
+                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
+                        $dependencies += Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+                    }
                 }
                 # BCContainerHelper dependencies
                 $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
