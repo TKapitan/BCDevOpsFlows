@@ -25,14 +25,16 @@ try {
     }
     $manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
  
-    $packageCachePath = "$baseRepoFolder\.alpackages"
-    mkdir $packageCachePath
+    $buildCacheFolder = "$baseRepoFolder\.buildpackages"
+    mkdir $buildCacheFolder
+    $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
+    mdkir $dependenciesPackageCachePath
     
-    nuget install $applicationPackage -outputDirectory $packageCachePath 
+    nuget install $applicationPackage -outputDirectory $buildCacheFolder 
     foreach ($Dependency in $manifestObject.dependencies) {
         $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
-        nuget install $PackageName -outputDirectory $packageCachePath
+        nuget install $PackageName -outputDirectory $dependenciesPackageCachePath
     }
 }
 catch {
