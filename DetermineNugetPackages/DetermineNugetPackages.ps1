@@ -28,7 +28,7 @@ try {
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
     mkdir $buildCacheFolder
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
-    mdkir $dependenciesPackageCachePath
+    mkdir $dependenciesPackageCachePath
     
     nuget install $applicationPackage -outputDirectory $buildCacheFolder 
     foreach ($Dependency in $manifestObject.dependencies) {
