@@ -5,9 +5,7 @@ Compile and create app file for the project (App folder only) without creating c
 **LIMITATIONS**
 - The nuget support in Business Central is still in limited.
 - BCDevOps Flows currently does not support
-  - Building against specific version of Business Central
   - Building against next-minor/major
-  - Building against non-W1 localization
 - BCDevOps Flows can only support what is supported by Microsoft. For this reason, BCDevOps Flows cannot run tests using nugets as it requires container.
 
 ## INPUT Parameters
