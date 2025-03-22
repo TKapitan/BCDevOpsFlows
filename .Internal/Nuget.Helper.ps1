@@ -53,7 +53,7 @@ function Add-NugetPackageSource() {
 
     if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
         Write-Host "Adding Nuget source $($feed.name)"
-        nuget sources add -Name $feed.name -Source $feed.url #-Username "AzureDevOps" -Password $feed.token
+        nuget sources add -Name $feed.name -Source $feed.url
     }
     else {
         OutputDebug -Message "Nuget source $($feed.name) already exists"
@@ -122,37 +122,3 @@ function Get-BCCTrustedNuGetFeeds {
     }
     return $requiredTrustedNuGetFeeds
 }
-# function Get-NugetConfig {
-#     param(
-#         [Parameter(Mandatory = $true)]
-#         [PSCustomObject]$TrustedNuGetFeeds
-#     )
-    
-#     $nugetConfig = @"
-# <?xml version="1.0" encoding="utf-8"?>
-# <configuration>
-#     <packageSources>
-# "@
-#     foreach ($feed in $TrustedNuGetFeeds) {
-#         $nugetConfig += "`n        <add key=`"$($feed.name)`" value=`"$($feed.url)`" />"
-#     }
-#     $nugetConfig += @"
-#     </packageSources>
-#     <packageSourceCredentials>
-# "@
-#     foreach ($feed in $TrustedNuGetFeeds) {
-#         if ($feed.token) {
-#             $nugetConfig += @"
-#         <$($feed.name)>
-#             <add key="Username" value="$($feed.token)" />
-#             <add key="ClearTextPassword" value="$($feed.token)" />
-#         </$($feed.name)>
-# "@
-#         }
-#     }
-#     $nugetConfig += @"
-#     </packageSourceCredentials>
-# </configuration>
-# "@
-#     return $nugetConfig
-# }
