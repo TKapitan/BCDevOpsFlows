@@ -51,11 +51,11 @@ foreach ($environmentName in $matchingEnvironments) {
         Write-Host "EnvironmentUrl: $environmentUrl"
         $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
         if ($response.Status -eq "DoesNotExist") {
-            Write-Warning "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context."
+            Write-Warning "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context. Skipping..."
             continue
         }
         if ($response.Status -ne "Ready") {
-            Write-Warning "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status))."
+            Write-Warning "Environment with name $($deploymentSettings.environmentName) is not ready (Status is $($response.Status)). Skipping..."
             continue
         }
         $noOfValidEnvironments++
