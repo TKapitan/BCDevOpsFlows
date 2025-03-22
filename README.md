@@ -38,21 +38,17 @@ We strongly recommend to not change any of the standard pipeline or standard scr
 You can use the following documentation of supported scripts to build your own pipelines (yaml).
 
 - [WorkflowInitialize](./WorkflowInitialize/README.md)
+- [InitNuget](./InitNuget/README.md)
 - [ReadSettings](./ReadSettings/README.md)
 - [VerifyAuthContext](./VerifyAuthContext/README.md)
+- [DetermineNugetPackages](./DetermineNugetPackages/README.md)
 - [DetermineArtifactUrl](./DetermineArtifactUrl/README.md)
 - [IncreaseVersion](./IncreaseVersion/README.md)
+- [BuildWithNuget](./BuildWithNuget/README.md)
 - [RunPipeline](./RunPipeline/README.md)
 - [StoreAppLocally](./StoreAppLocally/README.md)
 - [PushBackToRepo](./PushBackToRepo/README.md)
 - [DeployToCloud](./DeployToCloud/README.md)
-- [PipelineCleanup](./PipelineCleanup/README.md)
-
-BCDevOps Flows supports limited set of steps for working with NuGet packages. Microsoft Dynamics 365 Business Central does not support NuGet yet (still WIP). There may be breaking changes more often than in other sections.
-
-- [InitNuget](./InitNuget/README.md)
-- [DetermineNugetPackages](./DetermineNugetPackages/README.md)
-- [BuildWithNuget](./BuildWithNuget/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
 
 ## Obsoletion

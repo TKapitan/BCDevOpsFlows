@@ -13,6 +13,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
@@ -82,9 +83,8 @@ try {
         exit
     }
 
-    # Trusted NuGet feeds not supported
-    Write-Host "Trusted NuGet feeds not supported, skipping"
-    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
+    # Initialize trusted NuGet feeds
+    $bcContainerHelperConfig.TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
 
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
     if ($PSVersionTable.PSVersion.Major -ge 6) {
@@ -227,6 +227,43 @@ try {
                                 -ConfigPackage $configPackage `
                                 -PackageId $packageId
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    if (($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds') -and ($bcContainerHelperConfig.TrustedNuGetFeeds.Count -gt 0)) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+        if ($githubPackagesContext) {
+            $gitHubPackagesCredential = $gitHubPackagesContext | ConvertFrom-Json
+        }
+        else {
+            $gitHubPackagesCredential = [PSCustomObject]@{ "serverUrl" = ''; "token" = '' }
+        }
+        $runAlPipelineParams += @{
+            "InstallMissingDependencies" = {
+                Param([Hashtable]$parameters)
+                $parameters.missingDependencies | ForEach-Object {
+                    $appid = $_.Split(':')[0]
+                    $appName = $_.Split(':')[1]
+                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
+                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
+                    $publishParams = @{
+                        "nuGetServerUrl" = $gitHubPackagesCredential.serverUrl
+                        "nuGetToken"     = $gitHubPackagesCredential.token
+                        "packageName"    = $appId
+                        "version"        = $version
+                    }
+                    if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
+                        $publishParams += @{
+                            "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
+                        }
+                    }
+                    if ($parameters.ContainsKey('containerName')) {
+                        Publish-BcNuGetPackageToContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Download-BcNuGetPackageToFolder -folder $parameters.appSymbolsFolder @publishParams | Out-Null
                     }
                 }
             }

@@ -69,8 +69,10 @@ function ReadSettings {
         "appRevision"                     = 0
         "additionalCountries"             = @()
         "appDependencies"                 = @()
+        "appDependenciesNuGet"            = @()
         "appFolders"                      = @()
         "testDependencies"                = @()
+        "testDependenciesNuGet"           = @()
         "testFolders"                     = @()
         "bcptTestFolders"                 = @()
         "pageScriptingTests"              = @()
@@ -111,9 +113,11 @@ function ReadSettings {
         "buildModes"                      = @()
         "writableFolderPath"              = ""
         "nugetBCDevToolsVersion"          = "15.0.18.19684-beta"   
+        "trustMicrosoftNuGetFeeds"        = $true
         "artifactUrlCacheKeepHours"       = 6
         "overrideResourceExposurePolicy"  = $false
         "previousRelease"                 = ""
+        "deliveryTarget"                  = "AzureDevOps"
     }
 
     # Read settings from files and merge them into the settings object
