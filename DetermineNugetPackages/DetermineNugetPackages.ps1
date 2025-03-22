@@ -8,10 +8,7 @@ if (!$ENV:AL_NUGETINITIALIZED) {
 
 try {
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-
-    # Initialize trusted NuGet feeds
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json  
     foreach ($feed in $TrustedNuGetFeeds) {
         Add-NugetPackageSource -feed $feed
     }
