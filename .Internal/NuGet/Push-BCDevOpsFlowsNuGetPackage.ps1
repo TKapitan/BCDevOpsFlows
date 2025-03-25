@@ -17,15 +17,14 @@
 #>
 Function Push-BCDevOpsFlowsNuGetPackage {
     Param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $nuGetServerUrl,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $nuGetToken,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $bcNuGetPackage
     )
 
     $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::Create($nuGetServerUrl, $nuGetToken, @(), @())
     $nuGetFeed.PushPackage($bcNuGetPackage)
 }
-Export-ModuleMember -Function Push-BCDevOpsFlowsNuGetPackage

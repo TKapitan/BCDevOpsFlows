@@ -25,17 +25,17 @@
 #>
 function Get-BCDevOpsFlowsNuGetPackageId {
     Param(
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $packageIdTemplate = '{publisher}.{name}.{tag}.{id}',
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $publisher,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $name,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $id = '',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $tag = '',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $version = ''
     )
 
@@ -47,9 +47,9 @@ function Get-BCDevOpsFlowsNuGetPackageId {
     if ($nname -eq '') { throw "App name is invalid: '$name'" }
     if ($npublisher -eq '') { throw "App publisher is invalid: '$publisher'" }
 
-    $packageIdTemplate = $packageIdTemplate.replace('{id}',$id).replace('{publisher}',$npublisher).replace('{tag}',$tag).replace('{version}',$version.Replace('.', '-')).Replace('..', '.').TrimEnd('.')
+    $packageIdTemplate = $packageIdTemplate.replace('{id}', $id).replace('{publisher}', $npublisher).replace('{tag}', $tag).replace('{version}', $version.Replace('.', '-')).Replace('..', '.').TrimEnd('.')
     # Max. Length of NuGet Package Id is 100 - we shorten the name part of the id if it is too long
-    $packageId = $packageIdTemplate.replace('{name}',$nname)
+    $packageId = $packageIdTemplate.replace('{name}', $nname)
     if ($packageId.Length -gt 100) {
         if ($nname.Length -gt ($packageId.Length - 99)) {
             $nname = $nname.Substring(0, $nname.Length - ($packageId.Length - 99))
@@ -57,8 +57,7 @@ function Get-BCDevOpsFlowsNuGetPackageId {
         else {
             throw "Package id is too long: $packageId, unable to shorten it"
         }
-        $packageId = $packageIdTemplate.replace('{name}',$nname)
+        $packageId = $packageIdTemplate.replace('{name}', $nname)
     }
     return $packageId
 }
-Export-ModuleMember -Function Get-BCDevOpsFlowsNuGetPackageId

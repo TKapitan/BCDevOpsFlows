@@ -89,7 +89,7 @@ class BcDevOpsFlowsNuGetFeed {
             # GitHub API unfortunately doesn't support filtering, so we need to filter ourselves
             $organization = $matches[1]
             $headers = @{
-                "Accept" = "application/vnd.github+json"
+                "Accept"               = "application/vnd.github+json"
                 "X-GitHub-Api-Version" = "2022-11-28"
             }
             if ($this.token) {
@@ -115,7 +115,7 @@ class BcDevOpsFlowsNuGetFeed {
                 if ($result.Count -eq 0) {
                     break
                 }
-                $matching += @($result | Where-Object { $_.name -like "*$packageName*" -and $this.IsTrusted($_.name) } | Sort-Object { $_.name.replace('.symbols','') } | ForEach-Object { @{ "id" = $_.name; "versions" = @() } } )
+                $matching += @($result | Where-Object { $_.name -like "*$packageName*" -and $this.IsTrusted($_.name) } | Sort-Object { $_.name.replace('.symbols', '') } | ForEach-Object { @{ "id" = $_.name; "versions" = @() } } )
                 $page++
             }
         }
@@ -131,7 +131,7 @@ class BcDevOpsFlowsNuGetFeed {
                 throw (GetExtendedErrorMessage $_)
             }
             # Check that the found pattern matches the package name and the trusted patterns
-            $matching = @($searchResult.data | Where-Object { $_.id -like "*$($packageName)*" -and $this.IsTrusted($_.id) } | Sort-Object { $_.id.replace('.symbols','') } | ForEach-Object { @{ "id" = $_.id; "versions" = @($_.versions.version) } } )
+            $matching = @($searchResult.data | Where-Object { $_.id -like "*$($packageName)*" -and $this.IsTrusted($_.id) } | Sort-Object { $_.id.replace('.symbols', '') } | ForEach-Object { @{ "id" = $_.id; "versions" = @($_.versions.version) } } )
         }
         $exact = $matching | Where-Object { $_.id -eq $packageName -or $_.id -eq "$packageName.symbols" }
         if ($exact) {
@@ -166,7 +166,7 @@ class BcDevOpsFlowsNuGetFeed {
     
         }
         Write-Host "$($versionsArr.count) versions found"
-        $versionsArr = @($versionsArr | Where-Object { $allowPrerelease -or !$_.Contains('-') } | Sort-Object { ($_ -replace '-.+$') -as [System.Version]  }, { "$($_)z" } -Descending:$descending | ForEach-Object { "$_" })
+        $versionsArr = @($versionsArr | Where-Object { $allowPrerelease -or !$_.Contains('-') } | Sort-Object { ($_ -replace '-.+$') -as [System.Version] }, { "$($_)z" } -Descending:$descending | ForEach-Object { "$_" })
         Write-Host "First version is $($versionsArr[0])"
         Write-Host "Last version is $($versionsArr[$versionsArr.Count-1])"
         return $versionsArr
@@ -174,7 +174,7 @@ class BcDevOpsFlowsNuGetFeed {
 
     # Normalize name or publisher name to be used in nuget id
     static [string] Normalize([string] $name) {
-        return $name -replace '[^a-zA-Z0-9_\-]',''
+        return $name -replace '[^a-zA-Z0-9_\-]', ''
     }
 
     static [string] NormalizeVersionStr([string] $versionStr) {
@@ -225,7 +225,7 @@ class BcDevOpsFlowsNuGetFeed {
                 $fromver = [System.Version]([BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($matches[2]))
             }
             else {
-                $fromver = [System.Version]::new(0,0,0,0)
+                $fromver = [System.Version]::new(0, 0, 0, 0)
                 if ($inclFrom) {
                     Write-Host "Invalid NuGet version range $nuGetVersionRange"
                     return $false
@@ -235,7 +235,7 @@ class BcDevOpsFlowsNuGetFeed {
                 $tover = [System.Version]([BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($matches[4]))
             }
             elseif ($range) {
-                $tover = [System.Version]::new([int32]::MaxValue,[int32]::MaxValue,[int32]::MaxValue,[int32]::MaxValue)
+                $tover = [System.Version]::new([int32]::MaxValue, [int32]::MaxValue, [int32]::MaxValue, [int32]::MaxValue)
                 if ($inclTo) {
                     Write-Host "Invalid NuGet version range $nuGetVersionRange"
                     return $false
@@ -273,7 +273,7 @@ class BcDevOpsFlowsNuGetFeed {
         if ($excludeVersions) {
             Write-Host "Exclude versions: $($excludeVersions -join ', ')"
         }
-        foreach($version in $versions ) {
+        foreach ($version in $versions ) {
             if ($excludeVersions -contains $version) {
                 continue
             }
@@ -350,7 +350,7 @@ class BcDevOpsFlowsNuGetFeed {
         Write-Host "Preparing NuGet Package for submission"
         $headers = $this.GetHeaders()
         $headers += @{
-            "X-NuGet-ApiKey" = $this.token
+            "X-NuGet-ApiKey"         = $this.token
             "X-NuGet-Client-Version" = "6.3.0"
         }
         $boundary = [System.Guid]::NewGuid().ToString();
@@ -363,7 +363,8 @@ class BcDevOpsFlowsNuGetFeed {
             $fs.WriteBytes([System.Text.Encoding]::UTF8.GetBytes("Content-Type: application/octet-stream$($LF)Content-Disposition: form-data; name=package; filename=""$([System.IO.Path]::GetFileName($package))""$($LF)$($LF)"))
             $fs.WriteBytes([System.IO.File]::ReadAllBytes($package))
             $fs.WriteBytes([System.Text.Encoding]::UTF8.GetBytes("$LF--$boundary--$LF"))
-        } finally {
+        }
+        finally {
             $fs.Close()
         }
         

@@ -39,36 +39,35 @@
 #>
 Function Get-BCDevOpsFlowsNuGetPackage {
     Param(
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetToken = "",
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $packageName,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $version = '0.0.0.0',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string[]] $excludeVersions = @(),
-        [Parameter(Mandatory=$false)]
-        [ValidateSet('Earliest','Latest','Exact','Any')]
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Earliest', 'Latest', 'Exact', 'Any')]
         [string] $select = 'Latest',
         [switch] $allowPrerelease
     )
 
-try {    
-    $feed, $packageId, $packageVersion = Find-BcNugetPackage -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:($allowPrerelease.IsPresent)
-    if (-not $feed) {
-        Write-Host "No package found matching package name $($packageName) Version $($version)"
-        return ''
+    try {    
+        $feed, $packageId, $packageVersion = Find-BcNugetPackage -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:($allowPrerelease.IsPresent)
+        if (-not $feed) {
+            Write-Host "No package found matching package name $($packageName) Version $($version)"
+            return ''
+        }
+        else {
+            Write-Host "Best match for package name $($packageName) Version $($version): $packageId Version $packageVersion from $($feed.Url)"
+            return $feed.DownloadPackage($packageId, $packageVersion)
+        }
     }
-    else {
-        Write-Host "Best match for package name $($packageName) Version $($version): $packageId Version $packageVersion from $($feed.Url)"
-        return $feed.DownloadPackage($packageId, $packageVersion)
+    catch {
+        Write-Host -ForegroundColor Red "Error Message: $($_.Exception.Message.Replace("`r",'').Replace("`n",' '))`r`nStackTrace: $($_.ScriptStackTrace)"
+        throw
     }
 }
-catch {
-    Write-Host -ForegroundColor Red "Error Message: $($_.Exception.Message.Replace("`r",'').Replace("`n",' '))`r`nStackTrace: $($_.ScriptStackTrace)"
-    throw
-}
-}
-Export-ModuleMember -Function Get-BCDevOpsFlowsNuGetPackage

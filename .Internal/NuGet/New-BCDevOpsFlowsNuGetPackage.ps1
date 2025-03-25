@@ -63,41 +63,41 @@
 #>
 Function New-BCDevOpsFlowsNuGetPackage {
     Param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [alias('appFiles')]
         [string] $appfile,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [hashtable] $countrySpecificAppFiles = @{},
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $packageId = "{publisher}.{name}.{id}",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [System.Version] $packageVersion = $null,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $prereleaseTag = '',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $packageTitle = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $packageDescription = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $packageAuthors = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $githubRepository = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $dependencyIdTemplate = '{publisher}.{name}.{id}',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $dependencyVersionTemplate = '{version}',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $applicationDependencyId = 'Microsoft.Application',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $applicationDependency = '',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $platformDependencyId = 'Microsoft.Platform',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $platformDependency = '',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $runtimeDependencyId = '{publisher}.{name}.runtime-{version}',
         [switch] $isIndirectPackage,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $destinationFolder = '',
         [obsolete('NuGet Dependencies are always included.')]
         [switch] $includeNuGetDependencies
@@ -105,11 +105,11 @@ Function New-BCDevOpsFlowsNuGetPackage {
 
     function CopyFileToStream([string] $filename, [System.IO.Stream] $stream) {
         $bytes = [System.IO.File]::ReadAllBytes($filename)
-        $stream.Write($bytes,0,$bytes.Length)
+        $stream.Write($bytes, 0, $bytes.Length)
     }
 
     function GetDependencyVersionStr([string] $template, [System.Version] $version) {
-        return $template.Replace('{version}',"$version").Replace('{major}',$version.Major).Replace('{minor}',$version.Minor).Replace('{build}',$version.Build).Replace('{revision}',$version.Revision).Replace('{major+1}',($version.Major+1)).Replace('{minor+1}',($version.Minor+1)).Replace('{build+1}',($version.Build+1)).Replace('{revision+1}',($version.Revision+1))
+        return $template.Replace('{version}', "$version").Replace('{major}', $version.Major).Replace('{minor}', $version.Minor).Replace('{build}', $version.Build).Replace('{revision}', $version.Revision).Replace('{major+1}', ($version.Major + 1)).Replace('{minor+1}', ($version.Minor + 1)).Replace('{build+1}', ($version.Build + 1)).Replace('{revision+1}', ($version.Revision + 1))
     }
 
     Write-Host "Create NuGet package"
@@ -137,7 +137,7 @@ Function New-BCDevOpsFlowsNuGetPackage {
         if (!$isIndirectPackage.IsPresent) {
             Copy-Item -Path $appFile -Destination $rootFolder -Force
             if ($countrySpecificAppFiles) {
-                foreach($country in $countrySpecificAppFiles.Keys) {
+                foreach ($country in $countrySpecificAppFiles.Keys) {
                     $countrySpecificAppFile = $countrySpecificAppFiles[$country]
                     if (!(Test-Path $countrySpecificAppFile)) {
                         throw "Unable to locate file: $_"
@@ -149,7 +149,7 @@ Function New-BCDevOpsFlowsNuGetPackage {
             }
         }
         $appJson = Get-AppJsonFromAppFile -appFile $appFile
-        $packageId = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $packageId -publisher $appJson.publisher -name $appJson.name -id $appJson.id -version $appJson.version.replace('.','-')
+        $packageId = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $packageId -publisher $appJson.publisher -name $appJson.name -id $appJson.id -version $appJson.version.replace('.', '-')
         if ($null -eq $packageVersion) {
             $packageVersion = [System.Version]$appJson.version
         }
@@ -225,10 +225,11 @@ Function New-BCDevOpsFlowsNuGetPackage {
                 $appJson.dependencies | ForEach-Object {
                     if ($_.PSObject.Properties.name -eq 'id') {
                         $dependencyId = $_.id
-                    } else {
+                    }
+                    else {
                         $dependencyId = $_.appId
                     }
-                    $id = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $dependencyIdTemplate -publisher $_.publisher -name $_.name -id $dependencyId -version $_.version.replace('.','-')
+                    $id = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $dependencyIdTemplate -publisher $_.publisher -name $_.name -id $dependencyId -version $_.version.replace('.', '-')
                     $XmlObjectWriter.WriteStartElement("dependency")
                     $XmlObjectWriter.WriteAttributeString("id", $id)
                     $XmlObjectWriter.WriteAttributeString("version", (GetDependencyVersionStr -template $dependencyVersionTemplate -version ([System.Version]::Parse($_.version))))
@@ -249,7 +250,7 @@ Function New-BCDevOpsFlowsNuGetPackage {
             }
             if ($isIndirectPackage.IsPresent) {
                 $XmlObjectWriter.WriteStartElement("dependency")
-                $id = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $runtimeDependencyId -publisher $appJson.publisher -name $appJson.name -id $appJson.id -version $appJson.version.replace('.','-')
+                $id = Get-BCDevOpsFlowsNuGetPackageId -packageIdTemplate $runtimeDependencyId -publisher $appJson.publisher -name $appJson.name -id $appJson.id -version $appJson.version.replace('.', '-')
                 $XmlObjectWriter.WriteAttributeString("id", $id)
                 $XmlObjectWriter.WriteAttributeString("version", '1.0.0.0')
                 $XmlObjectWriter.WriteEndElement()
@@ -265,7 +266,7 @@ Function New-BCDevOpsFlowsNuGetPackage {
             $XmlObjectWriter.WriteAttributeString("target", $appFileName);
             $XmlObjectWriter.WriteEndElement()
             if ($countrySpecificAppFiles) {
-                foreach($country in $countrySpecificAppFiles.Keys) {
+                foreach ($country in $countrySpecificAppFiles.Keys) {
                     $countrySpecificAppFile = $countrySpecificAppFiles[$country]
                     $XmlObjectWriter.WriteStartElement("file")
                     $appFileName = Join-Path $country ([System.IO.Path]::GetFileName($countrySpecificAppFiles[$country]))
@@ -314,4 +315,3 @@ Function New-BCDevOpsFlowsNuGetPackage {
         }
     }
 }
-Export-ModuleMember -Function New-BCDevOpsFlowsNuGetPackage

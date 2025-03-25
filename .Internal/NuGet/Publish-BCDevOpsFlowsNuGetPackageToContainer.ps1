@@ -41,21 +41,21 @@
 #>
 Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
     Param(
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetToken = "",
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $packageName,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $version = '0.0.0.0',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Earliest', 'EarliestMatching', 'Latest', 'LatestMatching', 'Exact', 'Any')]
         [string] $select = 'Latest',
         [string] $containerName = "",
         [Hashtable] $bcAuthContext,
         [string] $environment,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $tenant = "default",
         [string] $appSymbolsFolder = "",
         [string] $copyInstalledAppsToFolder = "",
@@ -84,7 +84,8 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
     try {
         if ($allowPrerelease) {
             Write-Host "Prereleased packages are allowed"
-        } else {
+        }
+        else {
             Write-Host "Prereleased packages are not allowed"
         }
         if (Download-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
@@ -107,4 +108,3 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
         Remove-Item -Path $tmpFolder -Recurse -Force
     }
 }
-Export-ModuleMember -Function Publish-BCDevOpsFlowsNuGetPackageToContainer

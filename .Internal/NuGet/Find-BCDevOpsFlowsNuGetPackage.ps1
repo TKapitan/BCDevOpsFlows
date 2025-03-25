@@ -37,25 +37,25 @@
 #>
 Function Find-BCDevOpsFlowsNuGetPackage {
     Param(
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $nuGetToken = "",
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $packageName,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $version = '0.0.0.0',
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string[]] $excludeVersions = @(),
-        [Parameter(Mandatory=$false)]
-        [ValidateSet('Earliest','Latest','Exact','Any')]
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Earliest', 'Latest', 'Exact', 'Any')]
         [string] $select = 'Latest',
         [switch] $allowPrerelease
     )
 
     $bestmatch = $null
     # Search all trusted feeds for the package
-    foreach($feed in (@([PSCustomObject]@{ "Url" = $nuGetServerUrl; "Token" = $nuGetToken; "Patterns" = @('*'); "Fingerprints" = @() })+$bcContainerHelperConfig.TrustedNuGetFeeds)) {
+    foreach ($feed in (@([PSCustomObject]@{ "Url" = $nuGetServerUrl; "Token" = $nuGetToken; "Patterns" = @('*'); "Fingerprints" = @() }) + $bcContainerHelperConfig.TrustedNuGetFeeds)) {
         if ($feed -and $feed.Url) {
             Write-Host "Search NuGetFeed $($feed.Url)"
             if (!($feed.PSObject.Properties.Name -eq 'Token')) { $feed | Add-Member -MemberType NoteProperty -Name 'Token' -Value '' }
@@ -64,7 +64,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
             $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::Create($feed.Url, $feed.Token, $feed.Patterns, $feed.Fingerprints)
             $packages = $nuGetFeed.Search($packageName)
             if ($packages) {
-                foreach($package in $packages) {
+                foreach ($package in $packages) {
                     $packageId = $package.Id
                     Write-Host "PackageId: $packageId"
                     $packageVersion = $nuGetFeed.FindPackageVersion($package, $version, $excludeVersions, $select, $allowPrerelease.IsPresent)
@@ -77,8 +77,8 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                         if (($select -eq 'Earliest' -and ([BcDevOpsFlowsNuGetFeed]::CompareVersions($packageVersion, $bestmatch.PackageVersion) -eq -1)) -or 
                             ($select -eq 'Latest' -and ([BcDevOpsFlowsNuGetFeed]::CompareVersions($packageVersion, $bestmatch.PackageVersion) -eq 1))) {
                             $bestmatch = [PSCustomObject]@{
-                                "Feed" = $nuGetFeed
-                                "PackageId" = $packageId
+                                "Feed"           = $nuGetFeed
+                                "PackageId"      = $packageId
                                 "PackageVersion" = $packageVersion
                             }
                         }
@@ -87,8 +87,8 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                         # We only have a match if the version is exact
                         if ([BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($packageVersion) -eq [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($version)) {
                             $bestmatch = [PSCustomObject]@{
-                                "Feed" = $nuGetFeed
-                                "PackageId" = $packageId
+                                "Feed"           = $nuGetFeed
+                                "PackageId"      = $packageId
                                 "PackageVersion" = $packageVersion
                             }
                             break
@@ -96,8 +96,8 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                     }
                     else {
                         $bestmatch = [PSCustomObject]@{
-                            "Feed" = $nuGetFeed
-                            "PackageId" = $packageId
+                            "Feed"           = $nuGetFeed
+                            "PackageId"      = $packageId
                             "PackageVersion" = $packageVersion
                         }
                         # If we are looking for any match, we can stop here
@@ -117,4 +117,3 @@ Function Find-BCDevOpsFlowsNuGetPackage {
         return $bestmatch.Feed, $bestmatch.PackageId, $bestmatch.PackageVersion
     }
 }
-Export-ModuleMember -Function Find-BCDevOpsFlowsNuGetPackage
