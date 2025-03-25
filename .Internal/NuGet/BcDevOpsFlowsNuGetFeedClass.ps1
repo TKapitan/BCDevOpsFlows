@@ -1,8 +1,6 @@
 # Copy of NuGet class from BCContainerHelper, required changed to support Azure DevOps preview packages
 #requires -Version 5.0
 
-[BcDevOpsFlowsNuGetFeed[]] $NuGetFeedCache = @()
-
 class BcDevOpsFlowsNuGetFeed {
 
     [string] $url
@@ -53,11 +51,7 @@ class BcDevOpsFlowsNuGetFeed {
     }
 
     static [BcDevOpsFlowsNuGetFeed] Create([string] $nuGetServerUrl, [string] $nuGetToken, [string[]] $patterns, [string[]] $fingerprints) {
-        $nuGetFeed = $script:NuGetFeedCache | Where-Object { $_.url -eq $nuGetServerUrl -and $_.token -eq $nuGetToken -and (-not (Compare-Object $_.patterns $patterns)) -and (-not (Compare-Object $_.fingerprints $fingerprints)) }
-        if (!$nuGetFeed) {
-            $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::new($nuGetServerUrl, $nuGetToken, $patterns, $fingerprints)
-            $script:NuGetFeedCache += $nuGetFeed
-        }
+        $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::new($nuGetServerUrl, $nuGetToken, $patterns, $fingerprints)
         return $nuGetFeed
     }
 
@@ -121,7 +115,7 @@ class BcDevOpsFlowsNuGetFeed {
         }
         else {
             #if ($this.searchQueryServiceUrl -notlike 'https://pkgs.dev.azure.com/*' -and $allowPrerelease) {
-                $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&prerelease=true&take=50"
+            $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&prerelease=true&take=50"
             #}
             #else {
             #    $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&take=50"
