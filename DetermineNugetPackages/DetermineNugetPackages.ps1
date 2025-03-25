@@ -29,7 +29,7 @@ try {
     
     nuget install $applicationPackage -outputDirectory $buildCacheFolder 
     foreach ($Dependency in $manifestObject.dependencies) {
-        $PackageName = Get-BcNugetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
+        $PackageName = Get-BCDevOpsFlowsNuGetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
         Write-Host "Get $PackageName"
         nuget install $PackageName -outputDirectory $dependenciesPackageCachePath
     }
