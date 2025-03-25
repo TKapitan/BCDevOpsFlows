@@ -120,12 +120,12 @@ class BcDevOpsFlowsNuGetFeed {
             }
         }
         else {
-            if ($this.searchQueryServiceUrl -notlike 'https://pkgs.dev.azure.com/*' -and $allowPrerelease) {
+            #if ($this.searchQueryServiceUrl -notlike 'https://pkgs.dev.azure.com/*' -and $allowPrerelease) {
                 $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&prerelease=true&take=50"
-            }
-            else {
-                $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&take=50"
-            }
+            #}
+            #else {
+            #    $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&take=50"
+            #}
             try {
                 Write-Host -ForegroundColor Yellow "Search package using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
