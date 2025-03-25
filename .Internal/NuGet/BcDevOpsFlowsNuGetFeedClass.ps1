@@ -82,7 +82,7 @@ class BcDevOpsFlowsNuGetFeed {
         return ($packageId -and ($this.patterns | Where-Object { $packageId -like $_ }))
     }
 
-    [hashtable[]] Search([string] $packageName) {
+    [hashtable[]] Search([string] $packageName, [bool] $allowPrerelease) {
         if ($this.searchQueryServiceUrl -match '^https://nuget.pkg.github.com/(.*)/query$') {
             # GitHub support for SearchQueryService is unstable and is not usable
             # use GitHub API instead
@@ -120,7 +120,12 @@ class BcDevOpsFlowsNuGetFeed {
             }
         }
         else {
-            $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&take=50"
+            if ($this.searchQueryServiceUrl -notlike 'https://pkgs.dev.azure.com/*' -and $allowPrerelease) {
+                $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&prerelease=true&take=50"
+            }
+            else {
+                $queryUrl = "$($this.searchQueryServiceUrl)?q=$packageName&take=50"
+            }
             try {
                 Write-Host -ForegroundColor Yellow "Search package using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"

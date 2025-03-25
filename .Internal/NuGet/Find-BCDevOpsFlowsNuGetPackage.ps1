@@ -62,7 +62,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
             if (!($feed.PSObject.Properties.Name -eq 'Patterns')) { $feed | Add-Member -MemberType NoteProperty -Name 'Patterns' -Value @('*') }
             if (!($feed.PSObject.Properties.Name -eq 'Fingerprints')) { $feed | Add-Member -MemberType NoteProperty -Name 'Fingerprints' -Value @() }
             $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::Create($feed.Url, $feed.Token, $feed.Patterns, $feed.Fingerprints)
-            $packages = $nuGetFeed.Search($packageName)
+            $packages = $nuGetFeed.Search($packageName, $allowPrerelease)
             if ($packages) {
                 foreach ($package in $packages) {
                     $packageId = $package.Id
