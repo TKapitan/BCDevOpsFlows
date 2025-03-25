@@ -137,7 +137,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         }
         while ($true) {
             $returnValue = @()
-            $feed, $packageId, $packageVersion = Find-BcNugetPackage -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $findSelect -allowPrerelease:($allowPrerelease.IsPresent)
+            $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNugetPackage -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $findSelect -allowPrerelease:($allowPrerelease.IsPresent)
             if (-not $feed) {
                 Write-Host "No package found matching package name $($packageName) Version $($version)"
                 break

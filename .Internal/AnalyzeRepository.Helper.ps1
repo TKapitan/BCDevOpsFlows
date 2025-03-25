@@ -48,7 +48,7 @@ function AnalyzeRepo {
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BcNugetPackage -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageName
             if ($appFile) {
                 if (!$settings.appDependencies) {
                     $settings.appDependencies = @()
@@ -62,7 +62,7 @@ function AnalyzeRepo {
     if ($settings.testDependenciesNuGet) {
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BcNugetPackage -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageName
             if ($appFile) {
                 if (!$settings.testDependencies) {
                     $settings.testDependencies = @()
@@ -80,8 +80,8 @@ function AnalyzeRepo {
             $appJsonFile = Join-Path $folder "app.json"
             if (Test-Path $appJsonFile) {
                 $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-                $packageId = Get-BcNugetPackageId -id $appJson.id -name $appJson.name -publisher $appJson.publisher
-                $appFile = Get-BcNugetPackage -packageName $packageId
+                $packageId = Get-BCDevOpsFlowsNuGetPackageId -id $appJson.id -name $appJson.name -publisher $appJson.publisher
+                $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageId
                 if ($appFile) {
                     if (!$settings.previousRelease) {
                         $settings.previousRelease = @()
