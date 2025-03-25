@@ -235,7 +235,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                             }
                         }
                         elseif ($downloadDependencies -eq 'own') {
-                            $downloadIt = ($dependencyPublisher -eq [NugetFeed]::Normalize($manifest.package.metadata.authors))
+                            $downloadIt = ($dependencyPublisher -eq [BcDevOpsFlowsNuGetFeed]::Normalize($manifest.package.metadata.authors))
                         }
                         elseif ($downloadDependencies -eq 'allButMicrosoft') {
                             # Download if publisher isn't Microsoft (including if publisher is empty)

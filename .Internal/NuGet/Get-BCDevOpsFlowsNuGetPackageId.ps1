@@ -42,8 +42,8 @@ function Get-BCDevOpsFlowsNuGetPackageId {
     if ($id) {
         try { $id = ([GUID]::Parse($id)).Guid } catch { throw "App id must be a valid GUID: $id" }
     }
-    $nname = [nuGetFeed]::Normalize($name)
-    $npublisher = [nuGetFeed]::Normalize($publisher)
+    $nname = [BcDevOpsFlowsNuGetFeed]::Normalize($name)
+    $npublisher = [BcDevOpsFlowsNuGetFeed]::Normalize($publisher)
     if ($nname -eq '') { throw "App name is invalid: '$name'" }
     if ($npublisher -eq '') { throw "App publisher is invalid: '$publisher'" }
 
