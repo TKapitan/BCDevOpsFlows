@@ -47,7 +47,7 @@
  .PARAMETER allowPrerelease
   Include prerelease versions in the search
 #>
-Function Download-BCDevOpsFlowsNuGetPackageToFolder {
+Function Get-BCDevOpsFlowsNuGetPackageToFolder {
     Param(
         [Parameter(Mandatory = $false)]
         [string] $nuGetServerUrl = "",
@@ -100,12 +100,12 @@ Function Download-BCDevOpsFlowsNuGetPackageToFolder {
                     $checkPackageName = "$publisher.$name$countryPart$symbolsPart$appIdPart"
                 }
                 if ($checkPackageName -and $checkPackageName -ne $packageName) {
-                    $downloadedPackages = Download-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $checkPackageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                    $downloadedPackages = Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $checkPackageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
                     if ($downloadedPackages) {
                         return $downloadedPackages
                     }
                 }
-                return Download-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                return Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
             }
         }
         Write-Host "Looking for NuGet package $packageName version $version ($select match)"
@@ -271,7 +271,7 @@ Function Download-BCDevOpsFlowsNuGetPackageToFolder {
                             # Downloading Microsoft packages for a specific version
                             $dependencyVersion = $version
                         }
-                        $returnValue += Download-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $dependencyId -version $dependencyVersion -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
+                        $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $dependencyId -version $dependencyVersion -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
                     }
                 }
                 if ($dependenciesErr) {

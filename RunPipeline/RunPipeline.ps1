@@ -263,7 +263,7 @@ try {
                         Publish-BCDevOpsFlowsNuGetPackageToContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue -allowPrerelease:$true
                     }
                     else {
-                        Download-BCDevOpsFlowsNuGetPackageToFolder -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
+                        Get-BCDevOpsFlowsNuGetPackageToFolder -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
                     }
                 }
             }
