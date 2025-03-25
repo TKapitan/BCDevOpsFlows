@@ -260,10 +260,10 @@ try {
                         }
                     }
                     if ($parameters.ContainsKey('containerName')) {
-                        Publish-BcNuGetPackageToContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue
+                        Publish-BcNuGetPackageToBCContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -allowPrerelease:$parameters.allowPrerelease @publishParams -ErrorAction SilentlyContinue
                     }
                     else {
-                        Download-BcNuGetPackageToFolder -folder $parameters.appSymbolsFolder @publishParams | Out-Null
+                        Download-BcNuGetPackageToFolder -folder $parameters.appSymbolsFolder -allowPrerelease:$parameters.allowPrerelease @publishParams | Out-Null
                     }
                 }
             }
@@ -307,6 +307,8 @@ try {
         Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
         $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
+    $runAlPipelineParams["nuGetAllowPrerelease"] = -not $skipAppsInPreview
+    Write-Host "Adding NuGet Allow Prerelease : $($runAlPipelineParams["nuGetAllowPrerelease"])"
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
