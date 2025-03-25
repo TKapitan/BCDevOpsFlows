@@ -1,4 +1,12 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\BcDevOpsFlowsNuGetFeedClass.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Donwload-BCDevOpsFlowsNuGetPackageToFolder.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Find-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-BCDevOpsFlowsNuGetPackageId.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\New-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Publish-BCDevOpsFlowsNuGetPackageToContainer.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Push-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
 
 function DownloadNugetPackage() {
     Param(
@@ -121,72 +129,4 @@ function Get-BCCTrustedNuGetFeeds {
         $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" -and $_.url -notlike "*MSSymbols*" })
     }
     return $requiredTrustedNuGetFeeds
-}
-Function Publish-BcNuGetPackageToBCContainer {
-    Param(
-        [Parameter(Mandatory=$false)]
-        [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory=$false)]
-        [string] $nuGetToken = "",
-        [Parameter(Mandatory=$true)]
-        [string] $packageName,
-        [Parameter(Mandatory=$false)]
-        [string] $version = '0.0.0.0',
-        [Parameter(Mandatory=$false)]
-        [ValidateSet('Earliest', 'EarliestMatching', 'Latest', 'LatestMatching', 'Exact', 'Any')]
-        [string] $select = 'Latest',
-        [string] $containerName = "",
-        [Hashtable] $bcAuthContext,
-        [string] $environment,
-        [Parameter(Mandatory=$false)]
-        [string] $tenant = "default",
-        [string] $appSymbolsFolder = "",
-        [string] $copyInstalledAppsToFolder = "",
-        [switch] $allowPrerelease,
-        [switch] $skipVerification
-    )
-
-    if ($containerName -eq "" -and (!($bcAuthContext -and $environment))) {
-        $containerName = $bcContainerHelperConfig.defaultContainerName
-    }
-
-    $installedApps = @()
-    if ($bcAuthContext -and $environment) {
-        $envInfo = Get-BcEnvironments -bcAuthContext $bcAuthContext -environment $environment
-        $installedPlatform = [System.Version]$envInfo.platformVersion
-        $installedCountry = $envInfo.countryCode.ToLowerInvariant()
-        $installedApps = @(Get-BcEnvironmentInstalledExtensions -bcAuthContext $authContext -environment $environment | ForEach-Object { @{ "Publisher" = $_.Publisher; "Name" = $_.displayName; "Id" = $_.Id; "Version" = [System.Version]::new($_.VersionMajor, $_.VersionMinor, $_.VersionBuild, $_.VersionRevision) } })
-    }
-    else {
-        $installedApps = @(Get-BcContainerAppInfo -containerName $containerName -installedOnly | ForEach-Object { @{ "Publisher" = $_.Publisher; "Name" = $_.Name; "Id" = "$($_.AppId)"; "Version" = $_.Version } } )
-        $installedPlatform = [System.Version](Get-BcContainerPlatformVersion -containerOrImageName $containerName)
-        $installedCountry = (Get-BcContainerCountry -containerOrImageName $containerName).ToLowerInvariant()
-    }
-    $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([GUID]::NewGuid().ToString())
-    New-Item $tmpFolder -ItemType Directory | Out-Null
-    try {
-        if ($allowPrerelease) {
-            Write-Host "Prereleased packages are allowed"
-        } else {
-            Write-Host "Prereleased packages are not allowed"
-        }
-        if (Download-BcNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
-            $appFiles = Get-Item -Path (Join-Path $tmpFolder '*.app') | ForEach-Object {
-                if ($appSymbolsFolder) {
-                    Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
-                }
-                $_.FullName
-            }
-            Publish-BcContainerApp -containerName $containerName -bcAuthContext $bcAuthContext -environment $environment -tenant $tenant -appFile $appFiles -sync -install -upgrade -checkAlreadyInstalled -skipVerification -copyInstalledAppsToFolder $copyInstalledAppsToFolder
-        }
-        elseif ($ErrorActionPreference -eq 'Stop') {
-            throw "No apps to publish"
-        }
-        else {
-            Write-Host "No apps to publish"
-        }
-    }
-    finally {
-        Remove-Item -Path $tmpFolder -Recurse -Force
-    }
 }

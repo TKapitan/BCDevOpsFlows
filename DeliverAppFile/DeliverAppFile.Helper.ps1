@@ -30,6 +30,6 @@ function Push-AppToNuGetFeed {
         "preReleaseTag" = $versionSuffix
         "appFile"       = $appFilePath
     }
-    $package = New-BcNuGetPackage @parameters
-    Push-BcNuGetPackage -nuGetServerUrl $url -nuGetToken $token -bcNuGetPackage $package
+    $package = New-BCDevOpsFlowsNuGetPackage @parameters
+    Push-BCDevOpsFlowsNuGetPackage -nuGetServerUrl $url -nuGetToken $token -bcNuGetPackage $package
 }
