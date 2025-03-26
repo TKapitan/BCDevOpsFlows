@@ -34,7 +34,7 @@
 Function Find-BCDevOpsFlowsNuGetPackage {
     Param(
         [Parameter(Mandatory = $false)]
-        [string] $trustedNugetFeeds = @([PSCustomObject]@{"Url" = "https://api.nuget.org/v3/index.json"; "Token" = ""; "Patterns" = @('*'); "Fingerprints" = @() }),
+        $trustedNugetFeeds = @([PSCustomObject]@{"Url" = "https://api.nuget.org/v3/index.json"; "Token" = ""; "Patterns" = @('*'); "Fingerprints" = @() }),
         [Parameter(Mandatory = $true)]
         [string] $packageName,
         [Parameter(Mandatory = $false)]
