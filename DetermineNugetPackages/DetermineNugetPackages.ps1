@@ -28,7 +28,7 @@ try {
     mkdir $dependenciesPackageCachePath
     
     Write-Host "Getting application package $applicationPackage"
-    nuget install $applicationPackage -outputDirectory $buildCacheFolder 
+    Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $applicationPackage $buildCacheFolder -checkLocalVersion | Out-Null
     foreach ($dependency in $manifestObject.dependencies) {
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
