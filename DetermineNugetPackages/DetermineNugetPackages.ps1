@@ -28,11 +28,11 @@ try {
     mkdir $dependenciesPackageCachePath
     
     Write-Host "Getting application package $applicationPackage"
-    Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $applicationPackage $buildCacheFolder -checkLocalVersion | Out-Null
+    Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $applicationPackage -appSymbolsFolder $buildCacheFolder -checkLocalVersion | Out-Null
     foreach ($dependency in $manifestObject.dependencies) {
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName -folder $dependenciesPackageCachePath -allowPrerelease:$true | Out-Null
+        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName -appSymbolsFolder $dependenciesPackageCachePath -allowPrerelease:$true | Out-Null
     }
 }
 catch {
