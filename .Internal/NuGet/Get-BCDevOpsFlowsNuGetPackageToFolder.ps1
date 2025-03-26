@@ -3,12 +3,8 @@
 <# 
  .Description
   Download Apps from Business Central NuGet Package to folder
- .PARAMETER nuGetServerUrl
-  NuGet Server URL
-  Default: https://api.nuget.org/v3/index.json
- .PARAMETER nuGetToken
-  NuGet Token for authenticated access to the NuGet Server
-  If not specified, the NuGet Server is accessed anonymously (and needs to support this)
+ .PARAMETER trustedNugetFeeds
+  Array of objects with nuget feeds to trust in the format @([PSCustomObject]@{Url="https://api.nuget.org/v3/index.json"; Token=""; Patterns=@('*'); Fingerprints=@()})
  .PARAMETER packageName
   Package Name to search for.
   This can be the full name or a partial name with wildcards.
@@ -50,7 +46,7 @@
 Function Get-BCDevOpsFlowsNuGetPackageToFolder {
     Param(
         [Parameter(Mandatory = $false)]
-        [string] $nuGetServerUrl = "",
+        [string] $trustedNugetFeeds = @([PSCustomObject]@{"Url" = "https://api.nuget.org/v3/index.json"; "Token" = ""; "Patterns" = @('*'); "Fingerprints" = @() }),
         [Parameter(Mandatory = $false)]
         [string] $nuGetToken = "",
         [Parameter(Mandatory = $true)]
@@ -100,12 +96,12 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                     $checkPackageName = "$publisher.$name$countryPart$symbolsPart$appIdPart"
                 }
                 if ($checkPackageName -and $checkPackageName -ne $packageName) {
-                    $downloadedPackages = Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $checkPackageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                    $downloadedPackages = Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $checkPackageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
                     if ($downloadedPackages) {
                         return $downloadedPackages
                     }
                 }
-                return Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                return Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
             }
         }
         Write-Host "Looking for NuGet package $packageName version $version ($select match)"
@@ -137,7 +133,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         }
         while ($true) {
             $returnValue = @()
-            $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNugetPackage -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $findSelect -allowPrerelease:($allowPrerelease.IsPresent)
+            $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNugetPackage -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -excludeVersions $excludeVersions -verbose:($VerbosePreference -eq 'Continue') -select $findSelect -allowPrerelease:($allowPrerelease.IsPresent)
             if (-not $feed) {
                 Write-Host "No package found matching package name $($packageName) Version $($version)"
                 break
@@ -271,7 +267,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                             # Downloading Microsoft packages for a specific version
                             $dependencyVersion = $version
                         }
-                        $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -nuGetServerUrl $nuGetServerUrl -nuGetToken $nuGetToken -packageName $dependencyId -version $dependencyVersion -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
+                        $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $dependencyId -version $dependencyVersion -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
                     }
                 }
                 if ($dependenciesErr) {

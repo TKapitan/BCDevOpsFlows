@@ -234,12 +234,6 @@ try {
     }
 
     if (($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds') -and ($bcContainerHelperConfig.TrustedNuGetFeeds.Count -gt 0)) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
-        if ($githubPackagesContext) {
-            $gitHubPackagesCredential = $gitHubPackagesContext | ConvertFrom-Json
-        }
-        else {
-            $gitHubPackagesCredential = [PSCustomObject]@{ "serverUrl" = ''; "token" = '' }
-        }
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
                 Param([Hashtable]$parameters)
@@ -249,8 +243,6 @@ try {
                     $version = $appName.SubString($appName.LastIndexOf('_') + 1)
                     $version = [System.Version]$version.SubString(0, $version.Length - 4)
                     $publishParams = @{
-                        "nuGetServerUrl" = $gitHubPackagesCredential.serverUrl
-                        "nuGetToken"     = $gitHubPackagesCredential.token
                         "packageName"    = $appId
                         "version"        = $version
                     }

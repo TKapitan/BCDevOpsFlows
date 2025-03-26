@@ -7,12 +7,8 @@
   Find Business Central NuGet Package from NuGet Server
  .OUTPUTS
   BcDevOpsFlowsNuGetFeed class, packageId and package Version
- .PARAMETER nuGetServerUrl
-  NuGet Server URL
-  Default: https://api.nuget.org/v3/index.json
- .PARAMETER nuGetToken
-  NuGet Token for authenticated access to the NuGet Server
-  If not specified, the NuGet Server is accessed anonymously (and needs to support this)
+ .PARAMETER trustedNugetFeeds
+  Array of objects with nuget feeds to trust in the format @([PSCustomObject]@{Url="https://api.nuget.org/v3/index.json"; Token=""; Patterns=@('*'); Fingerprints=@()})
  .PARAMETER packageName
   Package Name to search for.
   This can be the full name or a partial name with wildcards.
@@ -33,14 +29,12 @@
  .EXAMPLE
   $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNuGetPackage -packageName 'FreddyKristiansen.BingMapsPTE.165d73c1-39a4-4fb6-85a5-925edc1684fb'
  .EXAMPLE
-  $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNuGetPackage -nuGetServerUrl $nugetServerUrl -nuGetToken $nuGetToken -packageName '437dbf0e-84ff-417a-965d-ed2bb9650972' -allowPrerelease
+  $feed, $packageId, $packageVersion = Find-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNugetFeeds -nuGetToken $nuGetToken -packageName '437dbf0e-84ff-417a-965d-ed2bb9650972' -allowPrerelease
 #>
 Function Find-BCDevOpsFlowsNuGetPackage {
     Param(
         [Parameter(Mandatory = $false)]
-        [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory = $false)]
-        [string] $nuGetToken = "",
+        [string] $trustedNugetFeeds = @([PSCustomObject]@{"Url" = "https://api.nuget.org/v3/index.json"; "Token" = ""; "Patterns" = @('*'); "Fingerprints" = @() }),
         [Parameter(Mandatory = $true)]
         [string] $packageName,
         [Parameter(Mandatory = $false)]
@@ -55,7 +49,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
 
     $bestmatch = $null
     # Search all trusted feeds for the package
-    foreach ($feed in (@([PSCustomObject]@{ "Url" = $nuGetServerUrl; "Token" = $nuGetToken; "Patterns" = @('*'); "Fingerprints" = @() }) + $bcContainerHelperConfig.TrustedNuGetFeeds)) {
+    foreach ($feed in ($trustedNugetFeeds + $bcContainerHelperConfig.TrustedNuGetFeeds)) {
         if ($feed -and $feed.Url) {
             Write-Host "Search NuGetFeed $($feed.Url)"
             if (!($feed.PSObject.Properties.Name -eq 'Token')) { $feed | Add-Member -MemberType NoteProperty -Name 'Token' -Value '' }
