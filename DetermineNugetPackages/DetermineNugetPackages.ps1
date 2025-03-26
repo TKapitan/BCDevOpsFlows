@@ -27,11 +27,11 @@ try {
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
     mkdir $dependenciesPackageCachePath
     
-    nuget install $applicationPackage -outputDirectory $buildCacheFolder 
-    foreach ($Dependency in $manifestObject.dependencies) {
-        $PackageName = Get-BCDevOpsFlowsNuGetPackageId -id $Dependency.id -name $Dependency.name -publisher $Dependency.publisher
-        Write-Host "Get $PackageName"
-        nuget install $PackageName -outputDirectory $dependenciesPackageCachePath
+    Write-Host "Getting application package $applicationPackage"
+    Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $applicationPackage -folder $buildCacheFolder -allowPrerelease:$true | Out-Null
+    foreach ($dependency in $manifestObject.dependencies) {
+        Write-Host "Getting $($dependency.name) using name $($dependency.id)"
+        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $dependency.id -folder $dependenciesPackageCachePath -allowPrerelease:$true | Out-Null
     }
 }
 catch {
