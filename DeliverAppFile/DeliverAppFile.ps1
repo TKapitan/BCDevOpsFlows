@@ -9,9 +9,6 @@ Param(
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 
-# Initialize trusted NuGet feeds
-$bcContainerHelperConfig.TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
-
 try {
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1

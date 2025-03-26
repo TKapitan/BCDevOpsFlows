@@ -33,8 +33,8 @@
 #>
 Function Find-BCDevOpsFlowsNuGetPackage {
     Param(
-        [Parameter(Mandatory = $false)]
-        $trustedNugetFeeds = @([PSCustomObject]@{"Url" = "https://api.nuget.org/v3/index.json"; "Token" = ""; "Patterns" = @('*'); "Fingerprints" = @() }),
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject[]] $trustedNugetFeeds,
         [Parameter(Mandatory = $true)]
         [string] $packageName,
         [Parameter(Mandatory = $false)]
@@ -49,7 +49,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
 
     $bestmatch = $null
     # Search all trusted feeds for the package
-    foreach ($feed in ($trustedNugetFeeds + $bcContainerHelperConfig.TrustedNuGetFeeds)) {
+    foreach ($feed in ($trustedNugetFeeds)) {
         if ($feed -and $feed.Url) {
             Write-Host "Search NuGetFeed $($feed.Url)"
             if (!($feed.PSObject.Properties.Name -eq 'Token')) { $feed | Add-Member -MemberType NoteProperty -Name 'Token' -Value '' }
