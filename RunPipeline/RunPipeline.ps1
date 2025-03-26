@@ -231,8 +231,8 @@ try {
     }
 
     # Initialize trusted NuGet feeds
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
-    if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+    $bcContainerHelperConfig.TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
+    if (($bcContainerHelperConfig.ContainsKey('TrustedNuGetFeeds') -and ($bcContainerHelperConfig.TrustedNuGetFeeds.Count -gt 0)) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
                 Param([Hashtable]$parameters)
@@ -254,7 +254,7 @@ try {
                         Publish-BCDevOpsFlowsNuGetPackageToContainer -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue -allowPrerelease:$true
                     }
                     else {
-                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
+                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $bcContainerHelperConfig.TrustedNuGetFeeds -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
                     }
                 }
             }
