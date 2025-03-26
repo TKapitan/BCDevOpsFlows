@@ -27,11 +27,14 @@ try {
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
     mkdir $dependenciesPackageCachePath
     
+    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    
     Write-Host "Getting application package $applicationPackage"
-    Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $applicationPackage -folder $buildCacheFolder -allowPrerelease:$true | Out-Null
+    Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $applicationPackage -appSymbolsFolder $buildCacheFolder -downloadDependencies 'all' | Out-Null
     foreach ($dependency in $manifestObject.dependencies) {
+        $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $dependency.id -folder $dependenciesPackageCachePath -allowPrerelease:$true | Out-Null
+        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName -appSymbolsFolder $dependenciesPackageCachePath -downloadDependencies 'allButMicrosoft' -allowPrerelease:$true | Out-Null
     }
 }
 catch {
