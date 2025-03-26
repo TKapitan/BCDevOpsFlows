@@ -43,12 +43,12 @@ function AnalyzeRepo {
         Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
 
-    $bcContainerHelperConfig.TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName
             if ($appFile) {
                 if (!$settings.appDependencies) {
                     $settings.appDependencies = @()
@@ -62,7 +62,7 @@ function AnalyzeRepo {
     if ($settings.testDependenciesNuGet) {
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName
             if ($appFile) {
                 if (!$settings.testDependencies) {
                     $settings.testDependencies = @()
@@ -81,7 +81,7 @@ function AnalyzeRepo {
             if (Test-Path $appJsonFile) {
                 $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
                 $packageId = Get-BCDevOpsFlowsNuGetPackageId -id $appJson.id -name $appJson.name -publisher $appJson.publisher
-                $appFile = Get-BCDevOpsFlowsNuGetPackage -packageName $packageId
+                $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageId
                 if ($appFile) {
                     if (!$settings.previousRelease) {
                         $settings.previousRelease = @()
