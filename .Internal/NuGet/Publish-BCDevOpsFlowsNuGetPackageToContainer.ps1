@@ -3,11 +3,8 @@
   PROOF OF CONCEPT PREVIEW: Publish Business Central NuGet Package to container
  .Description
   Publish Business Central NuGet Package to container
- .PARAMETER nuGetServerUrl
-  NuGet Server URL
- .PARAMETER nuGetToken
-  NuGet Token for authenticated access to the NuGet Server
-  If not specified, the NuGet Server is accessed anonymously (and needs to support this)
+ .PARAMETER trustedNugetFeeds
+  Array of objects with nuget feeds to trust in the format @([PSCustomObject]@{Url="https://api.nuget.org/v3/index.json"; Token=""; Patterns=@('*'); Fingerprints=@()})
  .PARAMETER packageName
   Package Name to search for.
   This can be the full name or a partial name with wildcards.
@@ -41,10 +38,8 @@
 #>
 Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
     Param(
-        [Parameter(Mandatory = $false)]
-        [string] $nuGetServerUrl = "",
-        [Parameter(Mandatory = $false)]
-        [string] $nuGetToken = "",
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject[]] $trustedNugetFeeds,
         [Parameter(Mandatory = $true)]
         [string] $packageName,
         [Parameter(Mandatory = $false)]
@@ -88,13 +83,7 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
         else {
             Write-Host "Prereleased packages are not allowed"
         }
-        $trustedNuGetFeed = @(
-            [PSCustomObject]@{
-                "nuGetServerUrl"    = $nuGetServerUrl; 
-                "nuGetToken"        = $nuGetToken; 
-            }
-        )
-        if (Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeed -packageName $packageName -version $version -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
+        if (Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
             $appFiles = Get-Item -Path (Join-Path $tmpFolder '*.app') | ForEach-Object {
                 if ($appSymbolsFolder) {
                     Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
