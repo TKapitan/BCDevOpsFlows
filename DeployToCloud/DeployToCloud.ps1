@@ -154,7 +154,7 @@ foreach ($environmentName in $matchingEnvironments) {
                         $parameters += @{ "SyncMode" = $deploymentSettings.SyncMode }
                     }
                     Write-Host "Publishing apps using development endpoint"
-                    Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
+                    Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId -ignoreIfAppExists
                 }
                 else {
                     # Use automation API for production environments (Publish-PerTenantExtensionApps)
