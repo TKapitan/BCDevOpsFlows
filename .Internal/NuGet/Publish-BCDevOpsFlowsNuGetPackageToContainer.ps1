@@ -90,7 +90,7 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
                 }
                 $_.FullName
             }
-            Publish-BcContainerApp -containerName $containerName -bcAuthContext $bcAuthContext -environment $environment -tenant $tenant -appFile $appFiles -sync -install -upgrade -checkAlreadyInstalled -skipVerification -useDevEndpoint -copyInstalledAppsToFolder $copyInstalledAppsToFolder
+            Publish-BcContainerApp -containerName $containerName -bcAuthContext $bcAuthContext -environment $environment -tenant $tenant -appFile $appFiles -sync -install -upgrade -checkAlreadyInstalled -skipVerification -copyInstalledAppsToFolder $copyInstalledAppsToFolder
         }
         elseif ($ErrorActionPreference -eq 'Stop') {
             throw "No apps to publish"
