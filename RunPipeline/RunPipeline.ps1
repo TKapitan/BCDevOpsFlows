@@ -13,6 +13,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
@@ -82,10 +83,6 @@ try {
         exit
     }
 
-    # Trusted NuGet feeds not supported
-    Write-Host "Trusted NuGet feeds not supported, skipping"
-    $bcContainerHelperConfig.TrustedNuGetFeeds = @()
-
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $bcContainerHelperConfig.useSslForWinRmSession = $false
@@ -110,9 +107,13 @@ try {
 
     $previousApps = @()
     if (!$settings.skipUpgrade) {
-        Write-Host "::group::Locating previous release"
-        Write-Host "Skipping upgrade validation - NOT YET IMPLEMENTED" # TODO Implement upgrade validation
-        Write-Host "::endgroup::"
+        if ($settings.previousRelease) {
+            Write-Host "Using $($settings.previousRelease) as previous release"
+            $previousApps = $settings.previousRelease
+        }
+        else {
+            OutputWarning -message "No previous release found"
+        }
     }
 
     $additionalCountries = $settings.additionalCountries
@@ -223,6 +224,37 @@ try {
                                 -ConfigPackage $configPackage `
                                 -PackageId $packageId
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    # Initialize trusted NuGet feeds
+    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
+    if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+        $runAlPipelineParams += @{
+            "InstallMissingDependencies" = {
+                Param([Hashtable]$parameters)
+                $parameters.missingDependencies | ForEach-Object {
+                    $appid = $_.Split(':')[0]
+                    $appName = $_.Split(':')[1]
+                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
+                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
+                    $publishParams = @{
+                        "packageName"    = $appId
+                        "version"        = $version
+                    }
+                    if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
+                        $publishParams += @{
+                            "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
+                        }
+                    }
+                    if ($parameters.ContainsKey('containerName')) {
+                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue -allowPrerelease:$true
+                    }
+                    else {
+                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
                     }
                 }
             }

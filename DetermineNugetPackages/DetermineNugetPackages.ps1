@@ -6,28 +6,41 @@ if (!$ENV:AL_NUGETINITIALIZED) {
     Write-Error "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
 }
 
-$settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+try {
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    foreach ($feed in $TrustedNuGetFeeds) {
+        Add-NugetPackageSource -feed $feed
+    }
 
-AddNugetPackageSource -sourceName "MSSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbols/nuget/v3/index.json"
-AddNugetPackageSource -sourceName "AppSourceSymbols" -sourceUrl "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
+    $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
+    $baseAppFolder = "$baseRepoFolder\App"
 
-$baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-$baseAppFolder = "$baseRepoFolder\App"
-
-$applicationPackage = "Microsoft.Application.symbols"
-if ($settings.country) {
-    $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
+    $applicationPackage = "Microsoft.Application.symbols"
+    if ($settings.country) {
+        $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
+    }
+    $manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+ 
+    $buildCacheFolder = "$baseRepoFolder\.buildpackages"
+    mkdir $buildCacheFolder
+    $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
+    mkdir $dependenciesPackageCachePath
+    
+    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    
+    Write-Host "Getting application package $applicationPackage"
+    Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $applicationPackage -appSymbolsFolder $buildCacheFolder -downloadDependencies 'all' | Out-Null
+    foreach ($dependency in $manifestObject.dependencies) {
+        $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
+        Write-Host "Getting $($dependency.name) using name $($dependency.id)"
+        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName -appSymbolsFolder $dependenciesPackageCachePath -downloadDependencies 'allButMicrosoft' -allowPrerelease:$true | Out-Null
+    }
 }
-$manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
- 
-$packageCachePath = "$baseRepoFolder\.alpackages"
-mkdir $packageCachePath
- 
-nuget install $applicationPackage -outputDirectory $packageCachePath 
- 
-foreach ($Dependency in $manifestObject.dependencies) {
-    $PackageName = ("{0}.{1}.symbols.{2}" -f $Dependency.publisher, $Dependency.name, $Dependency.id ) -replace ' ', ''
-    Write-Host "Get $PackageName"
-         
-    nuget install $PackageName -outputDirectory $packageCachePath 
+catch {
+    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace
+    Write-Host $_.PSMessageDetails
+
+    Write-Error "Process failed. See previous lines for details."
 }

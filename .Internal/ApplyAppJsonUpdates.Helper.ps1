@@ -5,10 +5,15 @@
 function Update-AppJson {
     Param(
         [Parameter(Mandatory)]
-        [PSCustomObject]$settings
+        [PSCustomObject]$settings,
+        [switch] $forNuGetBuild
     )
     RemoveInternalsVisibleTo -settings $settings
     OverrideResourceExposurePolicy -settings $settings
+
+    if ($forNuGetBuild) {
+        UpdateVersion -settings $settings
+    }
 }
 
 function RemoveInternalsVisibleTo {
@@ -78,4 +83,22 @@ function OverrideResourceExposurePolicy {
         $appFileJson | Add-Member -MemberType NoteProperty -Name 'resourceExposurePolicy' -Value $resourceExposurePolicy -Force
         Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
     }
+}
+
+function UpdateVersion {
+    Param(
+        [Parameter(Mandatory)]
+        [PSCustomObject]$settings
+    )
+
+    $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+    $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+
+    $existingVersionAsArray = [Version]$appFileJson.version
+    $appBuild = if ($settings.appBuild -eq -1) { $existingVersionAsArray.Build } else { $settings.appBuild }
+    $appRevision = if ($settings.appRevision -eq -1) { $existingVersionAsArray.Revision } else { $settings.appRevision }
+
+    $appFileJson.version = "$($existingVersionAsArray.Major).$($existingVersionAsArray.Minor).$appBuild.$appRevision"       
+    Write-Host "Updating app.json version to $($appFileJson.version)"
+    Set-JsonContentLF -Path $appJsonFilePath -object $appFileJson
 }

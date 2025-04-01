@@ -6,16 +6,20 @@
 # baseFolder is the repository baseFolder
 #
 function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App")) {
+    $params = @{ "ExportTelemetryFunctions" = $true }
+    $repoSettingsPath = Join-Path $baseFolder $repoSettingsFile
+    if (Test-Path $repoSettingsPath) {
+        $params += @{ "bcContainerHelperConfigFile" = $repoSettingsPath }
+    }
+
     if ("$ENV:AL_BCCONTAINERHELPERPATH" -and (Test-Path -Path $ENV:AL_BCCONTAINERHELPERPATH -PathType Leaf)) {
         OutputDebug -Message "Reusing BcContainerHelper from ($ENV:AL_BCCONTAINERHELPERPATH)"
+        . $ENV:AL_BCCONTAINERHELPERPATH @params
         return
     }
 
-    $params = @{ "ExportTelemetryFunctions" = $true }
     $repoSettingsPath = Join-Path $baseFolder $repoSettingsFile
-
-    # Default BcContainerHelper Version is hardcoded in BCDevOpsFlows.Setup.ps1
-    $bcContainerHelperVersion = $defaultBcContainerHelperVersion
+    $bcContainerHelperVersion = $defaultBcContainerHelperVersion # Default BcContainerHelper Version is hardcoded in BCDevOpsFlows.Setup.ps1
     if (Test-Path $repoSettingsPath) {
         # Read Repository Settings file (without applying organization variables or repository variables settings files)
         # Override default BcContainerHelper version only if new version is specifically specified in repo settings file
@@ -30,7 +34,6 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
                 Write-Host "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."
             }
         }
-        $params += @{ "bcContainerHelperConfigFile" = $repoSettingsPath }
     }
 
     if ($bcContainerHelperVersion -eq '') {
