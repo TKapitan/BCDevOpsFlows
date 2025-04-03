@@ -14,13 +14,13 @@ foreach ($pipelineYamlFilePath in $yamlFiles) {
     OutputDebug "Creating pipeline '$pipelineName' with YAML file '$pipelineYamlFileRelativePath'"
 
     $pipelineParams = @{
-        "name" = $pipelineName
-        "folder-path" = "Test"
-        "description" = "Test"
-        "repository" = $ENV:BUILD_REPOSITORY_NAME
-        "branch" = "TKA-dev"
-        "yml-path" = $pipelineYamlFileRelativePath
-        "repository-type" = "tfsgit"
+        "-name" = $pipelineName
+        "-folder-path" = "Test"
+        "-description" = "Test"
+        "-repository" = $ENV:BUILD_REPOSITORY_NAME
+        "-branch" = "TKA-dev"
+        "-yml-path" = $pipelineYamlFileRelativePath
+        "-repository-type" = "tfsgit"
     }
     az pipelines create @pipelineParams
     #az pipelines create --name "$pipelineName" --folder-path "Test" --description "Test" --repository "$ENV:BUILD_REPOSITORY_NAME" --branch "TKA-dev" --yml-path "$pipelineYamlFileRelativePath" --repository-type "tfsgit"
