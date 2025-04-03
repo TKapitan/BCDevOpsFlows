@@ -1,6 +1,6 @@
 Param()
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 az extension add -n azure-devops
 az devops configure --defaults organization="$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" project="$ENV:SYSTEM_TEAMPROJECT" --use-git-aliases true
