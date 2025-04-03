@@ -19,6 +19,9 @@ $pipelineFolderPath = switch ($settings.folderType) {
     '' { '' }
     default { Write-Error "Invalid folderType: $($settings.folderType)"; exit 1 }
 }
+if ($pipelineFolderPath -eq '') {
+    $pipelineFolderPath = '\'
+}
 OutputDebug "Using pipeline folder path: $pipelineFolderPath"
 
 OutputDebug "Adding Azure DevOps extension to Azure CLI"
