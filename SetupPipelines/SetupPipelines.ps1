@@ -12,12 +12,12 @@ if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
     Write-Error "settings.pipelineBranch is required but was not provided."
 }
 
-$pipelineFolderPath = switch ($settings.folderType) {
+$pipelineFolderPath = switch ($settings.pipelineFolderStructure) {
     'Repository' { $ENV:BUILD_REPOSITORY_NAME }
     'Pipeline' { $ENV:BUILD_DEFINITIONNAME }
     'Path' { $settings.pipelineFolderPath }
     '' { '' }
-    default { Write-Error "Invalid folderType: $($settings.folderType)"; exit 1 }
+    default { Write-Error "Invalid settings.pipelineFolderStructure: $($settings.pipelineFolderStructure)";  }
 }
 if ($pipelineFolderPath -eq '') {
     $pipelineFolderPath = '\'
