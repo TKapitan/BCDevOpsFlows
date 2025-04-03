@@ -11,5 +11,5 @@ foreach ($pipelineYamlFilePath in $yamlFiles) {
     $pipelineYamlFileRelativePath = ".azure-pipelines\Templates\$($pipelineYamlFilePath.BaseName).yml"
     
     OutputDebug "az pipelines create --name $pipelineName --description 'Test' --repository $ENV:BUILD_REPOSITORY_NAME --branch test --yml-path $pipelineName"
-    az pipelines create --name "TEST/$pipelineName-2" --description "Test" --repository "$ENV:BUILD_REPOSITORY_NAME" --branch "test" --yml-path "$pipelineYamlFileRelativePath" --repository-type "tfsgit"
+    az pipelines create --name "$pipelineName-2" --folder-path "Test" --description "Test" --repository "$ENV:BUILD_REPOSITORY_NAME" --branch "test" --yml-path "$pipelineYamlFileRelativePath" --repository-type "tfsgit"
 }
