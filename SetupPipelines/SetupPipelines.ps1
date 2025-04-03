@@ -8,6 +8,7 @@ az devops configure --defaults organization="$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIO
 $yamlFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH\.azure-pipelines\Templates"
 $yamlFiles = Get-ChildItem -Path $yamlFolder -Filter *.yml -File
 foreach ($pipelineYamlFilePath in $yamlFiles) {
+    $pipelineName = $pipelineYamlFilePath.BaseName
     $pipelineYamlFileRelativePath = ".azure-pipelines\Templates\$($pipelineYamlFilePath.BaseName).yml"
     
     OutputDebug "az pipelines create --name $pipelineName --description 'Test' --repository $ENV:BUILD_REPOSITORY_NAME --branch test --yml-path $pipelineName"
