@@ -11,5 +11,5 @@ foreach ($pipelineYamlFile in $yamlFiles) {
     $pipelineName = $pipelineYamlFile.BaseName
     
     OutputDebug "az pipelines create --name $pipelineName --description 'Test' --repository $ENV:BUILD_REPOSITORY_NAME --branch test --yml-path $pipelineName"
-    az pipelines create --name $pipelineName --description 'Test' --repository $ENV:BUILD_REPOSITORY_NAME --branch test --yml-path $pipelineName
+    az pipelines create --name $pipelineName --description "Test" --repository "$ENV:BUILD_REPOSITORY_NAME" --branch "test" --yml-path "$pipelineName"
 }
