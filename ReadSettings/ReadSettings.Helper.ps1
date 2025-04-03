@@ -118,6 +118,10 @@ function ReadSettings {
         "overrideResourceExposurePolicy"  = $false
         "previousRelease"                 = ""
         "deliveryTarget"                  = "AzureDevOps"
+        "pipelineBranch"                  = "main"
+        "pipelineFolderStructure"         = "Repository" # Repository | Pipeline | Path
+        "pipelineFolderPath"              = ""
+        "pipelineSkipFirstRun"            = $false
     }
 
     # Read settings from files and merge them into the settings object
