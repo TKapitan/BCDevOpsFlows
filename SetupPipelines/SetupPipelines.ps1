@@ -38,7 +38,7 @@ foreach ($pipelineYamlFilePath in $yamlFiles) {
 
     az pipelines create `
         --name "$pipelineName" `
-        --folder-path $pipelineFolderPath `
+        --folder-path "$pipelineFolderPath" `
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --description "Pipeline $pipelineName created by SetupPipelines." `
