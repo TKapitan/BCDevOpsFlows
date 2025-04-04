@@ -20,13 +20,26 @@ if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count 
     Write-Error "No YAML files found in template folder $yamlPipelineTemplateFolder"
 }
 
-Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
-Set-GitUser
-Invoke-RestoreUnstagedChanges -appFolderPath $yamlPipelineFolder
-Copy-PipelineTemplateFilesToPipelineFolder -templateFolderPath $yamlPipelineTemplateFolder -targetPipelineFolderPath $yamlPipelineFolder
-Invoke-GitAddCommit -appFolderPath $yamlPipelineFolder -commitMessage "Restore BCDevOpsFlows from template"
-Update-PipelineYMLFiles -templateFolderPath $yamlPipelineTemplateFolder -pipelineFolderPath $yamlPipelineFolder -settings $settings
-Invoke-GitAddCommit -appFolderPath $yamlPipelineFolder -commitMessage "Update BCDevOpsFlows from setup"
+try {
+    Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
+    Set-GitUser
+    Invoke-RestoreUnstagedChanges -appFolderPath $yamlPipelineFolder
+    Copy-PipelineTemplateFilesToPipelineFolder -templateFolderPath $yamlPipelineTemplateFolder -targetPipelineFolderPath $yamlPipelineFolder
+    Invoke-GitAddCommit -appFolderPath $yamlPipelineFolder -commitMessage "Restore BCDevOpsFlows from template"
+    Update-PipelineYMLFiles -templateFolderPath $yamlPipelineTemplateFolder -pipelineFolderPath $yamlPipelineFolder -settings $settings
+    Invoke-GitAddCommit -appFolderPath $yamlPipelineFolder -commitMessage "Update BCDevOpsFlows from setup"
+}
+catch {
+    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace
+    Write-Host $_.PSMessageDetails
+
+    Write-Error "Error when updating pipelines. See previous lines for details."
+}
+finally {
+    Set-GitUser
+    Pop-Location
+}
 Invoke-GitPush "HEAD:$($settings.pipelineBranch)"
 
 $pipelineDevOpsFolderPath = Get-PipelineDevOpsFolderPath -settings $settings
