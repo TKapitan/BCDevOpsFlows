@@ -60,9 +60,16 @@ function Invoke-GitCommit {
     else {
         $commitMessage = "$commitMessage [skip azurepipelines]"
     }
-    $changes = invoke-git status --porcelain
-    if (-not $changes) {
-        Write-Host "No changes to commit"
+
+    try {
+        invoke-git status --porcelain
+    }
+    catch {
+        Write-Host $_.Exception -ForegroundColor Red
+        Write-Host $_.ScriptStackTrace
+        Write-Host $_.PSMessageDetails
+
+        Write-Host "Commit failed. This may be because there are no changes. See previous lines for details."
         return
     }
     Write-Host "Committing changes with message: $commitMessage"
