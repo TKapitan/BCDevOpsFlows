@@ -198,5 +198,5 @@ function Update-PipelineYMLFile {
         # TODO ModifyUpdateALGoSystemFiles -yaml $yaml -repoSettings $settings
     }
 
-    $yaml.content -join "`n" | Set-ContentLF -Path $filePath
+    Set-ContentLF -Path $filePath -Content ($yaml.content -join "`n")
 }
