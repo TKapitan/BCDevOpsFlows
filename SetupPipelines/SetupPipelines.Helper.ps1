@@ -165,12 +165,9 @@ function Update-PipelineYMLFile {
         }
     }
     
+    ModifyAllWorkflows -yaml $yaml -settings $settings
     if ($baseName -eq "CICD") {
         # TODO ModifyCICDWorkflow -yaml $yaml -repoSettings $settings
-    }
-    
-    if ($baseName -eq "Pull_Request") {
-        # TODO ModifyPullRequestHandlerWorkflow -yaml $yaml -repoSettings $settings
     }
     
     $criticalWorkflows = @('UpdateGitHubGoSystemFiles', 'Troubleshooting')
@@ -199,4 +196,35 @@ function Update-PipelineYMLFile {
     }
 
     Set-ContentLF -Path $filePath -Content ($yaml.content -join "`n")
+}
+
+function ModifyAllWorkflows {
+    Param(
+        [Yaml] $yaml,
+        [hashtable] $settings
+    )
+
+    # BCDevOpsFlows Repository name is needed in all workflows to specify the repository name
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName') {
+        Write-Error "The resourceRepositoryName setting is required but was not provided."
+    }
+    $yaml.Replace('resources:/repositories:/name:', "name: $($settings.BCDevOpsFlowsResourceRepositoryName)")
+
+    # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName') {
+        Write-Error "The serviceConnectionName setting is required but was not provided."
+    }
+    $yaml.Replace('resources:/repositories:/endpoint:', "endpoint: $($settings.BCDevOpsFlowsServiceConnectionName)") 
+
+    # Pool Name is needed in all workflows to specify the agent pool
+    if ($settings.Keys -notcontains 'devOpsPoolName') {
+        Write-Error "The devOpsPoolName setting is required but was not provided."
+    }
+    $yaml.Replace('pool:/name:', "name: $($settings.devOpsPoolName)")
+
+    # Variable Group Name is needed in all workflows to specify the variable group name
+    if ($settings.Keys -notcontains 'devOpsVariableGroup') {
+        Write-Error "The devOpsVariableGroup setting is required but was not provided."
+    }
+    $yaml.Replace('variables:/group:', "group: $($settings.devOpsVariableGroup)")
 }
