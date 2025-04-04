@@ -22,7 +22,6 @@ function Invoke-RestoreUnstagedChanges {
     else {
         Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
             OutputDebug -Message "Restoring unstaged changes for $($_.FullName))"
-            Invoke-GitRestore -appFilePath $_.FullName
             invoke-git restore $_.FullName
         }
     }
