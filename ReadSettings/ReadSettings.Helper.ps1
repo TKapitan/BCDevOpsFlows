@@ -12,17 +12,11 @@ function ReadSettings {
         [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
-        [string] $pipelineName,
+        [string] $pipelineName = "$ENV:AL_PIPELINENAME",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
         [string] $projectSettings
     )
-    if ($pipelineName -eq "") {
-        $pipelineName = $ENV:AL_PIPELINENAME
-        if ($pipelineName -eq "") {
-            $pipelineName = $ENV:BUILD_DEFINITIONNAME
-        }
-    }
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
     if ($ENV:BUILD_REASON -eq "PullRequest") {
