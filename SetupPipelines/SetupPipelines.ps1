@@ -23,7 +23,7 @@ if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count 
     Write-Error "No YAML files found in template folder $yamlPipelineTemplateFolder"
 }
 Copy-PipelineTemplateFilesToPipelineFolder -templateFolderPath $yamlPipelineTemplateFolder -targetPipelineFolderPath $yamlPipelineFolder
-Invoke-GitAddCommit -appFolderPath$yamlPipelineFolder -commitMessage "Restore BCDevOpsFlows from template"
+Invoke-GitAddCommit -appFolderPath $yamlPipelineFolder -commitMessage "Restore BCDevOpsFlows from template"
 Invoke-GitPush "HEAD:$($settings.pipelineBranch)"
 
 $pipelineDevOpsFolderPath = Get-PipelineDevOpsFolderPath -settings $settings
