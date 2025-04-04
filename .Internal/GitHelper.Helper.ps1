@@ -6,21 +6,52 @@ function Set-GitUser {
 }
 function Invoke-RestoreUnstagedChanges {
     Param(
-        [string] $appFilePath
+        [Parameter(Mandatory = $false)]
+        [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath
     )
-    OutputDebug -Message "Restoring unstaged changes for $appFilePath"
-    invoke-git restore $appFilePath
+
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            Write-Error "Either appFilePath or appFolderPath must be provided."
+        }
+        OutputDebug -Message "Restoring unstaged changes for $appFilePath"
+        invoke-git restore $appFilePath
+    }
+    else {
+        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
+            OutputDebug -Message "Restoring unstaged changes for $($_.FullName))"
+            Invoke-GitRestore -appFilePath $_.FullName
+            invoke-git restore $_.FullName
+        }
+    }
 }
 function Invoke-GitAdd {
     Param(
-        [string] $appFilePath
+        [Parameter(Mandatory = $false)]
+        [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath
     )
 
-    OutputDebug -Message "Staging changes for $appFilePath"
-    invoke-git add $appFilePath
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            Write-Error "Either appFilePath or appFolderPath must be provided."
+        }
+        OutputDebug -Message "Staging changes for $appFilePath"
+        invoke-git add $appFilePath
+    }
+    else {
+        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
+            OutputDebug -Message "Staging changes for $($_.FullName)"
+            invoke-git add $_.FullName
+        }
+    }
 }
 function Invoke-GitCommit {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $commitMessage
     )
 
@@ -35,6 +66,7 @@ function Invoke-GitCommit {
 }
 function Invoke-GitPush {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
@@ -47,7 +79,7 @@ function Invoke-GitAddCommit {
         [string] $appFilePath,
         [Parameter(Mandatory = $false)]
         [string] $appFolderPath,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string] $commitMessage
     )
 
@@ -56,11 +88,9 @@ function Invoke-GitAddCommit {
             Write-Error "Either appFilePath or appFolderPath must be provided."
         }
         Invoke-GitAdd -appFilePath $appFilePath
-    } else {
-        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
-            Invoke-GitAdd -appFilePath $_.FullName
-        }
-        return
+    }
+    else {
+        Invoke-GitAdd -appFolderPath $appFolderPath
     }
     Invoke-GitCommit -commitMessage $commitMessage
 }
