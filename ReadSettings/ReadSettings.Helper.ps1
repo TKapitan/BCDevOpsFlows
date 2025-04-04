@@ -118,6 +118,10 @@ function ReadSettings {
         "overrideResourceExposurePolicy"  = $false
         "previousRelease"                 = ""
         "deliveryTarget"                  = "AzureDevOps"
+        "pipelineBranch"                  = "main"
+        "pipelineFolderStructure"         = "Repository" # Repository | Pipeline | Path
+        "pipelineFolderPath"              = ""
+        "pipelineSkipFirstRun"            = $false
     }
 
     # Read settings from files and merge them into the settings object
@@ -131,14 +135,12 @@ function ReadSettings {
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    if ($pipelineName) {
-        # Read settings from workflow settings file
-        $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
-        $settingsObjects += @($workflowSettingsObject)
-        # Read settings from user settings file
-        $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
-        $settingsObjects += @($userSettingsObject)
-    }
+    # Read settings from workflow settings file
+    $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
+    $settingsObjects += @($workflowSettingsObject)
+    # Read settings from user settings file
+    $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
+    $settingsObjects += @($userSettingsObject)
     $BCDevOpsFlowsSettingExists = $false
     foreach ($settingsJson in $settingsObjects) {
         if ($settingsJson) {
