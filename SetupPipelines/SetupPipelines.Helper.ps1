@@ -85,13 +85,19 @@ function Copy-PipelineTemplateFilesToPipelineFolder {
     }
 
     OutputDebug "Copying files from template folder '$templateFolderPath' to '$targetPipelineFolderPath'"
-    Get-ChildItem -Path $templateFolderPath -File -Recurse | ForEach-Object {
-        if (Test-Path -Path (Join-Path -Path $targetPipelineFolderPath -ChildPath $_.Name)) {
-            OutputDebug "Restoring pipeline from template: $($_.Name)"
+    $templateFiles = Get-ChildItem -Path $templateFolderPath -File -Recurse -Include *.json,*.yml
+    foreach ($file in $templateFiles) {
+        $targetFile = Join-Path -Path $targetPipelineFolderPath -ChildPath $file.Name
+        if (Test-Path -Path $targetFile) {
+            if ($file.Extension -eq '.yml') {
+                OutputDebug "Restoring pipeline from template $($file.Name)"
+                Copy-Item -Path $file.FullName -Destination $targetFile -Force
+            } elseif ($file.Extension -eq '.json') {
+                OutputDebug "JSON file $($file.Name) already exists, skipping copy"
+            }
         } else {
-            OutputDebug "Creating new pipeline from template: $($_.Name)"
+            OutputDebug "Creating new file from template: $($file.Name)"
+            Copy-Item -Path $file.FullName -Destination $targetFile -Force
         }
-        $targetFile = Join-Path -Path $targetPipelineFolderPath -ChildPath $_.Name
-        Copy-Item -Path $_.FullName -Destination $targetFile -Force
     }
 }
