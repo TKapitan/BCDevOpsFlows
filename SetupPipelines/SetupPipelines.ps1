@@ -3,6 +3,7 @@ Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "SetupPipelines.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\YamlClass.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 if (!$ENV:AL_SETTINGS) {
@@ -22,6 +23,8 @@ if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count 
     Write-Error "No YAML files found in template folder $yamlPipelineTemplateFolder"
 }
 Copy-PipelineTemplateFilesToPipelineFolder -templateFolderPath $yamlPipelineTemplateFolder -targetPipelineFolderPath $yamlPipelineFolder
+Invoke-GitAddCommit -appFolderPath$yamlPipelineFolder -commitMessage "Restore BCDevOpsFlows from template"
+Invoke-GitPush "HEAD:$($settings.pipelineBranch)"
 
 $pipelineDevOpsFolderPath = Get-PipelineDevOpsFolderPath -settings $settings
 $yamlFiles = Get-ChildItem -Path $yamlPipelineFolder -Filter *.yml -File

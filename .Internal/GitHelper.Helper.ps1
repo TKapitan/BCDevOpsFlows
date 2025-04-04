@@ -43,11 +43,25 @@ function Invoke-GitPush {
 }
 function Invoke-GitAddCommit {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath,
+        [Parameter(Mandatory = $true)]
         [string] $commitMessage
     )
 
-    Invoke-GitAdd -appFilePath $appFilePath
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            Write-Error "Either appFilePath or appFolderPath must be provided."
+        }
+        Invoke-GitAdd -appFilePath $appFilePath
+    } else {
+        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
+            Invoke-GitAdd -appFilePath $_.FullName
+        }
+        return
+    }
     Invoke-GitCommit -commitMessage $commitMessage
 }
 function Invoke-GitAddCommitPush {
