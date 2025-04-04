@@ -62,10 +62,10 @@ function Invoke-GitCommit {
     }
     $changes = invoke-git status --porcelain
     if (-not $changes) {
-        OutputDebug -Message "No changes to commit"
+        Write-Host "No changes to commit"
         return
     }
-    OutputDebug -Message "Committing changes with message: $commitMessage"
+    Write-Host "Committing changes with message: $commitMessage"
     invoke-git commit -m $commitMessage
 }
 function Invoke-GitPush {
@@ -74,7 +74,7 @@ function Invoke-GitPush {
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
-    OutputDebug -Message "Pushing changes to $targetBranch"
+    Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
 }
 function Invoke-GitAddCommit {
