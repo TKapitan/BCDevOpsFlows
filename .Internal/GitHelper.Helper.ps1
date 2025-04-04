@@ -60,8 +60,13 @@ function Invoke-GitCommit {
     else {
         $commitMessage = "$commitMessage [skip azurepipelines]"
     }
+    $changes = invoke-git status --porcelain
+    if (-not $changes) {
+        OutputDebug -Message "No changes to commit"
+        return
+    }
     OutputDebug -Message "Committing changes with message: $commitMessage"
-    invoke-git diff-index --quiet HEAD || invoke-git commit -m $commitMessage
+    invoke-git commit -m $commitMessage
 }
 function Invoke-GitPush {
     Param(
