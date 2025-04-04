@@ -1,6 +1,8 @@
 Param()
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "SetupPipelines.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\YamlClass.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 if (!$ENV:AL_SETTINGS) {
@@ -12,42 +14,26 @@ if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
     Write-Error "settings.pipelineBranch is required but was not provided."
 }
 
-$pipelineFolderPath = switch ($settings.pipelineFolderStructure) {
-    'Repository' { $ENV:BUILD_REPOSITORY_NAME }
-    'Pipeline' { $ENV:BUILD_DEFINITIONNAME }
-    'Path' { $settings.pipelineFolderPath }
-    '' { '' }
-    default { Write-Error "Invalid settings.pipelineFolderStructure: $($settings.pipelineFolderStructure)";  }
-}
-if ($pipelineFolderPath -eq '') {
-    $pipelineFolderPath = '\'
-}
-OutputDebug "Using pipeline folder path: $pipelineFolderPath"
+Install-AzureCLIDevOpsExtension
 
-OutputDebug "Adding Azure DevOps extension to Azure CLI"
-az extension add -n azure-devops
-
-$yamlFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH\$scriptsFolderName"
-$yamlFiles = Get-ChildItem -Path $yamlFolder -Filter *.yml -File
-if ($null -eq $yamlFiles -or $yamlFiles.Count -eq 0) {
-    Write-Error "No YAML files found in $yamlFolder"
+$yamlPipelineFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH\$scriptsFolderName"
+$yamlPipelineTemplateFolder = "$yamlPipelineFolder\Templates"
+if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count -eq 0) {
+    Write-Error "No YAML files found in template folder $yamlPipelineTemplateFolder"
 }
+Copy-PipelineTemplateFilesToPipelineFolder -templateFolderPath $yamlPipelineTemplateFolder -targetPipelineFolderPath $yamlPipelineFolder
+
+$pipelineDevOpsFolderPath = Get-PipelineDevOpsFolderPath -settings $settings
+$yamlFiles = Get-ChildItem -Path $yamlPipelineFolder -Filter *.yml -File
 OutputDebug "Preparing pipelines for project '$ENV:SYSTEM_TEAMPROJECT' in organization '$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'"
 foreach ($pipelineYamlFilePath in $yamlFiles) {
     $pipelineName = $pipelineYamlFilePath.BaseName
     $pipelineYamlFileRelativePath = "$scriptsFolderName\$($pipelineYamlFilePath.BaseName).yml"
     
-    OutputDebug "Creating pipeline '$pipelineName' with YAML file '$pipelineYamlFileRelativePath' in folder '$pipelineFolderPath'"
-
-    az pipelines create `
-        --name "$pipelineName" `
-        --folder-path "$pipelineFolderPath" `
-        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-        --project "$ENV:SYSTEM_TEAMPROJECT" `
-        --description "Pipeline $pipelineName created by SetupPipelines." `
-        --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --branch $settings.pipelineBranch `
-        --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "tfsgit" `
-        --skip-first-run $settings.pipelineSkipFirstRun
+    Add-AzureDevOpsPipelineFromYaml `
+        -pipelineName $pipelineName `
+        -pipelineFolder $pipelineDevOpsFolderPath `
+        -pipelineBranch $settings.pipelineBranch `
+        -pipelineYamlFileRelativePath $pipelineYamlFileRelativePath `
+        -skipPipelineFirstRun $settings.pipelineSkipFirstRun
 }
