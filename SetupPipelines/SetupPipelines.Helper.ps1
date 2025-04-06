@@ -167,12 +167,12 @@ function Update-PipelineYMLFile {
     if ($workflowName -eq "CICD") {
         $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
     }
-    if ($workflowName -eq "Publish_To_Production") {
+    if ($workflowName -eq "PublishToProduction") {
         $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
     }
     
     # Critical workflows may only run on allowed runners (must always be able to run)
-    $criticalWorkflows = @('Setup_Pipelines')
+    $criticalWorkflows = @('SetupPipelines')
     $modifyRunnersAndVariablesInWorkflows = $true
     if ($criticalWorkflows -contains $workflowName) {
         $modifyRunnersAndVariablesInWorkflows = $false
@@ -185,7 +185,7 @@ function Update-PipelineYMLFile {
     
     # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
     # If the dependency depth is higher than 1, we need to add multiple dependent build jobs to the workflow
-    if ($workflowName -eq 'PullRequestHandler' -or $workflowName -eq 'CICD' -or $workflowName -eq 'Current' -or $workflowName -eq 'NextMinor' -or $workflowName -eq 'NextMajor') {
+    if ($workflowName -eq 'PullRequest' -or $workflowName -eq 'CICD' -or $workflowName -eq 'Current' -or $workflowName -eq 'NextMinor' -or $workflowName -eq 'NextMajor') {
         # TODO $yamlContent = ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
     }
     
