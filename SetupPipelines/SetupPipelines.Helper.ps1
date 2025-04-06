@@ -201,55 +201,27 @@ function ModifyAllWorkflows {
     )
 
     # BCDevOpsFlows Repository name is needed in all workflows to specify the repository name
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName') {
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName' -or $settings.BCDevOpsFlowsResourceRepositoryName -eq '') {
         Write-Error "The resourceRepositoryName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
 
     # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName') {
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName' -or $settings.BCDevOpsFlowsServiceConnectionName -eq '') {
         Write-Error "The serviceConnectionName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].endpoint = $settings.BCDevOpsFlowsServiceConnectionName
 
     # Pool Name is needed in all workflows to specify the agent pool
-    if ($settings.Keys -notcontains 'devOpsPoolName') {
+    if ($settings.Keys -notcontains 'devOpsPoolName' -or $settings.devOpsPoolName -eq '') {
         Write-Error "The devOpsPoolName setting is required but was not provided."
     }
     $yamlContent.pool.name = $settings.devOpsPoolName
 
     # Variable Group Name is needed in all workflows to specify the variable group name
-    if ($settings.Keys -notcontains 'devOpsVariableGroup') {
+    if ($settings.Keys -notcontains 'devOpsVariableGroup' -or $settings.devOpsVariableGroup -eq '') {
         Write-Error "The devOpsVariableGroup setting is required but was not provided."
     }
     $yamlContent.variables[0].group = $settings.devOpsVariableGroup
     return $yamlContent
 }
-
-# Install-Module -Name powershell-yaml
-# Import-Module powershell-yaml
-
-# . "C:\Users\Tomas.Kapitan\ALProjects\_Fusion5\BCDevOpsFlows\.Internal\Yaml.Helper.ps1"
-# $yaml = @"
-# ---
-# anArray:
-# - 1
-# - 2
-# - 3
-# nested:
-#   array:
-#   - this: A
-#     is: B
-#     an: C
-#     X: D
-#   - this: XXXX
-#     is: BXXX
-#     an: CXXX
-#     X: DXXX
-# hello: world
-# "@
-
-# $yamlAsString = $yaml -split "`n"
-# $yaml = Get-AsYaml -fileContent $yamlAsString
-# $yaml.nested.array[0].this = 'A1'
-# ConvertTo-YAML $yaml
