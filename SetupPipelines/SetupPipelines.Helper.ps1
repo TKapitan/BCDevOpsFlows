@@ -161,7 +161,7 @@ function Update-PipelineYMLFile {
         }
     }
     
-    ModifyAllWorkflows -yamlContent [ref] $yamlContent -settings $settings
+    $yamlContent = ModifyAllWorkflows -yamlContent $yamlContent -settings $settings
     if ($baseName -eq "CICD") {
         # TODO ModifyCICDWorkflow -yaml $yamlContent -repoSettings $settings
     }
@@ -196,7 +196,7 @@ function Update-PipelineYMLFile {
 
 function ModifyAllWorkflows {
     Param(
-        [ref] $yamlContent,
+        $yamlContent,
         [hashtable] $settings
     )
 
