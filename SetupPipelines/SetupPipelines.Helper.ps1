@@ -171,7 +171,7 @@ function Update-PipelineYMLFile {
         $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
     }
     
-    # Critical workflows may only run on allowed runners (must always be able to run)
+    # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template. This runner is not configurable)
     $criticalWorkflows = @('SetupPipelines')
     $modifyRunnersAndVariablesInWorkflows = $true
     if ($criticalWorkflows -contains $workflowName) {
@@ -180,7 +180,6 @@ function Update-PipelineYMLFile {
     
     if ($modifyRunnersAndVariablesInWorkflows) {
         $yamlContent = ModifyRunnersAndVariablesInWorkflows -yamlContent $yamlContent -settings $settings
-        # TODO $yamlContent = ModifyRunsOnAndShell -yaml $yamlContent -repoSettings $settings
     }
     
     # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
@@ -207,6 +206,12 @@ function ModifyBCDevOpsFlowsInWorkflows {
         Write-Error "The BCDevOpsFlowsResourceRepositoryName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
+
+    # BCDevOpsFlows Repository Branch is needed in all workflows to specify the branch name
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryBranch' -or $settings.BCDevOpsFlowsResourceRepositoryBranch -eq '') {
+        Write-Error "The BCDevOpsFlowsResourceRepositoryBranch setting is required but was not provided."
+    }
+    $yamlContent.resources.repositories[0].ref = $settings.BCDevOpsFlowsResourceRepositoryBranch
 
     # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName' -or $settings.BCDevOpsFlowsServiceConnectionName -eq '') {
