@@ -136,13 +136,8 @@ function Update-PipelineYMLFile {
     )
 
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
-    $yaml = [Yaml]::Load($filePath)
-    $yamlName = $yaml.get('AL_PIPELINENAME:')
-    $workflowName = $baseName
-    if ($yamlName) {
-        $workflowName = $yamlName.content.SubString('AL_PIPELINENAME:'.Length).Trim().Trim('''"').Trim()
-    }
-
+    $yamlContent = Get-AsYamlFromFile -FileName $filePath
+    $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
     $workflowScheduleKey = "WorkflowSchedule"
     foreach ($key in @($workflowScheduleKey)) {
         if ($settings.Keys -contains $key -and ($settings."$key")) {
@@ -161,13 +156,13 @@ function Update-PipelineYMLFile {
                 throw "The $workflowScheduleKey setting must be a structure containing a cron property"
             }
             # Replace or add the schedule part under the on: key
-            # TODO $yaml.ReplaceOrAdd('on:/', 'schedule:', @("- cron: '$($settings."$workflowScheduleKey".cron)'"))
+            # TODO $yamlContent.ReplaceOrAdd('on:/', 'schedule:', @("- cron: '$($settings."$workflowScheduleKey".cron)'"))
         }
     }
     
-    ModifyAllWorkflows -yaml $yaml -settings $settings
+    ModifyAllWorkflows -yamlContent [ref] $yamlContent -settings $settings
     if ($baseName -eq "CICD") {
-        # TODO ModifyCICDWorkflow -yaml $yaml -repoSettings $settings
+        # TODO ModifyCICDWorkflow -yaml $yamlContent -repoSettings $settings
     }
     
     $criticalWorkflows = @('UpdateGitHubGoSystemFiles', 'Troubleshooting')
@@ -182,25 +177,25 @@ function Update-PipelineYMLFile {
     }
     
     if ($modifyRunsOnAndShell) {
-        # TODO ModifyRunsOnAndShell -yaml $yaml -repoSettings $settings
+        # TODO ModifyRunsOnAndShell -yaml $yamlContent -repoSettings $settings
     }
     
     # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
     # If the dependency depth is higher than 1, we need to add multiple dependent build jobs to the workflow
     if ($baseName -eq 'PullRequestHandler' -or $baseName -eq 'CICD' -or $baseName -eq 'Current' -or $baseName -eq 'NextMinor' -or $baseName -eq 'NextMajor') {
-        # TODO ModifyBuildWorkflows -yaml $yaml -depth $depth -includeBuildPP $includeBuildPP
+        # TODO ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
     }
     
     if ($baseName -eq 'UpdateGitHubGoSystemFiles') {
-        # TODO ModifyUpdateALGoSystemFiles -yaml $yaml -repoSettings $settings
+        # TODO ModifyUpdateALGoSystemFiles -yaml $yamlContent -repoSettings $settings
     }
 
-    Set-ContentLF -Path $filePath -Content ($yaml.content -join "`n")
+    Write-Yaml -FileName $filePath -Content $yamlContent
 }
 
 function ModifyAllWorkflows {
     Param(
-        [Yaml] $yaml,
+        [ref] $yamlContent,
         [hashtable] $settings
     )
 
@@ -208,23 +203,52 @@ function ModifyAllWorkflows {
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName') {
         Write-Error "The resourceRepositoryName setting is required but was not provided."
     }
-    $yaml.Replace('resources:/repositories:/repository:/name:', "name: $($settings.BCDevOpsFlowsResourceRepositoryName)")
+    $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
 
     # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName') {
         Write-Error "The serviceConnectionName setting is required but was not provided."
     }
-    $yaml.Replace('resources:/repositories:/repository:/endpoint:', "endpoint: $($settings.BCDevOpsFlowsServiceConnectionName)") 
+    $yamlContent.resources.repositories[0].endpoint = $settings.BCDevOpsFlowsServiceConnectionName
 
     # Pool Name is needed in all workflows to specify the agent pool
     if ($settings.Keys -notcontains 'devOpsPoolName') {
         Write-Error "The devOpsPoolName setting is required but was not provided."
     }
-    $yaml.Replace('pool:/name:', "name: $($settings.devOpsPoolName)")
+    $yamlContent.pool.name = $settings.devOpsPoolName
 
     # Variable Group Name is needed in all workflows to specify the variable group name
     if ($settings.Keys -notcontains 'devOpsVariableGroup') {
         Write-Error "The devOpsVariableGroup setting is required but was not provided."
     }
-    $yaml.Replace('variables:/group:', "group: $($settings.devOpsVariableGroup)")
+    $yamlContent.variables[0].group = $settings.devOpsVariableGroup
+    return $yamlContent
 }
+
+# Install-Module -Name powershell-yaml
+# Import-Module powershell-yaml
+
+# . "C:\Users\Tomas.Kapitan\ALProjects\_Fusion5\BCDevOpsFlows\.Internal\Yaml.Helper.ps1"
+# $yaml = @"
+# ---
+# anArray:
+# - 1
+# - 2
+# - 3
+# nested:
+#   array:
+#   - this: A
+#     is: B
+#     an: C
+#     X: D
+#   - this: XXXX
+#     is: BXXX
+#     an: CXXX
+#     X: DXXX
+# hello: world
+# "@
+
+# $yamlAsString = $yaml -split "`n"
+# $yaml = Get-AsYaml -fileContent $yamlAsString
+# $yaml.nested.array[0].this = 'A1'
+# ConvertTo-YAML $yaml
