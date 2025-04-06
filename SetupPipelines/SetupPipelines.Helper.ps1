@@ -152,7 +152,7 @@ function Update-PipelineYMLFile {
     $settings = ReadSettings -workflowName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined
-    if ($workflowName -ne "Pull_Request") {
+    if ($workflowName -ne "PullRequest") {
         # Add Schedule settings to the workflow
         if ($settings.Keys -contains $workflowScheduleKey) {
             if ($settings."$workflowScheduleKey" -isnot [hashtable] -or $settings."$workflowScheduleKey".Keys -notcontains 'cron' -or $settings."$workflowScheduleKey".cron -isnot [string]) {
@@ -173,23 +173,8 @@ function Update-PipelineYMLFile {
     
     # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template. This runner is not configurable)
     $criticalWorkflows = @('SetupPipelines')
-    $modifyRunnersAndVariablesInWorkflows = $true
-    if ($criticalWorkflows -contains $workflowName) {
-        $modifyRunnersAndVariablesInWorkflows = $false
-    }
-    
-    if ($modifyRunnersAndVariablesInWorkflows) {
+    if ($criticalWorkflows -notcontains $workflowName) {
         $yamlContent = ModifyRunnersAndVariablesInWorkflows -yamlContent $yamlContent -settings $settings
-    }
-    
-    # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
-    # If the dependency depth is higher than 1, we need to add multiple dependent build jobs to the workflow
-    if ($workflowName -eq 'PullRequest' -or $workflowName -eq 'CICD' -or $workflowName -eq 'Current' -or $workflowName -eq 'NextMinor' -or $workflowName -eq 'NextMajor') {
-        # TODO $yamlContent = ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
-    }
-    
-    if ($workflowName -eq 'UpdateGitHubGoSystemFiles') {
-        # TODO $yamlContent = ModifyUpdateALGoSystemFiles -yaml $yamlContent -repoSettings $settings
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
@@ -201,19 +186,14 @@ function ModifyBCDevOpsFlowsInWorkflows {
         [hashtable] $settings
     )
 
-    # BCDevOpsFlows Repository name is needed in all workflows to specify the repository name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName' -or $settings.BCDevOpsFlowsResourceRepositoryName -eq '') {
         Write-Error "The BCDevOpsFlowsResourceRepositoryName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
-
-    # BCDevOpsFlows Repository Branch is needed in all workflows to specify the branch name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryBranch' -or $settings.BCDevOpsFlowsResourceRepositoryBranch -eq '') {
         Write-Error "The BCDevOpsFlowsResourceRepositoryBranch setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].ref = $settings.BCDevOpsFlowsResourceRepositoryBranch
-
-    # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName' -or $settings.BCDevOpsFlowsServiceConnectionName -eq '') {
         Write-Error "The BCDevOpsFlowsServiceConnectionName setting is required but was not provided."
     }
@@ -227,13 +207,10 @@ function ModifyRunnersAndVariablesInWorkflows {
         [hashtable] $settings
     )
 
-    # Pool Name is needed in all workflows to specify the agent pool
     if ($settings.Keys -notcontains 'BCDevOpsFlowsPoolName' -or $settings.BCDevOpsFlowsPoolName -eq '') {
         Write-Error "The BCDevOpsFlowsPoolName setting is required but was not provided."
     }
     $yamlContent.pool.name = $settings.BCDevOpsFlowsPoolName
-
-    # Variable Group Name is needed in all workflows to specify the variable group name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
         Write-Error "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
     }
