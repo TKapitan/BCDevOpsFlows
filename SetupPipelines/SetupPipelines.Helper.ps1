@@ -5,6 +5,7 @@
 
 $workflowScheduleKey = "WorkflowSchedule"
 $CICDPushBranchesKey = "CICDPushBranches"
+$PublishToProdPushBranchesKey = "PublishToProdPushBranches"
 
 function Get-PipelineDevOpsFolderPath {
     Param(
@@ -139,7 +140,6 @@ function Update-PipelineYMLFile {
         [hashtable] $settings
     )
 
-    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
     foreach ($key in @($workflowScheduleKey)) {
@@ -152,7 +152,7 @@ function Update-PipelineYMLFile {
     $settings = ReadSettings -workflowName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined
-    if ($baseName -ne "Pull_Request") {
+    if ($workflowName -ne "Pull_Request") {
         # Add Schedule settings to the workflow
         if ($settings.Keys -contains $workflowScheduleKey) {
             if ($settings."$workflowScheduleKey" -isnot [hashtable] -or $settings."$workflowScheduleKey".Keys -notcontains 'cron' -or $settings."$workflowScheduleKey".cron -isnot [string]) {
@@ -163,43 +163,40 @@ function Update-PipelineYMLFile {
         }
     }
     
-    $yamlContent = ModifyAllWorkflows -yamlContent $yamlContent -settings $settings
-    if ($baseName -eq "CICD") {
+    $yamlContent = ModifyBCDevOpsFlowsInWorkflows -yamlContent $yamlContent -settings $settings
+    if ($workflowName -eq "CICD") {
         $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
     }
-    if ($baseName -eq "Publish_To_Production") {
-        # TODO $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
+    if ($workflowName -eq "Publish_To_Production") {
+        $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
     }
-    
-    $criticalWorkflows = @('UpdateGitHubGoSystemFiles', 'Troubleshooting')
-    $allowedRunners = @('windows-latest', 'ubuntu-latest')
-    $modifyRunsOnAndShell = $true
     
     # Critical workflows may only run on allowed runners (must always be able to run)
-    if ($criticalWorkflows -contains $baseName) {
-        if ($allowedRunners -notcontains $settings."runs-on") {
-            $modifyRunsOnAndShell = $false
-        }
+    $criticalWorkflows = @('Setup_Pipelines')
+    $modifyRunnersAndVariablesInWorkflows = $true
+    if ($criticalWorkflows -contains $workflowName) {
+        $modifyRunnersAndVariablesInWorkflows = $false
     }
     
-    if ($modifyRunsOnAndShell) {
+    if ($modifyRunnersAndVariablesInWorkflows) {
+        $yamlContent = ModifyRunnersAndVariablesInWorkflows -yamlContent $yamlContent -settings $settings
         # TODO $yamlContent = ModifyRunsOnAndShell -yaml $yamlContent -repoSettings $settings
     }
     
     # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
     # If the dependency depth is higher than 1, we need to add multiple dependent build jobs to the workflow
-    if ($baseName -eq 'PullRequestHandler' -or $baseName -eq 'CICD' -or $baseName -eq 'Current' -or $baseName -eq 'NextMinor' -or $baseName -eq 'NextMajor') {
+    if ($workflowName -eq 'PullRequestHandler' -or $workflowName -eq 'CICD' -or $workflowName -eq 'Current' -or $workflowName -eq 'NextMinor' -or $workflowName -eq 'NextMajor') {
         # TODO $yamlContent = ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
     }
     
-    if ($baseName -eq 'UpdateGitHubGoSystemFiles') {
+    if ($workflowName -eq 'UpdateGitHubGoSystemFiles') {
         # TODO $yamlContent = ModifyUpdateALGoSystemFiles -yaml $yamlContent -repoSettings $settings
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
 }
 
-function ModifyAllWorkflows {
+function ModifyBCDevOpsFlowsInWorkflows {
     Param(
         $yamlContent,
         [hashtable] $settings
@@ -216,6 +213,14 @@ function ModifyAllWorkflows {
         Write-Error "The serviceConnectionName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].endpoint = $settings.BCDevOpsFlowsServiceConnectionName
+    return $yamlContent
+}
+
+function ModifyRunnersAndVariablesInWorkflows {
+    Param(
+        $yamlContent,
+        [hashtable] $settings
+    )
 
     # Pool Name is needed in all workflows to specify the agent pool
     if ($settings.Keys -notcontains 'devOpsPoolName' -or $settings.devOpsPoolName -eq '') {
@@ -253,3 +258,24 @@ function ModifyCICDWorkflow {
     }
     return $yamlContent
 }
+
+function ModifyPublishToProductionWorkflow {
+    Param(
+        $yamlContent,
+        [hashtable] $settings
+    )
+
+    if ($settings.Keys -contains $PublishToProdPushBranchesKey) {
+        $PublishToProdPushBranches = $settings.PublishToProdPushBranchesKey
+    }
+    if ($PublishToProdPushBranches) {
+        $yamlContent.trigger.branches.include = @(
+            $settings.PublishToProdPushBranchesKey -split ','
+        )
+    }
+    else {
+        $yamlContent.trigger = 'none'
+    }
+    return $yamlContent
+}
+    
