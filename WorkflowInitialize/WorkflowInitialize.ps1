@@ -8,3 +8,5 @@ $scopeJson = @{
 $env:AL_TELEMETRYSCOPE = $scopeJson
 Write-Host "##vso[task.setvariable variable=AL_TELEMETRYSCOPE;]$scopeJson"
 OutputDebug -Message "Set environment variable AL_TELEMETRYSCOPE to ($env:AL_TELEMETRYSCOPE)"
+
+Install-Module -Name ConvertTo-Hashtable
