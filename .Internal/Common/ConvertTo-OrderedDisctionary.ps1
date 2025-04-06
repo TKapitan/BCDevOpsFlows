@@ -28,4 +28,3 @@ function ConvertTo-OrderedDictionary() {
     }
     $ht
 }
-Export-ModuleMember -Function ConvertTo-OrderedDictionary

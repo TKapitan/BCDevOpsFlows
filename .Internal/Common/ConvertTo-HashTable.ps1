@@ -56,4 +56,3 @@ function ConvertTo-HashTable() {
     }
     $ht
 }
-Export-ModuleMember -Function ConvertTo-HashTable
