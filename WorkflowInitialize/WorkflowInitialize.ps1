@@ -10,4 +10,4 @@ Write-Host "##vso[task.setvariable variable=AL_TELEMETRYSCOPE;]$scopeJson"
 OutputDebug -Message "Set environment variable AL_TELEMETRYSCOPE to ($env:AL_TELEMETRYSCOPE)"
 
 Install-Module -Name ConvertTo-Hashtable -Force -Verbose -Scope CurrentUser
-Import-Module powershell-yaml
+Import-Module ConvertTo-Hashtable
