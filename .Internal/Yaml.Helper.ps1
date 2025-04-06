@@ -28,5 +28,5 @@ function Write-Yaml {
         $Content
     )
     $result = ConvertTo-YAML $Content
-    Set-ContentLF -Path $filePath -Value $result
+    Set-ContentLF -Path $filePath -Content $result
 }
