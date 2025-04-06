@@ -3,6 +3,9 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
+$workflowScheduleKey = "WorkflowSchedule"
+$CICDPushBranchesKey = "CICDPushBranches"
+
 function Get-PipelineDevOpsFolderPath {
     Param(
         [Parameter(Mandatory = $true)]
@@ -139,7 +142,6 @@ function Update-PipelineYMLFile {
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
-    $workflowScheduleKey = "WorkflowSchedule"
     foreach ($key in @($workflowScheduleKey)) {
         if ($settings.Keys -contains $key -and ($settings."$key")) {
             throw "The $key setting is not allowed in the global repository settings. Please use the workflow specific settings file or conditional settings."
@@ -163,7 +165,10 @@ function Update-PipelineYMLFile {
     
     $yamlContent = ModifyAllWorkflows -yamlContent $yamlContent -settings $settings
     if ($baseName -eq "CICD") {
-        # TODO ModifyCICDWorkflow -yaml $yamlContent -repoSettings $settings
+        $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
+    }
+    if ($baseName -eq "Publish_To_Production") {
+        # TODO $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
     }
     
     $criticalWorkflows = @('UpdateGitHubGoSystemFiles', 'Troubleshooting')
@@ -178,17 +183,17 @@ function Update-PipelineYMLFile {
     }
     
     if ($modifyRunsOnAndShell) {
-        # TODO ModifyRunsOnAndShell -yaml $yamlContent -repoSettings $settings
+        # TODO $yamlContent = ModifyRunsOnAndShell -yaml $yamlContent -repoSettings $settings
     }
     
     # PullRequestHandler, CICD, Current, NextMinor and NextMajor workflows all include a build step.
     # If the dependency depth is higher than 1, we need to add multiple dependent build jobs to the workflow
     if ($baseName -eq 'PullRequestHandler' -or $baseName -eq 'CICD' -or $baseName -eq 'Current' -or $baseName -eq 'NextMinor' -or $baseName -eq 'NextMajor') {
-        # TODO ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
+        # TODO $yamlContent = ModifyBuildWorkflows -yaml $yamlContent -depth $depth -includeBuildPP $includeBuildPP
     }
     
     if ($baseName -eq 'UpdateGitHubGoSystemFiles') {
-        # TODO ModifyUpdateALGoSystemFiles -yaml $yamlContent -repoSettings $settings
+        # TODO $yamlContent = ModifyUpdateALGoSystemFiles -yaml $yamlContent -repoSettings $settings
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
@@ -223,5 +228,30 @@ function ModifyAllWorkflows {
         Write-Error "The devOpsVariableGroup setting is required but was not provided."
     }
     $yamlContent.variables[0].group = $settings.devOpsVariableGroup
+    return $yamlContent
+}
+
+function ModifyCICDWorkflow {
+    Param(
+        $yamlContent,
+        [hashtable] $settings
+    )
+
+    if ($repoSettings.Keys -contains $CICDPushBranchesKey) {
+        $CICDPushBranches = $repoSettings.CICDPushBranches
+    }
+    elseif ($repoSettings.Keys -contains $workflowScheduleKey) {
+        $CICDPushBranches = ''
+    }
+    if ($CICDPushBranches) {
+        $yamlContent.trigger = @{
+            "branches" = @{
+                "include" = @($settings.CICDPushBranches -join ',')
+            }
+        }
+    }
+    else {
+        $yamlContent.trigger = 'none'
+    }
     return $yamlContent
 }

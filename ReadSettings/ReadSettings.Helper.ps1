@@ -120,6 +120,8 @@ function ReadSettings {
         "BCDevOpsFlowsResourceRepositoryName" = ""
         "BCDevOpsFlowsServiceConnectionName"  = "BCDevOpsFlows"
         "devOpsVariableGroup"                 = "BCDevOpsFlows"
+        "CICDPushBranches"                    = "test,preview,preview/*"
+        "PublishToProdPushBranches"           = "main,master,release/*,feature/*"
     }
 
     # Read settings from files and merge them into the settings object
