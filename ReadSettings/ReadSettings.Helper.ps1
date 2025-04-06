@@ -135,12 +135,16 @@ function ReadSettings {
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    # Read settings from workflow settings file
-    $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
-    $settingsObjects += @($workflowSettingsObject)
-    # Read settings from user settings file
-    $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
-    $settingsObjects += @($userSettingsObject)
+    if ($pipelineName -ne "") {
+        # Read settings from workflow settings file
+        $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
+        $settingsObjects += @($workflowSettingsObject)
+    }
+    if ($userReqForEmail -ne "") {
+        # Read settings from user settings file
+        $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
+        $settingsObjects += @($userSettingsObject)
+    }
     $BCDevOpsFlowsSettingExists = $false
     foreach ($settingsJson in $settingsObjects) {
         if ($settingsJson) {
