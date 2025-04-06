@@ -18,7 +18,7 @@ function Get-AsYaml {
     foreach ($line in $fileContent) { 
         $content = $content + "`n" + $line 
     }
-    $yml = ConvertFrom-YAML $content
+    $yml = ConvertFrom-YAML $content -Ordered
     return $yml
 }
  
