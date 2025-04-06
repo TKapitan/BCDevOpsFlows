@@ -1,3 +1,6 @@
+Install-Module -Name powershell-yaml -Force -Verbose -Scope CurrentUser
+Import-Module powershell-yaml
+
 function Get-AsYamlFromFile {
     param (
         $FileName
