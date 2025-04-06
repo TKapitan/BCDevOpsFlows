@@ -208,13 +208,13 @@ function ModifyAllWorkflows {
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName') {
         Write-Error "The resourceRepositoryName setting is required but was not provided."
     }
-    $yaml.Replace('resources:/repositories:/name:', "name: $($settings.BCDevOpsFlowsResourceRepositoryName)")
+    $yaml.Replace('resources:/repositories:/repository:/name:', "name: $($settings.BCDevOpsFlowsResourceRepositoryName)")
 
     # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName') {
         Write-Error "The serviceConnectionName setting is required but was not provided."
     }
-    $yaml.Replace('resources:/repositories:/endpoint:', "endpoint: $($settings.BCDevOpsFlowsServiceConnectionName)") 
+    $yaml.Replace('resources:/repositories:/repository:/endpoint:', "endpoint: $($settings.BCDevOpsFlowsServiceConnectionName)") 
 
     # Pool Name is needed in all workflows to specify the agent pool
     if ($settings.Keys -notcontains 'devOpsPoolName') {
