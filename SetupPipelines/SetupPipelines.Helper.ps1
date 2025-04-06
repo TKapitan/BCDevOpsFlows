@@ -237,10 +237,10 @@ function ModifyCICDWorkflow {
         [hashtable] $settings
     )
 
-    if ($repoSettings.Keys -contains $CICDPushBranchesKey) {
-        $CICDPushBranches = $repoSettings.CICDPushBranches
+    if ($settings.Keys -contains $CICDPushBranchesKey) {
+        $CICDPushBranches = $settings.CICDPushBranches
     }
-    elseif ($repoSettings.Keys -contains $workflowScheduleKey) {
+    elseif ($settings.Keys -contains $workflowScheduleKey) {
         $CICDPushBranches = ''
     }
     if ($CICDPushBranches) {
