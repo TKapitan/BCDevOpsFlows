@@ -5,6 +5,7 @@ Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 $settings = ReadSettings -workflowName '' -userName '' -branchName '' | ConvertTo-HashTable -recurse
 if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
