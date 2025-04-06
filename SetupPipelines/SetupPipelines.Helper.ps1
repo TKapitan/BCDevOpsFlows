@@ -244,11 +244,9 @@ function ModifyCICDWorkflow {
         $CICDPushBranches = ''
     }
     if ($CICDPushBranches) {
-        $yamlContent.trigger = @{
-            "branches" = @{
-                "include" = @($settings.CICDPushBranches -join ',')
-            }
-        }
+        $yamlContent.trigger.branches.include = @(
+            $settings.CICDPushBranches -split ','
+        )
     }
     else {
         $yamlContent.trigger = 'none'
