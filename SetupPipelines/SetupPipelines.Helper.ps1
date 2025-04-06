@@ -204,13 +204,13 @@ function ModifyBCDevOpsFlowsInWorkflows {
 
     # BCDevOpsFlows Repository name is needed in all workflows to specify the repository name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName' -or $settings.BCDevOpsFlowsResourceRepositoryName -eq '') {
-        Write-Error "The resourceRepositoryName setting is required but was not provided."
+        Write-Error "The BCDevOpsFlowsResourceRepositoryName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
 
     # BCDevOpsFlows Service Connection name is needed in all workflows to specify the service connection name
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName' -or $settings.BCDevOpsFlowsServiceConnectionName -eq '') {
-        Write-Error "The serviceConnectionName setting is required but was not provided."
+        Write-Error "The BCDevOpsFlowsServiceConnectionName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].endpoint = $settings.BCDevOpsFlowsServiceConnectionName
     return $yamlContent
@@ -223,16 +223,16 @@ function ModifyRunnersAndVariablesInWorkflows {
     )
 
     # Pool Name is needed in all workflows to specify the agent pool
-    if ($settings.Keys -notcontains 'devOpsPoolName' -or $settings.devOpsPoolName -eq '') {
-        Write-Error "The devOpsPoolName setting is required but was not provided."
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsPoolName' -or $settings.BCDevOpsFlowsPoolName -eq '') {
+        Write-Error "The BCDevOpsFlowsPoolName setting is required but was not provided."
     }
-    $yamlContent.pool.name = $settings.devOpsPoolName
+    $yamlContent.pool.name = $settings.BCDevOpsFlowsPoolName
 
     # Variable Group Name is needed in all workflows to specify the variable group name
-    if ($settings.Keys -notcontains 'devOpsVariableGroup' -or $settings.devOpsVariableGroup -eq '') {
-        Write-Error "The devOpsVariableGroup setting is required but was not provided."
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
+        Write-Error "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
     }
-    $yamlContent.variables[0].group = $settings.devOpsVariableGroup
+    $yamlContent.variables[0].group = $settings.BCDevOpsFlowsVariableGroup
     return $yamlContent
 }
 

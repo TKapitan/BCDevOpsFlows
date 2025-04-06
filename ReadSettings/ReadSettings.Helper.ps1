@@ -116,10 +116,10 @@ function ReadSettings {
         "pipelineFolderStructure"             = "Repository" # Repository | Pipeline | Path
         "pipelineFolderPath"                  = ""
         "pipelineSkipFirstRun"                = $false
-        "devOpsPoolName"                      = "SelfHostedWindows"
+        "BCDevOpsFlowsPoolName"                      = "SelfHostedWindows"
         "BCDevOpsFlowsResourceRepositoryName" = ""
         "BCDevOpsFlowsServiceConnectionName"  = "BCDevOpsFlows"
-        "devOpsVariableGroup"                 = "BCDevOpsFlows"
+        "BCDevOpsFlowsVariableGroup"                 = "BCDevOpsFlows"
         "CICDPushBranches"                    = "test,preview,preview/*"
         "PublishToProdPushBranches"           = "main,master,release/*,feature/*"
     }
