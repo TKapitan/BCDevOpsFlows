@@ -3,7 +3,7 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$workflowScheduleKey = "WorkflowSchedule"
+$workflowScheduleKey = "workflowSchedule"
 $CICDPushBranchesKey = "CICDPushBranches"
 $PublishToProdPushBranchesKey = "PublishToProdPushBranches"
 
