@@ -169,12 +169,12 @@ function Update-PipelineYMLFile {
     }
     
     $yamlContent = ModifyBCDevOpsFlowsInWorkflows -yamlContent $yamlContent -settings $settings
-    if ($workflowName -eq "CICD") {
-        $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
-    }
-    if ($workflowName -eq "PublishToProduction") {
-        $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
-    }
+    # if ($workflowName -eq "CICD") {
+    #     $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
+    # }
+    # if ($workflowName -eq "PublishToProduction") {
+    #     $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
+    # }
     
     # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template. This runner is not configurable)
     $criticalWorkflows = @('SetupPipelines')
