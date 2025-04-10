@@ -149,7 +149,7 @@ function Update-PipelineYMLFile {
     }
 
     # Re-read settings and this time include workflow specific settings
-    $settings = ReadSettings -workflowName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
+    $settings = ReadSettings -pipelineName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined
     if ($workflowName -ne "PullRequest") {
