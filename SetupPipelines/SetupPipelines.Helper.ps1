@@ -158,8 +158,8 @@ function Update-PipelineYMLFile {
             if ($settings."$workflowScheduleKey" -isnot [hashtable] -or $settings."$workflowScheduleKey".Keys -notcontains 'cron' -or $settings."$workflowScheduleKey".cron -isnot [string]) {
                 throw "The $workflowScheduleKey setting must be a structure containing a cron property"
             }
-            # Replace or add the schedule part under the on: key
-            # TODO $yamlContent.ReplaceOrAdd('on:/', 'schedule:', @("- cron: '$($settings."$workflowScheduleKey".cron)'"))
+            # Add Workflow Schedule to the workflow
+            $yamlContent.trigger = $($settings."$workflowScheduleKey")
         }
     }
     
