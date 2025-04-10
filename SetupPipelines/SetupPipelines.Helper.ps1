@@ -116,9 +116,7 @@ function Update-PipelineYMLFiles {
         [Parameter(Mandatory = $true)]
         [string]$templateFolderPath,
         [Parameter(Mandatory = $true)]
-        [string]$pipelineFolderPath,
-        [Parameter(Mandatory = $true)]
-        [hashtable] $settings
+        [string]$pipelineFolderPath
     )
 
     $ymlFiles = Get-ChildItem -Path $templateFolderPath -Filter "*.yml" -File
@@ -128,17 +126,18 @@ function Update-PipelineYMLFiles {
             Write-Error "Pipeline YML file does not exist: $pipelineFile"
             continue
         }
-        Update-PipelineYMLFile -filePath $pipelineFile -settings $settings
+        Update-PipelineYMLFile -filePath $pipelineFile
     }
 }
 
 function Update-PipelineYMLFile {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$filePath,
-        [Parameter(Mandatory = $true)]
-        [hashtable] $settings
+        [string]$filePath
     )
+    
+    # Read settings without workflow specific settings
+    $settings = ReadSettings -pipelineName '' -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
@@ -148,7 +147,7 @@ function Update-PipelineYMLFile {
         }
     }
 
-    # Re-read settings and this time include workflow specific settings
+    # Re-read settings and this time include workflow specific settings + setup pipeline settings
     $settings = ReadSettings -pipelineName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined

@@ -13,6 +13,7 @@ function ReadSettings {
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
         [string] $pipelineName = "$ENV:AL_PIPELINENAME",
+        [string] $setupPipelineName = "",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
         [string] $projectSettings
@@ -48,6 +49,7 @@ function ReadSettings {
 
     $repoName = $repoName.SubString("$repoName".LastIndexOf('/') + 1)
     $pipelineName = $pipelineName.Trim().Split([System.IO.Path]::getInvalidFileNameChars()) -join ""
+    $setupPipelineName = $setupPipelineName.Trim().Split([System.IO.Path]::getInvalidFileNameChars()) -join ""
 
     # Start with default settings
     $settings = [ordered]@{
