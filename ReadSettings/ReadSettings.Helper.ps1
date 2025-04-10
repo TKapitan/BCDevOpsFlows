@@ -138,6 +138,11 @@ function ReadSettings {
     # Read settings from repository settings file
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
+    if ($setupPipelineName -ne "") {
+        # Read settings from setup pipeline settings file
+        $setupSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$setupPipelineName.settings.json")
+        $settingsObjects += @($setupSettingsObject)
+    }
     if ($pipelineName -ne "") {
         # Read settings from workflow settings file
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
