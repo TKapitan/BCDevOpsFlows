@@ -161,7 +161,7 @@ function Update-PipelineYMLFile {
             OutputDebug "Adding schedule to workflow: $($settings."$workflowScheduleKey")"
         }
         # Add Change Trigger settings to the workflow
-        if ($settings.Keys -contains $workflowTriggerKey) {
+        elseif ($settings.Keys -contains $workflowTriggerKey) {
             if ($settings."$workflowTriggerKey" -isnot [hashtable]) {
                 Write-Error "The $workflowTriggerKey setting must be a structure"
             }
