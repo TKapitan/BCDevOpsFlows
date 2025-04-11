@@ -4,8 +4,7 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 $workflowScheduleKey = "workflowSchedule"
-$CICDPushBranchesKey = "CICDPushBranches"
-$PublishToProdPushBranchesKey = "PublishToProdPushBranches"
+$workflowTriggerKey = "workflowTrigger"
 
 function Get-PipelineDevOpsFolderPath {
     Param(
@@ -141,7 +140,7 @@ function Update-PipelineYMLFile {
 
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
-    foreach ($key in @($workflowScheduleKey)) {
+    foreach ($key in @($workflowScheduleKey, $workflowTriggerKey)) {
         if ($settings.Keys -contains $key -and ($settings."$key")) {
             throw "The $key setting is not allowed in the global repository settings. Please use the workflow specific settings file or conditional settings."
         }
@@ -161,20 +160,22 @@ function Update-PipelineYMLFile {
             $yamlContent.trigger = $($settings."$workflowScheduleKey")
             OutputDebug "Adding schedule to workflow: $($settings."$workflowScheduleKey")"
         }
-        elseif ($yamlContent.trigger) {
+        # Add Change Trigger settings to the workflow
+        if ($settings.Keys -contains $workflowTriggerKey) {
+            if ($settings."$workflowTriggerKey" -isnot [hashtable]) {
+                Write-Error "The $workflowTriggerKey setting must be a structure"
+            }
+            # Add Workflow Schedule to the workflow
+            $yamlContent.trigger = $($settings."$workflowTriggerKey")
+            OutputDebug "Adding trigger to workflow: $($settings."$workflowTriggerKey")"
+        }
+        elseif ($yamlContent.trigger -and $yamlContent.trigger -ne 'none') {
             $yamlContent.trigger = 'none'
             OutputDebug "Removing schedule from workflow"
         }
     }
     
     $yamlContent = ModifyBCDevOpsFlowsInWorkflows -yamlContent $yamlContent -settings $settings
-    # if ($workflowName -eq "CICD") {
-    #     $yamlContent = ModifyCICDWorkflow -yamlContent $yamlContent -settings $settings
-    # }
-    # if ($workflowName -eq "PublishToProduction") {
-    #     $yamlContent = ModifyPublishToProductionWorkflow -yaml $yamlContent -repoSettings $settings
-    # }
-    
     # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template. This runner is not configurable)
     $criticalWorkflows = @('SetupPipelines')
     if ($criticalWorkflows -notcontains $workflowName) {
@@ -219,49 +220,6 @@ function ModifyRunnersAndVariablesInWorkflows {
         Write-Error "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
     }
     $yamlContent.variables[0].group = $settings.BCDevOpsFlowsVariableGroup
-    return $yamlContent
-}
-
-function ModifyCICDWorkflow {
-    Param(
-        $yamlContent,
-        [hashtable] $settings
-    )
-
-    if ($settings.Keys -contains $CICDPushBranchesKey) {
-        $CICDPushBranches = $settings.CICDPushBranches
-    }
-    elseif ($settings.Keys -contains $workflowScheduleKey) {
-        $CICDPushBranches = ''
-    }
-    if ($CICDPushBranches) {
-        $yamlContent.trigger.branches.include = @(
-            $settings.CICDPushBranches -split ','
-        )
-    }
-    else {
-        $yamlContent.trigger = 'none'
-    }
-    return $yamlContent
-}
-
-function ModifyPublishToProductionWorkflow {
-    Param(
-        $yamlContent,
-        [hashtable] $settings
-    )
-
-    if ($settings.Keys -contains $PublishToProdPushBranchesKey) {
-        $PublishToProdPushBranches = $settings.PublishToProdPushBranchesKey
-    }
-    if ($PublishToProdPushBranches) {
-        $yamlContent.trigger.branches.include = @(
-            $settings.PublishToProdPushBranchesKey -split ','
-        )
-    }
-    else {
-        $yamlContent.trigger = 'none'
-    }
     return $yamlContent
 }
     
