@@ -7,7 +7,7 @@ Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 
-$settings = ReadSettings -pipelineName '' -userName '' -branchName '' | ConvertTo-HashTable -recurse
+$settings = ReadSettings -pipelineName '' -setupPipelineName "$ENV:AL_PIPELINENAME" -userName '' -branchName '' | ConvertTo-HashTable -recurse
 if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
     Write-Error "settings.pipelineBranch is required but was not provided."
 }
