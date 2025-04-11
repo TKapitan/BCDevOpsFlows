@@ -137,7 +137,7 @@ function Update-PipelineYMLFile {
     )
     
     # Read settings without workflow specific settings
-    $settings = ReadSettings -pipelineName '' -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
+    $settings = ReadSettings -pipelineName '' -setupPipelineName '' -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
@@ -148,7 +148,7 @@ function Update-PipelineYMLFile {
     }
 
     # Re-read settings and this time include workflow specific settings + setup pipeline settings
-    $settings = ReadSettings -pipelineName $workflowName -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
+    $settings = ReadSettings -pipelineName $workflowName -setupPipelineName "$ENV:AL_PIPELINENAME" -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined
     if ($workflowName -ne "PullRequest") {
