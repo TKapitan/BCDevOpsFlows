@@ -62,17 +62,17 @@ function Add-AzureDevOpsPipelineFromYaml {
         OutputDebug "Skipping first run of pipeline '$pipelineName'"
     }
 
-    # az pipelines create `
-    #     --name "$pipelineName" `
-    #     --folder-path "$pipelineFolder" `
-    #     --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-    #     --project "$ENV:SYSTEM_TEAMPROJECT" `
-    #     --description "Pipeline $pipelineName created by SetupPipelines." `
-    #     --repository "$ENV:BUILD_REPOSITORY_NAME" `
-    #     --branch $pipelineBranch `
-    #     --yml-path "$pipelineYamlFileRelativePath" `
-    #     --repository-type "tfsgit" `
-    #     --skip-first-run $skipPipelineFirstRun
+    az pipelines create `
+        --name "$pipelineName" `
+        --folder-path "$pipelineFolder" `
+        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+        --project "$ENV:SYSTEM_TEAMPROJECT" `
+        --description "Pipeline $pipelineName created by SetupPipelines." `
+        --repository "$ENV:BUILD_REPOSITORY_NAME" `
+        --branch $pipelineBranch `
+        --yml-path "$pipelineYamlFileRelativePath" `
+        --repository-type "tfsgit" `
+        --skip-first-run $skipPipelineFirstRun
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
