@@ -172,15 +172,27 @@ function Update-PipelineYMLFile {
             if ($scheduledCronSettings -isnot [array]) {
                 $scheduledCronSettings = @($scheduledCronSettings)
             }
-            foreach ($schedule in $scheduledCronSettings) {
+            $scheduledCronSettingsOrdered = foreach ($schedule in $scheduledCronSettings) {
                 if ($schedule -isnot [hashtable] -or $schedule.Keys -notcontains 'cron' -or $schedule.cron -isnot [string]) {
                     Write-Error "Each schedule in $workflowScheduleKey must be a structure containing a cron property"
                 }
                 OutputDebug "Schedule cron: $($schedule.cron)"
+                $orderedSchedule = [ordered]@{}
+                # Add cron first
+                if ($schedule.ContainsKey('cron')) {
+                    $orderedSchedule['cron'] = $schedule.cron
+                }
+                # Add remaining properties
+                foreach ($key in $schedule.Keys) {
+                    if ($key -ne 'cron') {
+                        $orderedSchedule[$key] = $schedule[$key]
+                    }
+                }
+                $orderedSchedule
             }
             # Add Workflow Schedule to the workflow
-            $yamlContent.schedules = $scheduledCronSettings
-            OutputDebug "Adding schedule to workflow: $scheduledCronSettings"
+            $yamlContent.schedules = $scheduledCronSettingsOrdered
+            OutputDebug "Adding schedule to workflow: $scheduledCronSettingsOrdered"
         }
         elseif ($yamlContent.schedules) {
             $yamlContent.Remove('schedules')
