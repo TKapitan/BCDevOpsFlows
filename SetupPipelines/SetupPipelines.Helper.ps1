@@ -168,12 +168,18 @@ function Update-PipelineYMLFile {
     if ($workflowName -ne "PullRequest") {
         # Add Schedule settings to the workflow
         if ($settings.Keys -contains $workflowScheduleKey) {
-            if ($settings."$workflowScheduleKey" -isnot [hashtable] -or $settings."$workflowScheduleKey".Keys -notcontains 'cron' -or $settings."$workflowScheduleKey".cron -isnot [string]) {
-                Write-Error "The $workflowScheduleKey setting must be a structure containing a cron property for scheduled workflows"
+            $scheduledCronSettings = $settings."$workflowScheduleKey"
+            if ($scheduledCronSettings -isnot [array]) {
+                $scheduledCronSettings = @($scheduledCronSettings)
+            }
+            foreach ($schedule in $scheduledCronSettings) {
+                if ($schedule -isnot [hashtable] -or $schedule.Keys -notcontains 'cron' -or $schedule.cron -isnot [string]) {
+                    Write-Error "Each schedule in $workflowScheduleKey must be a structure containing a cron property"
+                }
             }
             # Add Workflow Schedule to the workflow
-            $yamlContent.schedules = $($settings."$workflowScheduleKey")
-            OutputDebug "Adding schedule to workflow: $($settings."$workflowScheduleKey")"
+            $yamlContent.schedules = $($scheduledCronSettings)
+            OutputDebug "Adding schedule to workflow: $($scheduledCronSettings)"
         }
         elseif ($yamlContent.schedules) {
             $yamlContent.PSObject.Properties.Remove('schedules')
