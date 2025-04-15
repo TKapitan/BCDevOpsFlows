@@ -183,8 +183,10 @@ function Update-PipelineYMLFile {
             OutputDebug "Adding schedule to workflow: $scheduledCronSettings"
         }
         elseif ($yamlContent.schedules) {
+            OutputDebug "1Removing existing schedules: $($yamlContent.schedules | ConvertTo-Json -Compress)"
             $yamlContent = $yamlContent | Select-Object -Property * -ExcludeProperty 'schedules'
             OutputDebug "Removing schedule from workflow"
+            OutputDebug "2Removing existing schedules: $($yamlContent.schedules | ConvertTo-Json -Compress)"
         }
 
         # Add Change Trigger settings to the workflow
