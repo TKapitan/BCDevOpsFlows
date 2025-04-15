@@ -57,9 +57,9 @@ function Add-AzureDevOpsPipelineFromYaml {
         [bool] $skipPipelineFirstRun = $false
     )
 
-    OutputDebug "Creating pipeline '$pipelineName' for branch '$pipelineBranch' with YAML file '$pipelineYamlFileRelativePath' in folder '$pipelineFolder'"
+    OutputDebug "Preparing pipeline '$pipelineName' for branch '$pipelineBranch' with YAML file '$pipelineYamlFileRelativePath' in folder '$pipelineFolder'"
     if ($skipPipelineFirstRun) {
-        OutputDebug "Skipping first run of pipeline '$pipelineName'"
+        OutputDebug "Setting skip first run of pipeline '$pipelineName'"
     }
 
     $existingPipelines = az pipelines list `
@@ -68,21 +68,25 @@ function Add-AzureDevOpsPipelineFromYaml {
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --repository-type "tfsgit" `
+        --repository-type "tfsgit" | ConvertFrom-Json
+        
+    if ([string]::IsNullOrWhiteSpace($existingPipelines) -or $existingPipelines.Count -eq 0) {
+        Write-Error "Pipeline $pipelineName in folder $pipelineFolder already exists. Skipping creation."
+        return
+    }
     
-    Write-Host 'Existing pipelines:' $existingPipelines
-
-    # az pipelines create `
-    #     --name "$pipelineName" `
-    #     --folder-path "$pipelineFolder" `
-    #     --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-    #     --project "$ENV:SYSTEM_TEAMPROJECT" `
-    #     --description "Pipeline $pipelineName created by SetupPipelines." `
-    #     --repository "$ENV:BUILD_REPOSITORY_NAME" `
-    #     --branch $pipelineBranch `
-    #     --yml-path "$pipelineYamlFileRelativePath" `
-    #     --repository-type "tfsgit" `
-    #     --skip-first-run $skipPipelineFirstRun
+    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder"
+    az pipelines create `
+        --name "$pipelineName" `
+        --folder-path "$pipelineFolder" `
+        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+        --project "$ENV:SYSTEM_TEAMPROJECT" `
+        --description "Pipeline $pipelineName created by SetupPipelines." `
+        --repository "$ENV:BUILD_REPOSITORY_NAME" `
+        --branch $pipelineBranch `
+        --yml-path "$pipelineYamlFileRelativePath" `
+        --repository-type "tfsgit" `
+        --skip-first-run $skipPipelineFirstRun
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
