@@ -62,7 +62,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         OutputDebug "Setting skip first run of pipeline '$pipelineName'"
     }
 
-    $existingPipelines = az pipelines list `
+    $existingPipelineDetails = az pipelines list `
         --name "$pipelineName" `
         --folder-path "$pipelineFolder" `
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
@@ -70,8 +70,8 @@ function Add-AzureDevOpsPipelineFromYaml {
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
         --repository-type "tfsgit" | ConvertFrom-Json
         
-    OutputDebug "Existing pipelines: $($existingPipelines | ConvertTo-Json -Depth 10)"
-    if ([string]::IsNullOrWhiteSpace($existingPipelines) -or $existingPipelines.Count -eq 0) {
+    OutputDebug "Existing pipeline details: $existingPipelineDetails"
+    if ($existingPipelineDetails.Count -gt 0) {
         Write-Host "Pipeline $pipelineName in folder $pipelineFolder already exists. Skipping creation."
         return
     }
