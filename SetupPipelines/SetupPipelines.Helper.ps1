@@ -70,6 +70,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
         --repository-type "tfsgit" | ConvertFrom-Json
         
+    OutputDebug "Existing pipelines: $($existingPipelines | ConvertTo-Json -Depth 10)"
     if ([string]::IsNullOrWhiteSpace($existingPipelines) -or $existingPipelines.Count -eq 0) {
         Write-Host "Pipeline $pipelineName in folder $pipelineFolder already exists. Skipping creation."
         return
