@@ -184,7 +184,7 @@ function Update-PipelineYMLFile {
         }
         elseif ($yamlContent.schedules) {
             OutputDebug "1Removing existing schedules: $($yamlContent | ConvertTo-Json -Compress)"
-            $yamlContent.PSObject.Properties.Remove('schedules')
+            $yamlContent.Remove('schedules')
             OutputDebug "Removing schedule from workflow"
             OutputDebug "2Removing existing schedules: $($yamlContent | ConvertTo-Json -Compress)"
         }
