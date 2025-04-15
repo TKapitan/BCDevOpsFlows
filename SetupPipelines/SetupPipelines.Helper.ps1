@@ -183,7 +183,7 @@ function Update-PipelineYMLFile {
             OutputDebug "Adding schedule to workflow: $scheduledCronSettings"
         }
         elseif ($yamlContent.schedules) {
-            $yamlContent.PSObject.Properties.Remove('schedules')
+            $yamlContent = $yamlContent.PSObject.Properties.Remove('schedules')
             OutputDebug "Removing schedule from workflow"
         }
 
