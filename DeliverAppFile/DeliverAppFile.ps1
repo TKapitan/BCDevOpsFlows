@@ -2,6 +2,7 @@ Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
     [switch] $isPreview
 )
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeliverAppFile.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)

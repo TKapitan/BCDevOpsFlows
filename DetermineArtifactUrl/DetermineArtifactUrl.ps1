@@ -1,3 +1,6 @@
+Param()
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+
 # Install BCContainerHelper
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 

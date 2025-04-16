@@ -1,3 +1,6 @@
+Param()
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 # Create a json object that contains an entry for the workflowstarttime

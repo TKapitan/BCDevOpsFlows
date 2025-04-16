@@ -1,3 +1,6 @@
+Param()
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 
 try {

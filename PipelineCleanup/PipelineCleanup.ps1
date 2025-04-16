@@ -1,3 +1,6 @@
+Param()
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+
 # Clean Containers
 if ($ENV:AL_CONTAINERNAME) {
     Write-Host "Cleaning container $ENV:AL_CONTAINERNAME"

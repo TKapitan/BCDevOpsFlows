@@ -2,6 +2,7 @@ Param(
     [Parameter(HelpMessage = "Name of environment to verify authcontext OR regex filter of environment names to verify authcontext", Mandatory = $true)]
     [string] $environmentsNameFilter
 )
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
