@@ -38,7 +38,7 @@ function ReadSettings {
                 }
             }
             catch {
-                Write-Error "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+                throw "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
             }
         }
         else {
@@ -192,7 +192,7 @@ function ReadSettings {
     }
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
-        Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+        throw "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
     }
     $settings
 }
@@ -225,7 +225,7 @@ function MergeCustomObjectIntoOrderedDictionary {
 
     # Loop through all properties in the destination object
     # If the property does not exist in the source object, do nothing
-    # If the property exists in the source object, but is of a different type, Write-Error an error
+    # If the property exists in the source object, but is of a different type, throw an error
     # If the property exists in the source object:
     # If the property is an Object, call this function recursively to merge values
     # If the property is an Object[], merge the arrays
@@ -243,8 +243,8 @@ function MergeCustomObjectIntoOrderedDictionary {
             }
             elseif ($dstPropType -ne $srcPropType -and !($srcPropType -eq "Int64" -and $dstPropType -eq "Int32")) {
                 # Under Linux, the Int fields read from the .json file will be Int64, while the settings defaults will be Int32
-                # This is not seen as an error and will not Write-Error an error
-                Write-Error "property $prop should be of type $dstPropType, is $srcPropType."
+                # This is not seen as an error and will not throw an error
+                throw "property $prop should be of type $dstPropType, is $srcPropType."
             }
             else {
                 if ($srcProp -is [Object[]]) {

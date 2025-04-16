@@ -5,19 +5,19 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-$deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
-$matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
-if ($matchingEnvironments.Count -eq 0) {
-    throw "No environments found matching filter '$environmentsNameFilter'"
-}
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
+try {
+    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+    $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
+    $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
+    if ($matchingEnvironments.Count -eq 0) {
+        throw "No environments found matching filter '$environmentsNameFilter'"
+    }
+    Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 
-$noOfValidEnvironments = 0
-foreach ($environmentName in $matchingEnvironments) {
-    Write-Host "Processing environment: $environmentName"
+    $noOfValidEnvironments = 0
+    foreach ($environmentName in $matchingEnvironments) {
+        Write-Host "Processing environment: $environmentName"
 
-    try {
         $deploymentSettings = $deploymentEnvironments."$environmentName"
         if (!$deploymentSettings) {
             throw "No deployment settings found for environment '$environmentName'."
@@ -27,10 +27,10 @@ foreach ($environmentName in $matchingEnvironments) {
         $authContextVariableName = $deploymentSettings.authContextVariableName
         Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
         if (!$authContextVariableName) {
-            Write-Error "No AuthContextVariableName specified for environment ($environmentName)."
+            throw "No AuthContextVariableName specified for environment ($environmentName)."
         }
         if (!$authContexts."$authContextVariableName") {
-            Write-Error "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
+            throw "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
         }
         try {
             $authContext = $authContexts."$authContextVariableName"
@@ -40,11 +40,11 @@ foreach ($environmentName in $matchingEnvironments) {
             }
         }
         catch {
-            Write-Host $_.Exception -ForegroundColor Red
+            Write-Host $_.Exception.Message -ForegroundColor Red
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
     
-            Write-Error "Authentication failed. See previous lines for details."
+            throw "Authentication failed. See previous lines for details."
         }
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
@@ -60,15 +60,17 @@ foreach ($environmentName in $matchingEnvironments) {
         }
         $noOfValidEnvironments++
     }
-    catch {
-        Write-Host $_.Exception -ForegroundColor Red
-        Write-Host $_.ScriptStackTrace
-        Write-Host $_.PSMessageDetails
 
-        Write-Error "Error while verifying auth context for environment '$environmentName'. See previous lines for details."
+    if ($noOfValidEnvironments -eq 0) {
+        throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
     }
 }
-
-if ($noOfValidEnvironments -eq 0) {
-    Write-Error "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
+catch {
+    Write-Host "##vso[task.logissue type=error]Error while verifying auth context for environment '$environmentName'. Error message: $($_.Exception.Message)"
+    Write-Host $_.ScriptStackTrace
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

@@ -1,12 +1,13 @@
 Param()
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-if (!$ENV:AL_NUGETINITIALIZED) {
-    Write-Error "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
-}
-
 try {
+    if (!$ENV:AL_NUGETINITIALIZED) {
+        throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
+    }
+
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     foreach ($feed in $TrustedNuGetFeeds) {
@@ -38,9 +39,11 @@ try {
     }
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    Write-Error "Process failed. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

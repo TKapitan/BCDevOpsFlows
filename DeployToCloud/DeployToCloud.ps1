@@ -11,23 +11,23 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-DownloadAndImportBcContainerHelper
+try {
+    DownloadAndImportBcContainerHelper
 
-$authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-$settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-$deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
-$matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $deployToEnvironmentsNameFilter } | Select-Object -ExpandProperty Key)
-if ($matchingEnvironments.Count -eq 0) {
-    throw "No environments found matching filter '$deployToEnvironmentsNameFilter'"
-}
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
+    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
+    $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $deployToEnvironmentsNameFilter } | Select-Object -ExpandProperty Key)
+    if ($matchingEnvironments.Count -eq 0) {
+        throw "No environments found matching filter '$deployToEnvironmentsNameFilter'"
+    }
+    Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
 
-$noOfValidEnvironments = 0
-$environmentUrls = @{} | ConvertTo-Json
-foreach ($environmentName in $matchingEnvironments) {
-    Write-Host "Processing environment: $environmentName"
+    $noOfValidEnvironments = 0
+    $environmentUrls = @{} | ConvertTo-Json
+    foreach ($environmentName in $matchingEnvironments) {
+        Write-Host "Processing environment: $environmentName"
 
-    try {
         $deploymentSettings = $deploymentEnvironments."$environmentName"
         if (!$deploymentSettings) {
             throw "No deployment settings found for environment '$environmentName'."
@@ -42,10 +42,10 @@ foreach ($environmentName in $matchingEnvironments) {
         $authContextVariableName = $deploymentSettings.authContextVariableName
         Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
         if (!$authContextVariableName) {
-            Write-Error "No AuthContextVariableName specified for environment ($environmentName)."
+            throw "No AuthContextVariableName specified for environment ($environmentName)."
         }
         if (!$authContexts."$authContextVariableName") {
-            Write-Error "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
+            throw "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
         }
         try {
             $authContext = $authContexts."$authContextVariableName"
@@ -55,11 +55,11 @@ foreach ($environmentName in $matchingEnvironments) {
             }
         }
         catch {
-            Write-Host $_.Exception -ForegroundColor Red
+            Write-Host $_.Exception.Message -ForegroundColor Red
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
     
-            Write-Error "Authentication failed. See previous lines for details."
+            throw "Authentication failed. See previous lines for details."
         }
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
@@ -177,20 +177,23 @@ foreach ($environmentName in $matchingEnvironments) {
                 }
             }
         }
+        throw "Deployment to environment ($environmentName) failed. See previous lines for details."
     }
-    catch {
-        Write-Host $_.Exception -ForegroundColor Red
-        Write-Host $_.ScriptStackTrace
+
+    if ($noOfValidEnvironments -eq 0) {
+        throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
+    }
+
+    $ENV:AL_ENVIRONMENTURLS = $environmentUrls | ConvertTo-Json -Compress
+    Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURLS;]$($environmentUrls | ConvertTo-Json -Compress)"
+    OutputDebug -Message "Set environment variable AL_ENVIRONMENTURLS to ($ENV:AL_ENVIRONMENTURLS)"
+}
+catch {
+    Write-Host "##vso[task.logissue type=error]Error while deploying to environment $environmentName. Error message: $($_.Exception.Message)"
+    Write-Host $_.ScriptStackTrace
+    if ($_.PSMessageDetails) {
         Write-Host $_.PSMessageDetails
-
-        Write-Error "Deployment to environment ($environmentName) failed. See previous lines for details."
     }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }
-
-if ($noOfValidEnvironments -eq 0) {
-    Write-Error "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
-}
-
-$ENV:AL_ENVIRONMENTURLS = $environmentUrls | ConvertTo-Json -Compress
-Write-Host "##vso[task.setvariable variable=AL_ENVIRONMENTURLS;]$($environmentUrls | ConvertTo-Json -Compress)"
-OutputDebug -Message "Set environment variable AL_ENVIRONMENTURLS to ($ENV:AL_ENVIRONMENTURLS)"
