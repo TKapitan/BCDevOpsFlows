@@ -1,14 +1,13 @@
 Param()
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-if (!$ENV:AL_NUGETINITIALIZED) {
-    throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
-}
-
 try {
+    if (!$ENV:AL_NUGETINITIALIZED) {
+        throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
+    }
+
     throw "TEST ERROR"
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
@@ -42,9 +41,9 @@ try {
 }
 catch {
     Write-Host "##vso[task.logissue type=error]$($_.Exception)"
-    Write-Host "##vso[task.logissue type=error]$($_.ScriptStackTrace)"
+    Write-Host $_.ScriptStackTrace -ForegroundColor Red
     if ($_.PSMessageDetails) {
-        Write-Host "##vso[task.logissue type=error]$($_.PSMessageDetails)"
+        Write-Host $_.PSMessageDetails -ForegroundColor Red
     }
     Write-Host "##vso[task.complete result=Failed]"
     exit 0
