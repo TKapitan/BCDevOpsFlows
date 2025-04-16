@@ -43,7 +43,9 @@ try {
 catch {
     Write-Host "##vso[task.logissue type=error]$($_.Exception)"
     Write-Host "##vso[task.logissue type=error]$($_.ScriptStackTrace)"
-    Write-Host "##vso[task.logissue type=error]$($_.PSMessageDetails)"
+    if ($_.PSMessageDetails) {
+        Write-Host "##vso[task.logissue type=error]$($_.PSMessageDetails)"
+    }
     Write-Host "##vso[task.complete result=Failed]"
     exit 0
 }
