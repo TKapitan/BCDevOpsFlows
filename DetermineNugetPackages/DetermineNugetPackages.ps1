@@ -9,6 +9,7 @@ if (!$ENV:AL_NUGETINITIALIZED) {
 }
 
 try {
+    Write-Error "TEST ERROR"
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     foreach ($feed in $TrustedNuGetFeeds) {
