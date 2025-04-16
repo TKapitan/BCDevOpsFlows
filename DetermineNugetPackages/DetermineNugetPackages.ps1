@@ -8,7 +8,6 @@ try {
         throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
     }
 
-    throw "TEST ERROR"
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     foreach ($feed in $TrustedNuGetFeeds) {
