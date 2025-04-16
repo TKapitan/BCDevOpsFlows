@@ -41,9 +41,9 @@ try {
     }
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
-    Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    throw "Process failed. See previous lines for details."
+    Write-Host "##vso[task.logissue type=error]$($_.Exception)"
+    Write-Host "##vso[task.logissue type=error]$($_.ScriptStackTrace)"
+    Write-Host "##vso[task.logissue type=error]$($_.PSMessageDetails)"
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }
