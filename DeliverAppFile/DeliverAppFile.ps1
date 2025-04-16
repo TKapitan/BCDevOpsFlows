@@ -37,13 +37,13 @@ try {
         else {
             $deliverToConfig = $deliverTo[$deliverToType]
             if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
-                Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
+                throw "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
             }
 
             $trustedFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
             $deliverToContext = $trustedFeeds | Where-Object { $_.Name -eq $deliverToConfig.NugetFeedName } | Select-Object -First 1
             if (!$deliverToContext) {
-                Write-Error "NuGet feed '$($deliverToConfig.NugetFeedName)' not found in trusted feeds configuration."
+                throw "NuGet feed '$($deliverToConfig.NugetFeedName)' not found in trusted feeds configuration."
             }
 
             foreach ($folderName in $folders) {
@@ -57,5 +57,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Delivery failed. See previous lines for details."
+    throw "Delivery failed. See previous lines for details."
 }

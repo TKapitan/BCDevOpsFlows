@@ -13,5 +13,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Pushing changes to DevOps failed. Please check the error message above."
+    throw "Pushing changes to DevOps failed. Please check the error message above."
 }

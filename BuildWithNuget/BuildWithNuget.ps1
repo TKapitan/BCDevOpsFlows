@@ -37,5 +37,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "NuGet build failed. See previous lines for details."
+    throw "NuGet build failed. See previous lines for details."
 }

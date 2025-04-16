@@ -56,7 +56,7 @@ try {
     }
 
     if (!$ENV:AL_SETTINGS) {
-        Write-Error "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
+        throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
@@ -80,7 +80,7 @@ try {
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
-        Write-Error "Repository is empty (no app or test folders found)"
+        throw "Repository is empty (no app or test folders found)"
         exit
     }
 
@@ -365,7 +365,7 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Error running pipeline. See previous lines for details."
+    throw "Error running pipeline. See previous lines for details."
 }
 finally {
     try {
@@ -376,6 +376,6 @@ finally {
         }
     }
     catch {
-        Write-Error "Error getting event log from container: $($_.Exception.Message)"
+        throw "Error getting event log from container: $($_.Exception.Message)"
     }
 }

@@ -5,11 +5,11 @@ $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Plain
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 if (!$ENV:AL_NUGETINITIALIZED) {
-    Write-Error "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
+    throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
 }
 
 try {
-    Write-Error "TEST ERROR"
+    throw "TEST ERROR"
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     foreach ($feed in $TrustedNuGetFeeds) {
@@ -45,5 +45,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Process failed. See previous lines for details."
+    throw "Process failed. See previous lines for details."
 }

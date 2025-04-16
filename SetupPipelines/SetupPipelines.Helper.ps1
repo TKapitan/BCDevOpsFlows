@@ -26,7 +26,7 @@ function Get-PipelineDevOpsFolderPath {
             $pipelineFolderPath = ''
         }
         default { 
-            Write-Error "Invalid settings.pipelineFolderStructure: $($settings.pipelineFolderStructure)"
+            throw "Invalid settings.pipelineFolderStructure: $($settings.pipelineFolderStructure)"
         }
     }
     if ($pipelineFolderPath -eq '') {
@@ -99,10 +99,10 @@ function Copy-PipelineTemplateFilesToPipelineFolder {
     )
 
     if (-not (Test-Path -Path $templateFolderPath -PathType Container)) {
-        Write-Error "Pipeline Template folder does not exist: $templateFolderPath"
+        throw "Pipeline Template folder does not exist: $templateFolderPath"
     }
     if (-not (Test-Path -Path $targetPipelineFolderPath -PathType Container)) {
-        Write-Error "Target Pipeline folder does not exist: $targetPipelineFolderPath"
+        throw "Target Pipeline folder does not exist: $targetPipelineFolderPath"
     }
 
     OutputDebug "Copying files from template folder '$templateFolderPath' to '$targetPipelineFolderPath'"
@@ -137,7 +137,7 @@ function Update-PipelineYMLFiles {
     foreach ($templateFile in $ymlFiles) {
         $pipelineFile = Join-Path -Path $pipelineFolderPath -ChildPath $templateFile.Name
         if (-not (Test-Path -Path $pipelineFile)) {
-            Write-Error "Pipeline YML file does not exist: $pipelineFile"
+            throw "Pipeline YML file does not exist: $pipelineFile"
             continue
         }
         Update-PipelineYMLFile -filePath $pipelineFile
@@ -175,7 +175,7 @@ function Update-PipelineYMLFile {
             $scheduledCronSettingsOrdered = @()
             foreach ($schedule in $scheduledCronSettings) {
                 if ($schedule -isnot [hashtable] -or $schedule.Keys -notcontains 'cron' -or $schedule.cron -isnot [string]) {
-                    Write-Error "Each schedule in $workflowScheduleKey must be a structure containing a cron property"
+                    throw "Each schedule in $workflowScheduleKey must be a structure containing a cron property"
                 }
                 OutputDebug "Schedule cron: $($schedule.cron)"
                 $orderedSchedule = [ordered]@{}
@@ -203,7 +203,7 @@ function Update-PipelineYMLFile {
         # Add Change Trigger settings to the workflow
         if ($settings.Keys -contains $workflowTriggerKey) {
             if ($settings."$workflowTriggerKey" -isnot [hashtable]) {
-                Write-Error "The $workflowTriggerKey setting must be a structure"
+                throw "The $workflowTriggerKey setting must be a structure"
             }
             # Add Workflow Schedule to the workflow
             $yamlContent.trigger = $($settings."$workflowTriggerKey")
@@ -232,15 +232,15 @@ function ModifyBCDevOpsFlowsInWorkflows {
     )
 
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryName' -or $settings.BCDevOpsFlowsResourceRepositoryName -eq '') {
-        Write-Error "The BCDevOpsFlowsResourceRepositoryName setting is required but was not provided."
+        throw "The BCDevOpsFlowsResourceRepositoryName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].name = $settings.BCDevOpsFlowsResourceRepositoryName
     if ($settings.Keys -notcontains 'BCDevOpsFlowsResourceRepositoryBranch' -or $settings.BCDevOpsFlowsResourceRepositoryBranch -eq '') {
-        Write-Error "The BCDevOpsFlowsResourceRepositoryBranch setting is required but was not provided."
+        throw "The BCDevOpsFlowsResourceRepositoryBranch setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].ref = $settings.BCDevOpsFlowsResourceRepositoryBranch
     if ($settings.Keys -notcontains 'BCDevOpsFlowsServiceConnectionName' -or $settings.BCDevOpsFlowsServiceConnectionName -eq '') {
-        Write-Error "The BCDevOpsFlowsServiceConnectionName setting is required but was not provided."
+        throw "The BCDevOpsFlowsServiceConnectionName setting is required but was not provided."
     }
     $yamlContent.resources.repositories[0].endpoint = $settings.BCDevOpsFlowsServiceConnectionName
     return $yamlContent
@@ -253,11 +253,11 @@ function ModifyRunnersAndVariablesInWorkflows {
     )
 
     if ($settings.Keys -notcontains 'BCDevOpsFlowsPoolName' -or $settings.BCDevOpsFlowsPoolName -eq '') {
-        Write-Error "The BCDevOpsFlowsPoolName setting is required but was not provided."
+        throw "The BCDevOpsFlowsPoolName setting is required but was not provided."
     }
     $yamlContent.pool.name = $settings.BCDevOpsFlowsPoolName
     if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
-        Write-Error "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
+        throw "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
     }
     $yamlContent.variables[0].group = $settings.BCDevOpsFlowsVariableGroup
     return $yamlContent

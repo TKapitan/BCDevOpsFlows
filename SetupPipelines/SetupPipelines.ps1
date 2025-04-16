@@ -10,7 +10,7 @@ $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Plain
 
 $settings = ReadSettings -pipelineName '' -setupPipelineName "$ENV:AL_PIPELINENAME" -userName '' -branchName '' | ConvertTo-HashTable -recurse
 if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
-    Write-Error "settings.pipelineBranch is required but was not provided."
+    throw "settings.pipelineBranch is required but was not provided."
 }
 
 Install-AzureCLIDevOpsExtension
@@ -18,7 +18,7 @@ Install-AzureCLIDevOpsExtension
 $yamlPipelineFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH\$scriptsFolderName"
 $yamlPipelineTemplateFolder = "$yamlPipelineFolder\Templates"
 if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count -eq 0) {
-    Write-Error "No YAML files found in template folder $yamlPipelineTemplateFolder"
+    throw "No YAML files found in template folder $yamlPipelineTemplateFolder"
 }
 
 try {
@@ -35,7 +35,7 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Error when updating pipelines. See previous lines for details."
+    throw "Error when updating pipelines. See previous lines for details."
 }
 finally {
     Set-GitUser

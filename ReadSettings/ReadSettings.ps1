@@ -66,7 +66,7 @@ $settings.Keys | ForEach-Object {
     $setting = $_
     $settingValue = $settings."$setting"
     if ($settingValue -is [String] -and ($settingValue.contains("`n") -or $settingValue.contains("`r"))) {
-        Write-Error "Setting $setting contains line breaks, which is not supported"
+        throw "Setting $setting contains line breaks, which is not supported"
     }
     $outSettings += @{ "$setting" = $settingValue }
     if ($getSettings -contains $setting) {

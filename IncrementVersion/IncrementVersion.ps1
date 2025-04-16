@@ -83,5 +83,5 @@ catch {
     Write-Host $_.ScriptStackTrace
     Write-Host $_.PSMessageDetails
 
-    Write-Error "Updating app.json or pushing changes to Azure DevOps failed. See previous lines for details."
+    throw "Updating app.json or pushing changes to Azure DevOps failed. See previous lines for details."
 }

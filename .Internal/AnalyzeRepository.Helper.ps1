@@ -33,14 +33,14 @@ function AnalyzeRepo {
             $settings.Add('enableAppSourceCop', $true)
         }
         if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
-            Write-Error "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
+            throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
         }
         if (!$settings.Contains('removeInternalsVisibleTo')) {
             $settings.Add('removeInternalsVisibleTo', $true)
         }
     }
     else {
-        Write-Error "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
+        throw "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
 
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
@@ -93,7 +93,7 @@ function AnalyzeRepo {
                 }
             }
             else {
-                Write-Error  "No app.json file found in $folder"
+                throw  "No app.json file found in $folder"
             }
         }
     }
@@ -122,12 +122,12 @@ function AnalyzeRepo {
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
         $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
         if (!($folders)) {
-            Write-Error "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
+            throw "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
         }
         $settings.artifact = $artifactUrl
 
         if ([Version]$settings.applicationDependency -gt [Version]$version) {
-            Write-Error "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
+            throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
         }
     }
     Write-Host "::endgroup::"

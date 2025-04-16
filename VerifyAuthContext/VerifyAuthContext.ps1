@@ -28,10 +28,10 @@ foreach ($environmentName in $matchingEnvironments) {
         $authContextVariableName = $deploymentSettings.authContextVariableName
         Set-Location $ENV:BUILD_REPOSITORY_LOCALPATH
         if (!$authContextVariableName) {
-            Write-Error "No AuthContextVariableName specified for environment ($environmentName)."
+            throw "No AuthContextVariableName specified for environment ($environmentName)."
         }
         if (!$authContexts."$authContextVariableName") {
-            Write-Error "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
+            throw "No AuthContext found for environment ($environmentName) with variable name ($authContextVariableName)."
         }
         try {
             $authContext = $authContexts."$authContextVariableName"
@@ -45,7 +45,7 @@ foreach ($environmentName in $matchingEnvironments) {
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
     
-            Write-Error "Authentication failed. See previous lines for details."
+            throw "Authentication failed. See previous lines for details."
         }
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
@@ -66,10 +66,10 @@ foreach ($environmentName in $matchingEnvironments) {
         Write-Host $_.ScriptStackTrace
         Write-Host $_.PSMessageDetails
 
-        Write-Error "Error while verifying auth context for environment '$environmentName'. See previous lines for details."
+        throw "Error while verifying auth context for environment '$environmentName'. See previous lines for details."
     }
 }
 
 if ($noOfValidEnvironments -eq 0) {
-    Write-Error "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
+    throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
 }

@@ -14,7 +14,7 @@ function Invoke-RestoreUnstagedChanges {
 
     if ([string]::IsNullOrEmpty($appFolderPath)) {
         if ([string]::IsNullOrEmpty($appFilePath)) {
-            Write-Error "Either appFilePath or appFolderPath must be provided."
+            throw "Either appFilePath or appFolderPath must be provided."
         }
         OutputDebug -Message "Restoring unstaged changes for $appFilePath"
         invoke-git restore $appFilePath
@@ -36,7 +36,7 @@ function Invoke-GitAdd {
 
     if ([string]::IsNullOrEmpty($appFolderPath)) {
         if ([string]::IsNullOrEmpty($appFilePath)) {
-            Write-Error "Either appFilePath or appFolderPath must be provided."
+            throw "Either appFilePath or appFolderPath must be provided."
         }
         OutputDebug -Message "Staging changes for $appFilePath"
         invoke-git add $appFilePath
@@ -96,7 +96,7 @@ function Invoke-GitAddCommit {
 
     if ([string]::IsNullOrEmpty($appFolderPath)) {
         if ([string]::IsNullOrEmpty($appFilePath)) {
-            Write-Error "Either appFilePath or appFolderPath must be provided."
+            throw "Either appFilePath or appFolderPath must be provided."
         }
         Invoke-GitAdd -appFilePath $appFilePath
     }
