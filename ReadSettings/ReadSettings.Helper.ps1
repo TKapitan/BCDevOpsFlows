@@ -4,7 +4,7 @@
 # Read settings from the settings files
 # Settings are read from the following files:
 # - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
-# - .azure-pipelines/BCDevOpsFlows-Settings.json            = Repository Settings file
+# - .azure-pipelines/BCDevOpsFlows.Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
@@ -123,8 +123,6 @@ function ReadSettings {
         "BCDevOpsFlowsResourceRepositoryBranch" = "main"
         "BCDevOpsFlowsServiceConnectionName"    = "BCDevOpsFlows"
         "BCDevOpsFlowsVariableGroup"            = "BCDevOpsFlows"
-        "CICDPushBranches"                      = "test,preview,preview/*"
-        "PublishToProdPushBranches"             = "main,master,release/*,feature/*"
     }
 
     # Read settings from files and merge them into the settings object
