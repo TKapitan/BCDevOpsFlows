@@ -1,31 +1,41 @@
 Param()
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
-# Clean Containers
-if ($ENV:AL_CONTAINERNAME) {
-    Write-Host "Cleaning container $ENV:AL_CONTAINERNAME"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
-    . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
+try {
+    # Clean Containers
+    if ($ENV:AL_CONTAINERNAME) {
+        Write-Host "Cleaning container $ENV:AL_CONTAINERNAME"
+        . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+        . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 
-    DownloadAndImportBcContainerHelper
-    Write-Host "Removing container $ENV:AL_CONTAINERNAME"
-    Remove-Bccontainer GetContainerName
+        DownloadAndImportBcContainerHelper
+        Write-Host "Removing container $ENV:AL_CONTAINERNAME"
+        Remove-Bccontainer GetContainerName
+    }
+
+    # Clean Nuget
+    if ($ENV:AL_NUGETINITIALIZED) {
+        Write-Host "Cleaning Nuget packages"
+        . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
+
+        $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
+        $cleanUpPath = "$baseRepoFolder\.buildpackages"
+        if (Test-Path $cleanUpPath) {
+            Write-Host "Removing Nuget packages from $cleanUpPath"
+            Remove-Item $cleanUpPath -Recurse -Include *.*
+        }
+        $cleanUpPath = "$baseRepoFolder\.dependencyPackages"
+        if (Test-Path $cleanUpPath) {
+            Write-Host "Removing Nuget packages from $cleanUpPath"
+            Remove-Item $cleanUpPath -Recurse -Include *.*
+        }
+    }
 }
-
-# Clean Nuget
-if ($ENV:AL_NUGETINITIALIZED) {
-    Write-Host "Cleaning Nuget packages"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
-
-    $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-    $cleanUpPath = "$baseRepoFolder\.buildpackages"
-    if (Test-Path $cleanUpPath) {
-        Write-Host "Removing Nuget packages from $cleanUpPath"
-        Remove-Item $cleanUpPath -Recurse -Include *.*
+catch {
+    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+    Write-Host $_.ScriptStackTrace
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
     }
-    $cleanUpPath = "$baseRepoFolder\.dependencyPackages"
-    if (Test-Path $cleanUpPath) {
-        Write-Host "Removing Nuget packages from $cleanUpPath"
-        Remove-Item $cleanUpPath -Recurse -Include *.*
-    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

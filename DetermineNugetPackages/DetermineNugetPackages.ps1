@@ -40,10 +40,10 @@ try {
     }
 }
 catch {
-    Write-Host "##vso[task.logissue type=error]$($_.Exception)"
-    Write-Host $_.ScriptStackTrace -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+    Write-Host $_.ScriptStackTrace
     if ($_.PSMessageDetails) {
-        Write-Host $_.PSMessageDetails -ForegroundColor Red
+        Write-Host $_.PSMessageDetails
     }
     Write-Host "##vso[task.complete result=Failed]"
     exit 0

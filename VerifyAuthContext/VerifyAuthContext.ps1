@@ -2,23 +2,22 @@ Param(
     [Parameter(HelpMessage = "Name of environment to verify authcontext OR regex filter of environment names to verify authcontext", Mandatory = $true)]
     [string] $environmentsNameFilter
 )
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
-$deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
-$matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
-if ($matchingEnvironments.Count -eq 0) {
-    throw "No environments found matching filter '$environmentsNameFilter'"
-}
-Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
+try {
+    $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+    $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
+    $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
+    if ($matchingEnvironments.Count -eq 0) {
+        throw "No environments found matching filter '$environmentsNameFilter'"
+    }
+    Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$environmentsNameFilter'"
 
-$noOfValidEnvironments = 0
-foreach ($environmentName in $matchingEnvironments) {
-    Write-Host "Processing environment: $environmentName"
+    $noOfValidEnvironments = 0
+    foreach ($environmentName in $matchingEnvironments) {
+        Write-Host "Processing environment: $environmentName"
 
-    try {
         $deploymentSettings = $deploymentEnvironments."$environmentName"
         if (!$deploymentSettings) {
             throw "No deployment settings found for environment '$environmentName'."
@@ -41,7 +40,7 @@ foreach ($environmentName in $matchingEnvironments) {
             }
         }
         catch {
-            Write-Host $_.Exception -ForegroundColor Red
+            Write-Host $_.Exception.Message -ForegroundColor Red
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
     
@@ -61,15 +60,17 @@ foreach ($environmentName in $matchingEnvironments) {
         }
         $noOfValidEnvironments++
     }
-    catch {
-        Write-Host $_.Exception -ForegroundColor Red
-        Write-Host $_.ScriptStackTrace
-        Write-Host $_.PSMessageDetails
 
-        throw "Error while verifying auth context for environment '$environmentName'. See previous lines for details."
+    if ($noOfValidEnvironments -eq 0) {
+        throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
     }
 }
-
-if ($noOfValidEnvironments -eq 0) {
-    throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
+catch {
+    Write-Host "##vso[task.logissue type=error]Error while verifying auth context for environment '$environmentName'. Error message: $($_.Exception.Message)"
+    Write-Host $_.ScriptStackTrace
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

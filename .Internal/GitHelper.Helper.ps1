@@ -65,7 +65,7 @@ function Invoke-GitCommit {
         invoke-git status --porcelain
     }
     catch {
-        Write-Host $_.Exception -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
         Write-Host $_.ScriptStackTrace
         Write-Host $_.PSMessageDetails
 

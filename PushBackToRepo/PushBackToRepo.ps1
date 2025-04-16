@@ -1,5 +1,4 @@
 Param()
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
 
@@ -9,9 +8,14 @@ try {
     Invoke-GitPush
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while pushing changes back to repo. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    throw "Pushing changes to DevOps failed. Please check the error message above."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
+}
+finally {
+    Pop-Location
 }

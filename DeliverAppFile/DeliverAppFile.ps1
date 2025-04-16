@@ -2,15 +2,13 @@ Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
     [switch] $isPreview
 )
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeliverAppFile.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-
 try {
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
@@ -53,9 +51,11 @@ try {
     }
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while delivering the app to storage. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    throw "Delivery failed. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

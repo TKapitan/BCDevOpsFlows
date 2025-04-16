@@ -2,7 +2,6 @@ Param(
     [Parameter(HelpMessage = "The version to update to. Use Major.Minor[.Build][.Revision] for absolute change, use +1 to bump to the next major version, use +0.1 to bump to the next minor version, +0.0.1 to bump to the next build version or +0.0.0.1 to bump to the next revision version", Mandatory = $true)]
     [string] $versionNumber
 )
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "IncrementVersion.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
@@ -79,9 +78,11 @@ try {
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while updating app.json or pushing changes to Azure DevOps. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    throw "Updating app.json or pushing changes to Azure DevOps failed. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

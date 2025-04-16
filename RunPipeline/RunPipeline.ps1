@@ -10,7 +10,6 @@ Param(
     [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
     [switch] $skipAppsInPreview
 )
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
@@ -361,11 +360,13 @@ try {
     OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while running pipeline using container. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    throw "Error running pipeline. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }
 finally {
     try {
@@ -376,6 +377,12 @@ finally {
         }
     }
     catch {
-        throw "Error getting event log from container: $($_.Exception.Message)"
+        Write-Host "##vso[task.logissue type=error]Error getting event log from container: Error message: $($_.Exception.Message)"
+        Write-Host $_.ScriptStackTrace
+        if ($_.PSMessageDetails) {
+            Write-Host $_.PSMessageDetails
+        }
+        Write-Host "##vso[task.complete result=Failed]"
+        exit 0
     }
 }
