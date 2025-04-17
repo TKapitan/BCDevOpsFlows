@@ -6,8 +6,7 @@ This page explains the configuration parameters supported by BCDevOps Flows.
 
 Settings can be defined in Azure Devops variables or in various settings file. When running a workflow or a local script, the settings are applied by reading settings from Azure DevOps variables and one or more settings files. Last applied settings file wins. The following lists the order of locations to search for settings:
 
-1. You can use `External settings json file` that will be used for all projects and repositories. Azure DevOps does not have **Organization Setup** so this is the only option how to replicate Organization Setup from GitHub. The link can be http or https.
-
+1. You can use `External settings JSON file` that will be used for all projects and repositories. Azure DevOps does not have **Organization Setup** so this is the only option how to replicate Organization Setup from GitHub. The link can be http or https.
 1. `AL_PROJECTSETTINGS` is **Azure DevOps environment variable** for project setting
 
 1. `.azure-pipelines/BCDevOpsFlows.Settings.json` is the **repository settings file**. This settings file contains settings that are relevant for all projects in the repository.
