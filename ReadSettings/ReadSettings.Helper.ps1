@@ -134,6 +134,7 @@ function ReadSettings {
         $externalSettingsObject = $null
         if ($externalSettingLink.StartsWith("http")) {
             try {
+                OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
                 $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
                 $externalSettingsObject = $response.Content | ConvertFrom-Json
             }
@@ -142,12 +143,14 @@ function ReadSettings {
             }
         }
         else {
+            OutputDebug "Applying settings from external (shared file) settings file $externalSettingLink"
             $externalSettingsObject = GetSettingsObject -Path $externalSettingLink
         }
         $settingsObjects += @($externalSettingsObject)
     }
     # Read settings from project settings variable (parameter)
     if ($projectSettings) {
+        OutputDebug "Applying settings from project settings variable $projectSettings"
         $projectSettingsObject = $projectSettings | ConvertFrom-Json
         $settingsObjects += @($projectSettingsObject)
     }
@@ -214,6 +217,7 @@ function ReadSettings {
     }
     
     if ($externalSettingLink -eq "" -and $settings.externalSettingsLink) {
+        Write-Host "Recreating settings object with external settings link $($settings.externalSettingsLink)"
         $settings = ReadSettings -baseFolder $baseFolder -repoName $repoName -buildMode $buildMode -pipelineName $pipelineName -setupPipelineName $setupPipelineName -userReqForEmail $userReqForEmail -branchName $branchName -projectSettings $projectSettings -externalSettingLink $settings.externalSettingsLink
         $settings
         return
