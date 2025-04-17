@@ -28,7 +28,7 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
             $bcContainerHelperVersion = $repoSettings.BcContainerHelperVersion
             Write-Host "Using BcContainerHelper $bcContainerHelperVersion version"
             if ($bcContainerHelperVersion -like "https://*") {
-                Write-Error "Setting BcContainerHelperVersion to a URL in settings is not allowed."
+                throw "Setting BcContainerHelperVersion to a URL in settings is not allowed."
             }
             if ($bcContainerHelperVersion -ne 'latest' -and $bcContainerHelperVersion -ne 'preview') {
                 Write-Host "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."

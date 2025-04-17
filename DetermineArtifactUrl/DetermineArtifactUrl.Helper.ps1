@@ -7,7 +7,7 @@ function DetermineArtifactUrl {
 
     $artifact = $settings.artifact
     if ($artifact.Contains('{INSIDERSASTOKEN}')) {
-        Write-Error "{INSIDERSASTOKEN} is no longer supported in the artifact setting."
+        throw "{INSIDERSASTOKEN} is no longer supported in the artifact setting."
     }
 
     Write-Host "Checking artifact setting for repository"
@@ -17,7 +17,7 @@ function DetermineArtifactUrl {
             # Check Insider Artifacts
             $artifact = Get-BCArtifactUrl -storageAccount bcinsider -accept_insiderEula -country $settings.country -select all | Where-Object { [Version]$_.Split("/")[4] -ge [Version]$settings.applicationDependency } | Select-Object -First 1
             if (-not $artifact) {
-                Write-Error "No artifacts found for application dependency $($settings.applicationDependency)."
+                throw "No artifacts found for application dependency $($settings.applicationDependency)."
             }
         }
     }
@@ -56,17 +56,17 @@ function DetermineArtifactUrl {
                 $artifactUrl = $allArtifactUrls | Select-Object -First 1
             }
             else {
-                Write-Error "Invalid artifact setting ($artifact) in $repoSettingsFile. Version can only be '*' if select is first or latest."
+                throw "Invalid artifact setting ($artifact) in $repoSettingsFile. Version can only be '*' if select is first or latest."
             }
             Write-Host "Found $($allArtifactUrls.Count) artifacts for version $version matching application dependency $($settings.applicationDependency), selecting $select."
             if (-not $artifactUrl) {
-                Write-Error "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile, when application dependency is $($settings.applicationDependency)"
+                throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile, when application dependency is $($settings.applicationDependency)"
             }
         }
         else {
             $artifactUrl = Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select $select -accept_insiderEula | Select-Object -First 1
             if (-not $artifactUrl) {
-                Write-Error "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
+                throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
             }
         }
 
@@ -94,11 +94,11 @@ function DetermineArtifactUrl {
         $allowedCountries = $bcContainerHelperConfig.mapCountryCode.PSObject.Properties.Name + $countries | Select-Object -Unique
         Write-Host "Allowed Country codes $($allowedCountries -join ',')"
         if ($allowedCountries -notcontains $settings.country) {
-            Write-Error "Country ($($settings.country)), specified in $repoSettingsFile is not a valid country code."
+            throw "Country ($($settings.country)), specified in $repoSettingsFile is not a valid country code."
         }
         $illegalCountries = $settings.additionalCountries | Where-Object { $allowedCountries -notcontains $_ }
         if ($illegalCountries) {
-            Write-Error "additionalCountries contains one or more invalid country codes ($($illegalCountries -join ",")) in $repoSettingsFile."
+            throw "additionalCountries contains one or more invalid country codes ($($illegalCountries -join ",")) in $repoSettingsFile."
         }
         $artifactUrl = $artifactUrl.Replace($artifactUrl.Split('/')[4], $atArtifactUrl.Split('/')[4])
     }

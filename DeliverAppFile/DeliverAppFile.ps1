@@ -7,9 +7,8 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
-$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-
 try {
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     foreach ($folderTypeNumber in 1..2) {
         $appFolder = $folderTypeNumber -eq 1
         $testFolder = $folderTypeNumber -eq 2
@@ -36,13 +35,13 @@ try {
         else {
             $deliverToConfig = $deliverTo[$deliverToType]
             if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
-                Write-Error "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
+                throw "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
             }
 
             $trustedFeeds = $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL | ConvertFrom-Json
             $deliverToContext = $trustedFeeds | Where-Object { $_.Name -eq $deliverToConfig.NugetFeedName } | Select-Object -First 1
             if (!$deliverToContext) {
-                Write-Error "NuGet feed '$($deliverToConfig.NugetFeedName)' not found in trusted feeds configuration."
+                throw "NuGet feed '$($deliverToConfig.NugetFeedName)' not found in trusted feeds configuration."
             }
 
             foreach ($folderName in $folders) {
@@ -52,9 +51,11 @@ try {
     }
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while delivering the app to storage. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    Write-Error "Delivery failed. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }

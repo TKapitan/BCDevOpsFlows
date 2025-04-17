@@ -23,7 +23,7 @@ function Get-AppJsonFile {
         }
     }
     if ($appFile -eq '') {
-        Write-Error "App.json file was not found for $($sourceAppJsonFilePath).";
+        throw "App.json file was not found for $($sourceAppJsonFilePath).";
     }
     else {
         OutputDebug -Message "App.json found for $($appFilePath)"

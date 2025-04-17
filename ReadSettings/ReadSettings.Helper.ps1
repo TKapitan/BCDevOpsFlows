@@ -3,8 +3,9 @@
 
 # Read settings from the settings files
 # Settings are read from the following files:
+# - External settings json file                             = Link to external settings file (could be http or https)
 # - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
-# - .azure-pipelines/BCDevOpsFlows-Settings.json            = Repository Settings file
+# - .azure-pipelines/BCDevOpsFlows.Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
 # - .azure-pipelines/<userReqForEmail>.settings.json        = User settings file
 function ReadSettings {
@@ -12,17 +13,13 @@ function ReadSettings {
         [string] $baseFolder = ("$ENV:PIPELINE_WORKSPACE/App"),
         [string] $repoName = "$ENV:BUILD_REPOSITORY_NAME",
         [string] $buildMode = "Default",
-        [string] $pipelineName,
+        [string] $pipelineName = "$ENV:AL_PIPELINENAME",
+        [string] $setupPipelineName = "",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettings
+        [string] $projectSettings,
+        [string] $externalSettingLink = ""
     )
-    if ($pipelineName -eq "") {
-        $pipelineName = $ENV:AL_PIPELINENAME
-        if ($pipelineName -eq "") {
-            $pipelineName = $ENV:BUILD_DEFINITIONNAME
-        }
-    }
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
     if ($ENV:BUILD_REASON -eq "PullRequest") {
@@ -43,7 +40,7 @@ function ReadSettings {
                 }
             }
             catch {
-                Write-Error "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+                throw "Error reading $path. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
             }
         }
         else {
@@ -54,88 +51,124 @@ function ReadSettings {
 
     $repoName = $repoName.SubString("$repoName".LastIndexOf('/') + 1)
     $pipelineName = $pipelineName.Trim().Split([System.IO.Path]::getInvalidFileNameChars()) -join ""
+    $setupPipelineName = $setupPipelineName.Trim().Split([System.IO.Path]::getInvalidFileNameChars()) -join ""
 
     # Start with default settings
     $settings = [ordered]@{
-        "type"                            = "PTE"
-        "country"                         = "au"
-        "artifact"                        = ""
-        "companyName"                     = ""
-        "repoVersion"                     = "1.0"
-        "repoName"                        = $repoName
-        "versioningStrategy"              = 0
-        "buildNumberOffset"               = 0
-        "appBuild"                        = 0
-        "appRevision"                     = 0
-        "additionalCountries"             = @()
-        "appDependencies"                 = @()
-        "appDependenciesNuGet"            = @()
-        "appFolders"                      = @()
-        "testDependencies"                = @()
-        "testDependenciesNuGet"           = @()
-        "testFolders"                     = @()
-        "bcptTestFolders"                 = @()
-        "pageScriptingTests"              = @()
-        "restoreDatabases"                = @()
-        "installApps"                     = @()
-        "installTestApps"                 = @()
-        "installOnlyReferencedApps"       = $true
-        "generateDependencyArtifact"      = $false
-        "skipUpgrade"                     = $false
-        "applicationDependency"           = "25.0.0.0"
-        "updateDependencies"              = $false
-        "installTestRunner"               = $false
-        "installTestFramework"            = $false
-        "installTestLibraries"            = $false
-        "installPerformanceToolkit"       = $false
-        "enableCodeCop"                   = $false
-        "enableUICop"                     = $false
-        "enableCodeAnalyzersOnTestApps"   = $false
-        "customCodeCops"                  = @()
-        "failOn"                          = "error"
-        "treatTestFailuresAsWarnings"     = $false
-        "rulesetFile"                     = ""
-        "enableExternalRulesets"          = $false
-        "vsixFile"                        = ""
-        "assignPremiumPlan"               = $false
-        "enableTaskScheduler"             = $false
-        "doNotBuildTests"                 = $false
-        "doNotRunTests"                   = $false
-        "doNotRunBcptTests"               = $false
-        "doNotRunPageScriptingTests"      = $false
-        "doNotPublishApps"                = $false
-        "configPackages"                  = @()
-        "appSourceCopMandatoryAffixes"    = @()
-        "obsoleteTagMinAllowedMajorMinor" = ""
-        "memoryLimit"                     = ""
-        "cacheImageName"                  = ""
-        "cacheKeepDays"                   = 3
-        "buildModes"                      = @()
-        "writableFolderPath"              = ""
-        "nugetBCDevToolsVersion"          = "15.0.18.19684-beta"   
-        "trustMicrosoftNuGetFeeds"        = $true
-        "artifactUrlCacheKeepHours"       = 6
-        "overrideResourceExposurePolicy"  = $false
-        "previousRelease"                 = ""
-        "deliveryTarget"                  = "AzureDevOps"
+        "type"                                  = "PTE"
+        "country"                               = "au"
+        "artifact"                              = ""
+        "companyName"                           = ""
+        "repoVersion"                           = "1.0"
+        "repoName"                              = $repoName
+        "versioningStrategy"                    = 0
+        "buildNumberOffset"                     = 0
+        "appBuild"                              = 0
+        "appRevision"                           = 0
+        "additionalCountries"                   = @()
+        "appDependencies"                       = @()
+        "appDependenciesNuGet"                  = @()
+        "appFolders"                            = @()
+        "testDependencies"                      = @()
+        "testDependenciesNuGet"                 = @()
+        "testFolders"                           = @()
+        "bcptTestFolders"                       = @()
+        "pageScriptingTests"                    = @()
+        "restoreDatabases"                      = @()
+        "installApps"                           = @()
+        "installTestApps"                       = @()
+        "installOnlyReferencedApps"             = $true
+        "generateDependencyArtifact"            = $false
+        "skipUpgrade"                           = $false
+        "applicationDependency"                 = "25.0.0.0"
+        "updateDependencies"                    = $false
+        "installTestRunner"                     = $false
+        "installTestFramework"                  = $false
+        "installTestLibraries"                  = $false
+        "installPerformanceToolkit"             = $false
+        "enableCodeCop"                         = $false
+        "enableUICop"                           = $false
+        "enableCodeAnalyzersOnTestApps"         = $false
+        "customCodeCops"                        = @()
+        "failOn"                                = "error"
+        "treatTestFailuresAsWarnings"           = $false
+        "rulesetFile"                           = ""
+        "enableExternalRulesets"                = $false
+        "vsixFile"                              = ""
+        "assignPremiumPlan"                     = $false
+        "enableTaskScheduler"                   = $false
+        "doNotBuildTests"                       = $false
+        "doNotRunTests"                         = $false
+        "doNotRunBcptTests"                     = $false
+        "doNotRunPageScriptingTests"            = $false
+        "doNotPublishApps"                      = $false
+        "configPackages"                        = @()
+        "appSourceCopMandatoryAffixes"          = @()
+        "obsoleteTagMinAllowedMajorMinor"       = ""
+        "memoryLimit"                           = ""
+        "cacheImageName"                        = ""
+        "cacheKeepDays"                         = 3
+        "buildModes"                            = @()
+        "writableFolderPath"                    = ""
+        "nugetBCDevToolsVersion"                = "15.0.18.19684-beta"   
+        "trustMicrosoftNuGetFeeds"              = $true
+        "artifactUrlCacheKeepHours"             = 6
+        "overrideResourceExposurePolicy"        = $false
+        "previousRelease"                       = ""
+        "deliveryTarget"                        = "AzureDevOps"
+        "pipelineBranch"                        = "main"
+        "pipelineFolderStructure"               = "Repository" # Repository | Pipeline | Path
+        "pipelineFolderPath"                    = ""
+        "pipelineSkipFirstRun"                  = $false
+        "BCDevOpsFlowsPoolName"                 = "SelfHostedWindows"
+        "BCDevOpsFlowsResourceRepositoryName"   = ""
+        "BCDevOpsFlowsResourceRepositoryBranch" = "main"
+        "BCDevOpsFlowsServiceConnectionName"    = "BCDevOpsFlows"
+        "BCDevOpsFlowsVariableGroup"            = "BCDevOpsFlows"
     }
 
     # Read settings from files and merge them into the settings object
-
     $settingsObjects = @()
+    # Read settings from external settings file (if specified)
+    if ($externalSettingLink -ne "") {
+        if (-not $externalSettingLink.StartsWith("http")) {
+            throw "External settings link must start with http/https"
+        }
+        try {
+            OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
+            $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
+            $externalSettingsObject = $response.Content | ConvertFrom-Json
+            $settingsObjects += @($externalSettingsObject)
+        }
+        catch {
+            Write-Warning "Error reading external settings from $externalSettingLink. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+        }
+    }
     # Read settings from project settings variable (parameter)
     if ($projectSettings) {
+        OutputDebug "Applying settings from project settings variable $projectSettings"
         $projectSettingsObject = $projectSettings | ConvertFrom-Json
         $settingsObjects += @($projectSettingsObject)
     }
     # Read settings from repository settings file
+    OutputDebug "Applying settings from repository settings file $baseFolder/$RepoSettingsFile"
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
-    if ($pipelineName) {
+    if ($setupPipelineName -ne "") {
+        # Read settings from setup pipeline settings file
+        OutputDebug "Applying settings from setup pipeline settings file $baseFolder/$scriptsFolderName/$setupPipelineName.settings.json"
+        $setupSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$setupPipelineName.settings.json")
+        $settingsObjects += @($setupSettingsObject)
+    }
+    if ($pipelineName -ne "") {
         # Read settings from workflow settings file
+        OutputDebug "Applying settings from workflow settings file $baseFolder/$scriptsFolderName/$pipelineName.settings.json"
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
         $settingsObjects += @($workflowSettingsObject)
+    }
+    if ($userReqForEmail -ne "") {
         # Read settings from user settings file
+        OutputDebug "Applying settings from user settings file $baseFolder/$scriptsFolderName/$userReqForEmail.settings.json"
         $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
         $settingsObjects += @($userSettingsObject)
     }
@@ -180,7 +213,14 @@ function ReadSettings {
     }
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
-        Write-Error "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+        throw "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+    }
+    
+    if ($externalSettingLink -eq "" -and $settings.externalSettingsLink) {
+        Write-Host "Recreating settings object with external settings link $($settings.externalSettingsLink)"
+        $settings = ReadSettings -baseFolder $baseFolder -repoName $repoName -buildMode $buildMode -pipelineName $pipelineName -setupPipelineName $setupPipelineName -userReqForEmail $userReqForEmail -branchName $branchName -projectSettings $projectSettings -externalSettingLink $settings.externalSettingsLink
+        $settings
+        return
     }
     $settings
 }
@@ -213,7 +253,7 @@ function MergeCustomObjectIntoOrderedDictionary {
 
     # Loop through all properties in the destination object
     # If the property does not exist in the source object, do nothing
-    # If the property exists in the source object, but is of a different type, Write-Error an error
+    # If the property exists in the source object, but is of a different type, throw an error
     # If the property exists in the source object:
     # If the property is an Object, call this function recursively to merge values
     # If the property is an Object[], merge the arrays
@@ -231,8 +271,8 @@ function MergeCustomObjectIntoOrderedDictionary {
             }
             elseif ($dstPropType -ne $srcPropType -and !($srcPropType -eq "Int64" -and $dstPropType -eq "Int32")) {
                 # Under Linux, the Int fields read from the .json file will be Int64, while the settings defaults will be Int32
-                # This is not seen as an error and will not Write-Error an error
-                Write-Error "property $prop should be of type $dstPropType, is $srcPropType."
+                # This is not seen as an error and will not throw an error
+                throw "property $prop should be of type $dstPropType, is $srcPropType."
             }
             else {
                 if ($srcProp -is [Object[]]) {

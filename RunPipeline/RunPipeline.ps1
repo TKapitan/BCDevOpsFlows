@@ -55,7 +55,7 @@ try {
     }
 
     if (!$ENV:AL_SETTINGS) {
-        Write-Error "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
+        throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
@@ -79,7 +79,7 @@ try {
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
-        Write-Error "Repository is empty (no app or test folders found)"
+        throw "Repository is empty (no app or test folders found)"
         exit
     }
 
@@ -360,11 +360,13 @@ try {
     OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
 catch {
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "##vso[task.logissue type=error]Error while running pipeline using container. Error message: $($_.Exception.Message)"
     Write-Host $_.ScriptStackTrace
-    Write-Host $_.PSMessageDetails
-
-    Write-Error "Error running pipeline. See previous lines for details."
+    if ($_.PSMessageDetails) {
+        Write-Host $_.PSMessageDetails
+    }
+    Write-Host "##vso[task.complete result=Failed]"
+    exit 0
 }
 finally {
     try {
@@ -375,6 +377,12 @@ finally {
         }
     }
     catch {
-        Write-Error "Error getting event log from container: $($_.Exception.Message)"
+        Write-Host "##vso[task.logissue type=error]Error getting event log from container: Error message: $($_.Exception.Message)"
+        Write-Host $_.ScriptStackTrace
+        if ($_.PSMessageDetails) {
+            Write-Host $_.PSMessageDetails
+        }
+        Write-Host "##vso[task.complete result=Failed]"
+        exit 0
     }
 }

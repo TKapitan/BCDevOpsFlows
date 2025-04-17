@@ -4,18 +4,25 @@ _Prerequisities: Existing BCDevOps Flows project (see [Create New project](./Cre
 
 Now, when you have BC DevOps Flows project you are ready to configure pipelines.
 
+## Update Pipeline Settings
+
+Configure BCDevOps Flows json setting files
+1. Open your local repository that contains BCDevOpsFlows yaml files.
+1. Navigate to **".azure-pipelines"** folder where you can update the generic settings file **"BCDevOpsFlows.settings.json"** that should contain settings applicable to all pipelines.
+1. Navigate to **".azure-pipelines"** folder where you can update the generic settings file **"SetupPipelines.settings.json"** that should contain settings applicable to pipeline setup.
+1. Navigate to **".azure-pipelines/Templates"** folder where you can update pipeline-specific settings. !!!IMPORTANT!!! once you run **SetupPipelines** pipeline (see below) the settings files are copied to **".azure-pipelines"** folder and files in the template folder are ignored. To change setup once the pipelines are configure, use files in **".azure-pipelines"** folder.
+
 ## Update BC DevOps Files
 
 Before you create Azure DevOps pipelines, you must update BCDevOps flows template.
-
-1. Open your local BCDevOps Flows repository you want to configure.
-1. Update default .yaml files
-    - Replace `# Specify the link to your BCDevOpsFlows fork (format YourGitHubUsername/ForkName)` with name of your repository that hosts the fork/clone of BCDevOpsFlows scripts (usually `GitHubUserName/GitHubRepositoryName`)
-    - Replace `# Specify the name of the service connection with access to your fork` with the name of your service connection (see [Connect Azure DevOps with GitHub](./HowToStart/ConnectAzureDevOpsWithGitHub.md))
-    - Replace `# Specify the name of the pool of your self-hosted agents` with the name of your agent pool that hosts your self-hosted agents (see [Configure Agent Pool](./HowToStart/ConfigureAgentPool.md))
-1. Update default .yaml files (mandatory for Deploy to Cloud only)
-    - Replace `# Specify the name of the environment to deploy to` with a name of environment you want the pipeline to deploy the apps. The value must match values specified in **AL_ENVIRONMENTS** environment variable (see [Configure Azure DevOps Variables](./HowToStart/ConfigAzureDevOpsVariables.md))
-1. You can create your own yaml files by combining supported steps. See the documentation in BCDevOpsFlows for every step to understand mandatory and optional variables.
+1. Create Azure DevOps Service Connection, see [Connect Azure DevOps with GitHub](./HowToStart/ConnectAzureDevOpsWithGitHub.md) for more details.
+1. Create a pool of self-hosted agents, see [Configure Agent Pool](./HowToStart/ConfigureAgentPool.md) for more details.
+1. Open your local repository that contains BCDevOpsFlows yaml files.
+1. Navigate to **".azure-pipelines"** folder and open **"SetupPipelines.yml"**
+1. Replace 
+    - **name: ------ REPLACE -------** with name of your GitHub repository that contains your copy of BCDevOpsFlows (format **"UserName/RepositoryName"**)
+    - **endpoint: ------ REPLACE -------** with name of your Azure DevOps Service Connection configured to access your BCDevOpsFlows GitHub repository
+    - **ref: ------ REPLACE -------** name of the branch from your BCDevOpsFlows repository you want to use
 
 ## Configure Azure DevOps pipelines
 
@@ -23,7 +30,7 @@ Before you create Azure DevOps pipelines, you must update BCDevOps flows templat
 1. Navigate to the Azure Devops project.
 1. Select **Pipelines** -> **New Pipeline**
 1. Select **Azure Repos Git** -> Select your repository -> **Existing Azure Pipelines YAML file**
-1. Select the branch where your files are located and the file -> **Continue**.
+1. Select the branch where your files are located and the file **".azure-pipelines/SetupPipelines.yml"** -> **Continue**.
 1. Click on the arrow next to **Run** and select **Save**.
 1. **Run Pipeline**
-1. (optional) based on your setup, you may need to grant access to the variable group and runner group. Open the pipeline once you clicked **Run Pipeline** and grant access to everything needed.
+1. Once the pipeline is completed, you will see all pipelines in Azure DevOps and configured based on provided setup.

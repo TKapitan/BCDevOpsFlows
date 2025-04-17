@@ -38,6 +38,7 @@ We strongly recommend to not change any of the standard pipeline or standard scr
 You can use the following documentation of supported scripts to build your own pipelines (yaml).
 
 - [WorkflowInitialize](./WorkflowInitialize/README.md)
+- [SetupPipelines](./SetupPipelines/README.md)
 - [InitNuget](./InitNuget/README.md)
 - [ReadSettings](./ReadSettings/README.md)
 - [VerifyAuthContext](./VerifyAuthContext/README.md)

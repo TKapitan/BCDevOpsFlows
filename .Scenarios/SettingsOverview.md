@@ -6,15 +6,74 @@ This page explains the configuration parameters supported by BCDevOps Flows.
 
 Settings can be defined in Azure Devops variables or in various settings file. When running a workflow or a local script, the settings are applied by reading settings from Azure DevOps variables and one or more settings files. Last applied settings file wins. The following lists the order of locations to search for settings:
 
+1. You can use `External settings JSON file` that will be used for all projects and repositories. Azure DevOps does not have **Organization Setup** so this is the only option how to replicate Organization Setup from GitHub. The link can be http or https.
 1. `AL_PROJECTSETTINGS` is **Azure DevOps environment variable** for project setting
 
-1. `.azure-pipelines/BCDevOpsFlows-Settings.json` is the **repository settings file**. This settings file contains settings that are relevant for all projects in the repository.
+1. `.azure-pipelines/BCDevOpsFlows.Settings.json` is the **repository settings file**. This settings file contains settings that are relevant for all projects in the repository.
 
 1. `.azure-pipelines/\<pipelineName\>.settings.json` is the **workflow-specific settings file**. This option is used for the Current, NextMinor and NextMajor workflows to determine artifacts and build numbers when running these workflows.
     - \<pipelineName\> is specified in AL_PIPELINENAME environment variable
     - If this environment variable is not found, the predefined Azure DevOps variable (Build.DefinitionName) is used instead.
 
 1. `.azure-pipelines/\<userReqForEmail\>.settings.json` is the **user-specific settings file**. This option is rarely used, but if you have special settings, which should only be used for one specific user (potentially in the local scripts), these settings can be added to a settings file with the email of the user followed by `.settings.json` (example: Tom@bccaptain.com.au.Settings.json)
+
+## BC DevOps Flows pipeline setup
+
+The following setup is designed to automate management of your pipelines.
+
+### IMPORTANT: Only specific setting files are supported
+This setup can be placed only in **External settings json file**, **BCDevOpsFlows.Settings.json** or **\<pipelineName\>.settings.json** (both the pipeline itself or the SetupPipelines.settings.json). All other (Azure DevOps variable and user-specific) settings are ignored.
+
+### **IMPORTANT - run SetupPipelines pipeline to apply this settings** 
+This setup is not applied until you run the **SetupPipelines** pipeline. **SetupPipelines** pipeline must be created manually and must be run whenever any of the following settings is changed.
+
+| Name | Description | Default value |
+| :-- | :-- | :-- |
+| <a id="pipelineBranch"></a>pipelineBranch | Specify what branch should be used in Azure DevOps to run pipelines from. | main |
+| <a id="pipelineFolderStructure"></a>pipelineFolderStructure | Specifies the parent folder for pipelines in Azure DevOps. This settings is not a folder in repository, but folder in Azure DevOps Pipelines (Project -> Pipelines -> All -> folders). Allowed values: "Repository" - repository name is used as folder, "Pipeline" - pipeline name is used as folder, "Path" - manually specified path in "pipelineFolderPath" property (see below) | Repository |
+| <a id="pipelineFolderPath"></a>pipelineFolderPath | Specifies the folder path in Azure DevOps pipelines. Only applicable when pipelineFolderStructure is set to Path. Leave blank and set pipelineFolderStructure to Path if you do not want to use folders. |  |
+| <a id="pipelineSkipFirstRun"></a>pipelineSkipFirstRun | When a new pipeline is created in Azure DevOps, it's automatically run to test the setup and permissions. We recommend to always run the pipeline after it is created to verify setup and permissions. | $false |
+| <a id="BCDevOpsFlowsPoolName"></a>BCDevOpsFlowsPoolName | Name of the Azure DevOps Pool that hosts your self-hosted agents. The project must have access to the pool. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. |  |
+| <a id="BCDevOpsFlowsResourceRepositoryName"></a>BCDevOpsFlowsResourceRepositoryName | Specifies name of the GitHub repository where you host your version of BCDevOpsFlows (format "owner/repositoryname") |  |
+| <a id="BCDevOpsFlowsResourceRepositoryBranch"></a>BCDevOpsFlowsResourceRepositoryBranch | Specifies what branch from your GitHub BCDevOpsFlows repository you want to use. | main |
+| <a id="BCDevOpsFlowsServiceConnectionName"></a>BCDevOpsFlowsServiceConnectionName | Specifies name of Azure DevOps Service Connection that is configured and allowed to access your GitHub with BCDevOpsFlows scripts. |  |
+| <a id="BCDevOpsFlowsVariableGroup"></a>BCDevOpsFlowsVariableGroup | Specifies name of the variable group in your Azure DevOps pipeline that hosts environment variables. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. |  |
+| <a id="workflowTrigger"></a>workflowTrigger | Specifies pipeline triggers. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/azure-repos-git?view=azure-devops&tabs=yaml#ci-triggers. This settings is available for all pipelines except "PullRequest". | Set for CICD and PublishToProduction pipelines |
+| <a id="workflowSchedule"></a>workflowSchedule | Specifies schedule when the pipeline should be automatically run. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers. This settings is available for all pipelines except "PullRequest". | Set for TestCurrent, TestNextMinor and TestNextMajor |
+| <a id="externalSettingsLink"></a>externalSettingsLink | Specifies link to json file that contains settings that should be used for all projects and repositories. This path could be http or https. While technically changing this value does not require running the **SetupPipelines** pipeline, it is highly recommended to do so, as the file can contain any of the options above. |  |
+#### Example of "workflowTrigger" (used as default for CICD pipeline)
+
+```json
+  "workflowTrigger": {
+    "batch": true,
+    "branches": {
+      "include": [
+        "test",
+        "preview"
+      ]
+    },
+    "paths": {
+      "exclude": [
+        ".azure-pipelines"
+      ]
+    }
+  }
+```
+
+#### Example of "workflowSchedule"
+
+```json
+  "workflowSchedule": {
+    "cron": "0 2 15 * *",
+    "displayName": "Fifteenth of every month",
+    "branches": {
+      "include": [
+        "main",
+        "master"
+      ]
+    }
+  }
+```
 
 ## Basic Project settings
 

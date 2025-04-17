@@ -6,21 +6,51 @@ function Set-GitUser {
 }
 function Invoke-RestoreUnstagedChanges {
     Param(
-        [string] $appFilePath
+        [Parameter(Mandatory = $false)]
+        [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath
     )
-    OutputDebug -Message "Restoring unstaged changes for $appFilePath"
-    invoke-git restore $appFilePath
+
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            throw "Either appFilePath or appFolderPath must be provided."
+        }
+        OutputDebug -Message "Restoring unstaged changes for $appFilePath"
+        invoke-git restore $appFilePath
+    }
+    else {
+        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
+            OutputDebug -Message "Restoring unstaged changes for $($_.FullName))"
+            invoke-git restore $_.FullName
+        }
+    }
 }
 function Invoke-GitAdd {
     Param(
-        [string] $appFilePath
+        [Parameter(Mandatory = $false)]
+        [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath
     )
 
-    OutputDebug -Message "Staging changes for $appFilePath"
-    invoke-git add $appFilePath
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            throw "Either appFilePath or appFolderPath must be provided."
+        }
+        OutputDebug -Message "Staging changes for $appFilePath"
+        invoke-git add $appFilePath
+    }
+    else {
+        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
+            OutputDebug -Message "Staging changes for $($_.FullName)"
+            invoke-git add $_.FullName
+        }
+    }
 }
 function Invoke-GitCommit {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $commitMessage
     )
 
@@ -30,24 +60,49 @@ function Invoke-GitCommit {
     else {
         $commitMessage = "$commitMessage [skip azurepipelines]"
     }
-    OutputDebug -Message "Committing changes with message: $commitMessage"
+
+    try {
+        invoke-git status --porcelain
+    }
+    catch {
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-Host $_.ScriptStackTrace
+        Write-Host $_.PSMessageDetails
+
+        Write-Host "Commit failed. This may be because there are no changes. See previous lines for details."
+        return
+    }
+    Write-Host "Committing changes with message: $commitMessage"
     invoke-git commit -m $commitMessage
 }
 function Invoke-GitPush {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
-    OutputDebug -Message "Pushing changes to $targetBranch"
+    Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
 }
 function Invoke-GitAddCommit {
     Param(
+        [Parameter(Mandatory = $false)]
         [string] $appFilePath,
+        [Parameter(Mandatory = $false)]
+        [string] $appFolderPath,
+        [Parameter(Mandatory = $false)]
         [string] $commitMessage
     )
 
-    Invoke-GitAdd -appFilePath $appFilePath
+    if ([string]::IsNullOrEmpty($appFolderPath)) {
+        if ([string]::IsNullOrEmpty($appFilePath)) {
+            throw "Either appFilePath or appFolderPath must be provided."
+        }
+        Invoke-GitAdd -appFilePath $appFilePath
+    }
+    else {
+        Invoke-GitAdd -appFolderPath $appFolderPath
+    }
     Invoke-GitCommit -commitMessage $commitMessage
 }
 function Invoke-GitAddCommitPush {
