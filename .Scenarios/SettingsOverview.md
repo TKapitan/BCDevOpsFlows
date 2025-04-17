@@ -6,6 +6,7 @@ This page explains the configuration parameters supported by BCDevOps Flows.
 
 Settings can be defined in Azure Devops variables or in various settings file. When running a workflow or a local script, the settings are applied by reading settings from Azure DevOps variables and one or more settings files. Last applied settings file wins. The following lists the order of locations to search for settings:
 
+1. You can use `External settings JSON file` that will be used for all projects and repositories. Azure DevOps does not have **Organization Setup** so this is the only option how to replicate Organization Setup from GitHub. The link can be http or https.
 1. `AL_PROJECTSETTINGS` is **Azure DevOps environment variable** for project setting
 
 1. `.azure-pipelines/BCDevOpsFlows.Settings.json` is the **repository settings file**. This settings file contains settings that are relevant for all projects in the repository.
@@ -21,7 +22,7 @@ Settings can be defined in Azure Devops variables or in various settings file. W
 The following setup is design to automate management of your pipelines.
 
 ### **IMPORTANT - not all setting files are allowed for this settings** 
-This setup can be placed only in **BCDevOpsFlows.Settings.json** or **\<pipelineName\>.settings.json** (both the pipeline itself or the SetupPipelines.settings.json). All other (Azure DevOps variable and user-specific) settings are ignored.
+This setup can be placed only in **External settings json file**, **BCDevOpsFlows.Settings.json** or **\<pipelineName\>.settings.json** (both the pipeline itself or the SetupPipelines.settings.json). All other (Azure DevOps variable and user-specific) settings are ignored.
 
 ### **IMPORTANT - run SetupPipelines pipeline to apply this settings** 
 This setup is not applied until you run the **SetupPipelines** pipeline. **SetupPipelines** pipeline must be created manually and must be run whenever any of the following settings is changed.
@@ -39,7 +40,7 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 | <a id="BCDevOpsFlowsVariableGroup"></a>BCDevOpsFlowsVariableGroup | Specifies name of the variable group in your Azure DevOps pipeline that hosts environment variables. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. |  |
 | <a id="workflowTrigger"></a>workflowTrigger | Specifies pipeline triggers. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/azure-repos-git?view=azure-devops&tabs=yaml#ci-triggers. This settings is available for all pipelines except "PullRequest". | Set for CICD and PublishToProduction pipelines |
 | <a id="workflowSchedule"></a>workflowSchedule | Specifies schedule when the pipeline should be automatically run. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers. This settings is available for all pipelines except "PullRequest". | Set for TestCurrent, TestNextMinor and TestNextMajor |
-
+| <a id="externalSettingsLink"></a>externalSettingsLink | Specifies link to json file that contains settings that should be used for all projects and repositories. This path could be http or https. While technically changing this value does not require running the **SetupPipelines** pipeline, it is highly recommended to do so, as the file can contain any of the options above. |  |
 #### Example of "workflowTrigger" (used as default for CICD pipeline)
 
 ```json

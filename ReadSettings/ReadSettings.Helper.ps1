@@ -3,6 +3,7 @@
 
 # Read settings from the settings files
 # Settings are read from the following files:
+# - External settings json file                             = Link to external settings file (could be http or https)
 # - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
 # - .azure-pipelines/BCDevOpsFlows.Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
@@ -16,7 +17,8 @@ function ReadSettings {
         [string] $setupPipelineName = "",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettings
+        [string] $projectSettings,
+        [string] $externalSettingLink = ""
     )
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
@@ -126,28 +128,47 @@ function ReadSettings {
     }
 
     # Read settings from files and merge them into the settings object
-
     $settingsObjects = @()
+    # Read settings from external settings file (if specified)
+    if ($externalSettingLink -ne "") {
+        if (-not $externalSettingLink.StartsWith("http")) {
+            throw "External settings link must start with http/https"
+        }
+        try {
+            OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
+            $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
+            $externalSettingsObject = $response.Content | ConvertFrom-Json
+            $settingsObjects += @($externalSettingsObject)
+        }
+        catch {
+            Write-Warning "Error reading external settings from $externalSettingLink. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+        }
+    }
     # Read settings from project settings variable (parameter)
     if ($projectSettings) {
+        OutputDebug "Applying settings from project settings variable $projectSettings"
         $projectSettingsObject = $projectSettings | ConvertFrom-Json
         $settingsObjects += @($projectSettingsObject)
     }
     # Read settings from repository settings file
+    OutputDebug "Applying settings from repository settings file $baseFolder/$RepoSettingsFile"
     $repoSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder $RepoSettingsFile)
     $settingsObjects += @($repoSettingsObject)
     if ($setupPipelineName -ne "") {
         # Read settings from setup pipeline settings file
+        OutputDebug "Applying settings from setup pipeline settings file $baseFolder/$scriptsFolderName/$setupPipelineName.settings.json"
         $setupSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$setupPipelineName.settings.json")
         $settingsObjects += @($setupSettingsObject)
     }
     if ($pipelineName -ne "") {
         # Read settings from workflow settings file
+        OutputDebug "Applying settings from workflow settings file $baseFolder/$scriptsFolderName/$pipelineName.settings.json"
         $workflowSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$pipelineName.settings.json")
         $settingsObjects += @($workflowSettingsObject)
     }
     if ($userReqForEmail -ne "") {
         # Read settings from user settings file
+        OutputDebug "Applying settings from user settings file $baseFolder/$scriptsFolderName/$userReqForEmail.settings.json"
         $userSettingsObject = GetSettingsObject -Path (Join-Path $baseFolder "$scriptsFolderName/$userReqForEmail.settings.json")
         $settingsObjects += @($userSettingsObject)
     }
@@ -193,6 +214,13 @@ function ReadSettings {
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
         throw "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+    }
+    
+    if ($externalSettingLink -eq "" -and $settings.externalSettingsLink) {
+        Write-Host "Recreating settings object with external settings link $($settings.externalSettingsLink)"
+        $settings = ReadSettings -baseFolder $baseFolder -repoName $repoName -buildMode $buildMode -pipelineName $pipelineName -setupPipelineName $setupPipelineName -userReqForEmail $userReqForEmail -branchName $branchName -projectSettings $projectSettings -externalSettingLink $settings.externalSettingsLink
+        $settings
+        return
     }
     $settings
 }

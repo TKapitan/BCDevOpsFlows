@@ -8,7 +8,7 @@ Param()
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 try {
-    $settings = ReadSettings -pipelineName '' -setupPipelineName "$ENV:AL_PIPELINENAME" -userName '' -branchName '' | ConvertTo-HashTable -recurse
+    $settings = ReadSettings -pipelineName '' -setupPipelineName "$ENV:AL_PIPELINENAME" -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
     if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
         throw "settings.pipelineBranch is required but was not provided."
     }
