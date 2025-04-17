@@ -21,7 +21,7 @@ Settings can be defined in Azure Devops variables or in various settings file. W
 
 The following setup is designed to automate management of your pipelines.
 
-### **IMPORTANT - not all setting files are allowed for this settings** 
+### IMPORTANT: Only specific setting files are supported
 This setup can be placed only in **External settings json file**, **BCDevOpsFlows.Settings.json** or **\<pipelineName\>.settings.json** (both the pipeline itself or the SetupPipelines.settings.json). All other (Azure DevOps variable and user-specific) settings are ignored.
 
 ### **IMPORTANT - run SetupPipelines pipeline to apply this settings** 
