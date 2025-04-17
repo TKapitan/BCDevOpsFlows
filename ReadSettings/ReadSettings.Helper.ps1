@@ -3,6 +3,7 @@
 
 # Read settings from the settings files
 # Settings are read from the following files:
+# - External settings json file                             = Link to external settings file (could be http, https or path to file accessible from all runners)
 # - BCDevOpsFlowsProjectSettings (Azure DevOps Variable)    = Project settings variable
 # - .azure-pipelines/BCDevOpsFlows.Settings.json            = Repository Settings file
 # - .azure-pipelines/<pipelineName>.settings.json           = Workflow settings file
@@ -16,7 +17,8 @@ function ReadSettings {
         [string] $setupPipelineName = "",
         [string] $userReqForEmail = "$ENV:BUILD_REQUESTEDFOREMAIL",
         [string] $branchName = "$ENV:BUILD_SOURCEBRANCHNAME",
-        [string] $projectSettings
+        [string] $projectSettings,
+        [string] $externalSettingLink = ""
     )
 
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
@@ -126,8 +128,24 @@ function ReadSettings {
     }
 
     # Read settings from files and merge them into the settings object
-
     $settingsObjects = @()
+    # Read settings from external settings file (if specified)
+    if ($externalSettingLink -ne "") {
+        $externalSettingsObject = $null
+        if ($externalSettingLink.StartsWith("http")) {
+            try {
+                $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
+                $externalSettingsObject = $response.Content | ConvertFrom-Json
+            }
+            catch {
+                Write-Warning "Error reading external settings from $externalSettingLink. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
+            }
+        }
+        else {
+            $externalSettingsObject = GetSettingsObject -Path $externalSettingLink
+        }
+        $settingsObjects += @($externalSettingsObject)
+    }
     # Read settings from project settings variable (parameter)
     if ($projectSettings) {
         $projectSettingsObject = $projectSettings | ConvertFrom-Json
@@ -193,6 +211,12 @@ function ReadSettings {
 
     if ($BCDevOpsFlowsSettingExists -eq $false) {
         throw "No BCDevOpsFlows settings found. Please check that the repository is correctly configured and follows BCDevOpsFlows rules."
+    }
+    
+    if ($externalSettingLink -eq "" -and $settings.externalSettingsLink) {
+        $settings = ReadSettings -baseFolder $baseFolder -repoName $repoName -buildMode $buildMode -pipelineName $pipelineName -setupPipelineName $setupPipelineName -userReqForEmail $userReqForEmail -branchName $branchName -projectSettings $projectSettings -externalSettingLink $settings.externalSettingsLink
+        $settings
+        return
     }
     $settings
 }
