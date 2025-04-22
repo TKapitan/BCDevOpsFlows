@@ -1,4 +1,7 @@
-Param()
+Param(
+    [Parameter(HelpMessage = "Specifies whether to include preview apps as dependencies.", Mandatory = $false)]
+    [switch] $skipAppsInPreview
+)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 
@@ -11,7 +14,14 @@ try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    $settings = AnalyzeRepo -settings $settings
+
+    $analyzeRepoParams = @{}
+    if ($skipAppsInPreview) {
+        $analyzeRepoParams += @{
+            "allowPrerelease" = $true
+        }
+    }
+    $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
     $artifactUrl = DetermineArtifactUrl -settings $settings
 
     # Set output variables

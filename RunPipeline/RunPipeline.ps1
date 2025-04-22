@@ -7,7 +7,7 @@ Param(
     [string] $installAppsJson = '[]',
     [Parameter(HelpMessage = "A JSON-formatted list of test apps to install", Mandatory = $false)]
     [string] $installTestAppsJson = '[]',
-    [Parameter(HelpMessage = "Specifies whether the app is in preview only.", Mandatory = $false)]
+    [Parameter(HelpMessage = "Specifies whether to include preview apps as dependencies.", Mandatory = $false)]
     [switch] $skipAppsInPreview
 )
 
@@ -62,7 +62,7 @@ try {
         $analyzeRepoParams = @{}
         if ($skipAppsInPreview) {
             $analyzeRepoParams += @{
-                "skipAppsInPreview" = $true
+                "allowPrerelease" = $true
             }
         }
 
@@ -250,11 +250,17 @@ try {
                             "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
                         }
                     }
+                    if (-not $skipAppsInPreview) {
+                        $publishParams += @{
+                            "allowPrerelease" = $true
+                        }
+                    }
+                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $(-not $skipAppsInPreview)"
                     if ($parameters.ContainsKey('containerName')) {
-                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue -allowPrerelease:$true
+                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
                     }
                     else {
-                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder -allowPrerelease:$true @publishParams | Out-Null
+                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
                     }
                 }
             }
