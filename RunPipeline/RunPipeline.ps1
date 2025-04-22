@@ -251,6 +251,7 @@ try {
                             "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
                         }
                     }
+                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $allowPrerelease"
                     if ($parameters.ContainsKey('containerName')) {
                         Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder @publishParams -ErrorAction SilentlyContinue -allowPrerelease $allowPrerelease
                     }
