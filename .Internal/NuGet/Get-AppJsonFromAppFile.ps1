@@ -7,7 +7,6 @@
  .Example
   Get-AppJsonFromAppFile -appFile c:\temp\baseapp.app
 #>
-$script:AlLanguageExtensionPath = @('', '')
 function Get-AppJsonFromAppFile {
     Param(
         [Parameter(Mandatory = $true)]
