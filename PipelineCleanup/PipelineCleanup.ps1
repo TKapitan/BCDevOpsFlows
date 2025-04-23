@@ -1,5 +1,7 @@
 Param()
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 try {
     # Clean Containers
     if ($ENV:AL_CONTAINERNAME) {
