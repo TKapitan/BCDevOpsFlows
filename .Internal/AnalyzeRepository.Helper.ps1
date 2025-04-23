@@ -31,15 +31,15 @@ function AnalyzeRepo {
         if (!$settings.Contains('enableAppSourceCop')) {
             $settings.Add('enableAppSourceCop', $true)
         }
-        if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
-            throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
-        }
         if (!$settings.Contains('removeInternalsVisibleTo')) {
             $settings.Add('removeInternalsVisibleTo', $true)
         }
     }
     else {
         throw "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
+    }
+    if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
+        throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
     }
 
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
