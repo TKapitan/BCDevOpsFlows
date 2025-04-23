@@ -47,6 +47,7 @@ function Get-AppJsonFromAppFile {
         CmdDo -Command $command -arguments $arguments -returnValue -silent
     }
 
+    $AlLanguageExtenssionPath = @('','')
     function DownloadLatestAlLanguageExtension {
         Param(
             [switch] $allowPrerelease
