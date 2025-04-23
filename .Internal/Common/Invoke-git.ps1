@@ -1,3 +1,9 @@
+<# 
+ .Synopsis
+  Invoke git command with parameters
+ .Description
+  Requires Git installed  
+#>
 function invoke-git {
     Param(
         [parameter(mandatory = $false, ValueFromPipeline = $true)]
