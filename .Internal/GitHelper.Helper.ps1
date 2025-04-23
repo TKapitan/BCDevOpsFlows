@@ -1,4 +1,4 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath ".\WriteOutput.Helper.ps1" -Resolve)
 
 function Set-GitUser {
     invoke-git config --global user.email "BCDevOpsFlows@dev.azure.com"
