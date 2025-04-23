@@ -25,6 +25,10 @@ function Get-AppJsonFromAppFile {
             CmdDo -Command 'altool.exe' -arguments $arguments -returnValue -silent
         }
         catch {
+            Write-Host $_.Exception.Message -ForegroundColor Red
+            Write-Host $_.ScriptStackTrace
+            Write-Host $_.PSMessageDetails
+    
             throw "Unable to run AlTool. Make sure that the BCDevTools are available and compatible with the current version."
         }
         finally {
