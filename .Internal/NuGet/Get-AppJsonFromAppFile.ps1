@@ -7,6 +7,7 @@
  .Example
   Get-AppJsonFromAppFile -appFile c:\temp\baseapp.app
 #>
+$script:AlLanguageExtensionPath = @('','')
 function Get-AppJsonFromAppFile {
     Param(
         [Parameter(Mandatory=$true)]
@@ -47,20 +48,19 @@ function Get-AppJsonFromAppFile {
         CmdDo -Command $command -arguments $arguments -returnValue -silent
     }
 
-    $AlLanguageExtenssionPath = @('','')
     function DownloadLatestAlLanguageExtension {
         Param(
             [switch] $allowPrerelease
         )
     
         # Check if we already have the latest version downloaded and located in this session
-        if ($script:AlLanguageExtenssionPath[$allowPrerelease.IsPresent]) {
-            $path = $script:AlLanguageExtenssionPath[$allowPrerelease.IsPresent]
+        if ($script:AlLanguageExtensionPath[$allowPrerelease.IsPresent]) {
+            $path = $script:AlLanguageExtensionPath[$allowPrerelease.IsPresent]
             if (Test-Path $path -PathType Container) {
                 return $path
             }
             else {
-                $script:AlLanguageExtenssionPath[$allowPrerelease.IsPresent] = ''
+                $script:AlLanguageExtensionPath[$allowPrerelease.IsPresent] = ''
             }
         }
         
