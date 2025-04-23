@@ -18,10 +18,9 @@ function Get-AppJsonFromAppFile {
             [string[]] $arguments
         )
 
-        Push-Location
         try {
-            Set-Location $ENV:AL_BCDEVTOOLSFOLDER
-            CmdDo -Command 'altool.exe' -arguments $arguments -returnValue -silent
+            $ALToolExeLocation = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'altool.exe'
+            CmdDo -Command $ALToolExeLocation -arguments $arguments -returnValue -silent
         }
         catch {
             Write-Host $_.Exception.Message -ForegroundColor Red
@@ -29,9 +28,6 @@ function Get-AppJsonFromAppFile {
             Write-Host $_.PSMessageDetails
     
             throw "Unable to run AlTool. Make sure that the BCDevTools are available and compatible with the current version."
-        }
-        finally {
-            Pop-Location
         }
     }
 
