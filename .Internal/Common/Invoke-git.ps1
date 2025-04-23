@@ -1,5 +1,3 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath ".\Import-Common.ps1" -Resolve)
-
 function invoke-git {
     Param(
         [parameter(mandatory = $false, ValueFromPipeline = $true)]
