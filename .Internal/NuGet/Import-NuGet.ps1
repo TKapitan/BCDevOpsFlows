@@ -6,3 +6,4 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\New-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Publish-BCDevOpsFlowsNuGetPackageToContainer.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Push-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-AppJsonFromAppFile.ps1" -Resolve)

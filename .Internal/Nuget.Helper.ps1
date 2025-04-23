@@ -1,5 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath ".\Import-NuGet.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath ".\NuGet\Import-NuGet.ps1" -Resolve)
 
 function DownloadNugetPackage() {
     Param(
