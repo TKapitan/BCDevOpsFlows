@@ -1,3 +1,4 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Import-NuGet.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 
 function Push-AppToNuGetFeed {

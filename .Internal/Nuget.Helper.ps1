@@ -1,12 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\BcDevOpsFlowsNuGetFeedClass.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Find-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-BCDevOpsFlowsNuGetPackageId.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Get-BCDevOpsFlowsNuGetPackageToFolder.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\New-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Publish-BCDevOpsFlowsNuGetPackageToContainer.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "NuGet\Push-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath ".\Import-NuGet.ps1" -Resolve)
 
 function DownloadNugetPackage() {
     Param(
