@@ -42,7 +42,9 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 | <a id="BCDevOpsFlowsVariableGroup"></a>BCDevOpsFlowsVariableGroup | Specifies name of the variable group in your Azure DevOps pipeline that hosts environment variables. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. |  |
 | <a id="workflowTrigger"></a>workflowTrigger | Specifies pipeline triggers. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/azure-repos-git?view=azure-devops&tabs=yaml#ci-triggers. This settings is available for all pipelines except "PullRequest". | Set for CICD and PublishToProduction pipelines |
 | <a id="workflowSchedule"></a>workflowSchedule | Specifies schedule when the pipeline should be automatically run. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers. This settings is available for all pipelines except "PullRequest". | Set for TestCurrent, TestNextMinor and TestNextMajor |
+| <a id="updateVersionNumber"></a>updateVersionNumber | Specifies the version (relative or absolute) to what the app version should be updated to. This setting is applied only to CICD and PublishToProduction pipelines. You can use both relative (+1, +0.1, ...) or absolute (1, 23.5, ...) notations. You must use only values allowed by the versionStrategy. If the version strategy calculates automatically last two digits, you cannot specify version that includes the third digit etc. |  |
 | <a id="externalSettingsLink"></a>externalSettingsLink | Specifies link to json file that contains settings that should be used for all projects and repositories. This path could be http or https. While technically changing this value does not require running the **SetupPipelines** pipeline, it is highly recommended to do so, as the file can contain any of the options above. |  |
+
 #### Example of "workflowTrigger" (used as default for CICD pipeline)
 
 ```json
@@ -173,7 +175,7 @@ Example, adding this:
     ]
 ```
 
-to your [project settings file](#where-are-the-settings-located) will ensure that all branches matching the patterns in branches will use doNotPublishApps=true and doNotSignApps=true during CI/CD. Conditions can be:
+to your [repository settings file](#where-are-the-settings-located) will ensure that all branches matching the patterns in branches will use doNotPublishApps=true and doNotSignApps=true during CI/CD. Conditions can be:
 
 - **repositories** settings will be applied to repositories matching the patterns
 - **buildModes** settings will be applied when building with these buildModes

@@ -1,5 +1,5 @@
 Param(
-    [Parameter(HelpMessage = "The version to update to. Use Major.Minor[.Build][.Revision] for absolute change, use +1 to bump to the next major version, use +0.1 to bump to the next minor version, +0.0.1 to bump to the next build version or +0.0.0.1 to bump to the next revision version", Mandatory = $true)]
+    [Parameter(HelpMessage = "The version to update to. Use Major.Minor[.Build][.Revision] for absolute change, use +1 to bump to the next major version, use +0.1 to bump to the next minor version, +0.0.1 to bump to the next build version or +0.0.0.1 to bump to the next revision version", Mandatory = $false)]
     [string] $versionNumber
 )
 
@@ -13,6 +13,19 @@ Param(
 try {
     $baseFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+
+    if ([string]::IsNullOrEmpty($versionNumber)) {
+        if (-not (Get-Member -InputObject $settings -Name 'updateVersionNumber')) {
+            Write-Output "Version change not specified. Skipping version update."
+            exit 0
+        }
+        if ($settings.updateVersionNumber -eq '') {
+            Write-Output "Version change not specified. Skipping version update."
+            exit 0
+        }
+        $versionNumber = $settings.updateVersionNumber
+    }
+
     if ($versionNumber.StartsWith('+')) {
         # Handle incremental version number
         $allowedIncrementalVersionNumbers = @('+1', '+0.1')
