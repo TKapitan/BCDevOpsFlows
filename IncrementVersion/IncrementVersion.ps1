@@ -16,10 +16,12 @@ try {
 
     if ([string]::IsNullOrEmpty($versionNumber)) {
         if (-not (Get-Member -InputObject $settings -Name 'updateVersionNumber')) {
-            throw "Version number is not specified and settings.updateVersionNumber is not defined"
+            Write-Output "Version change not specified. Skipping version update."
+            exit 0
         }
         if ($settings.updateVersionNumber -eq '') {
-            throw "Version number is not specified and settings.updateVersionNumber is empty"
+            Write-Output "Version change not specified. Skipping version update."
+            exit 0
         }
         $versionNumber = $settings.updateVersionNumber
     }
