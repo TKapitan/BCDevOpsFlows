@@ -7,7 +7,7 @@
 
 This section describes most important points how to use and configure BCDevOps Flows.
 
-1. [Create Azure DevOps Agent Pool and at least one self-hosted Agent](.Scenarios/HowToStart/ConfigureAgentPool.mdd)
+1. [Create Azure DevOps Agent Pool and at least one self-hosted Agent](.Scenarios/HowToStart/ConfigureAgentPool.md)
 1. [Create a fork/clone of this repository](.Scenarios/HowToStart/ForkRepository.md)
 1. [Connect Azure DevOps with your fork/clone](.Scenarios/HowToStart/ConnectAzureDevOpsWithGitHub.md)
 1. [Configure Azure DevOps variables](.Scenarios/HowToStart/ConfigAzureDevOpsVariables.md)
@@ -18,6 +18,13 @@ This section describes how to start using BCDevOps Flows.
 1. [Create New BCDevOps Flows Project](.Scenarios/CreateNewProject.md)
 1. [Add BCDevOps Flows to Existing Project](.Scenarios/AddBCDevOpsFlowsToExistingProject.md)
 1. [Configure Pipelines](.Scenarios/ConfigurePipelines.md)
+
+## Permissions & Security overview
+
+This section describes all important security/permission settings.
+1. [Build Service Permissions (Project Level)](.Scenarios/Permissions/BuildServicePermissions.md)
+1. All pipelines must have access to configured Agent Pool
+1. All pipelines must have access to configured Variable Group
 
 ## Important/Interesting setting
 
