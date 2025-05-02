@@ -121,6 +121,8 @@ function ReadSettings {
         "pipelineFolderPath"                    = ""
         "pipelineSkipFirstRun"                  = $false
         "BCDevOpsFlowsPoolName"                 = "SelfHostedWindows"
+        "BCDevOpsFlowsPoolNameCICD"             = ""
+        "BCDevOpsFlowsPoolNamePublishToProd"    = ""
         "BCDevOpsFlowsResourceRepositoryName"   = ""
         "BCDevOpsFlowsResourceRepositoryBranch" = "main"
         "BCDevOpsFlowsServiceConnectionName"    = "BCDevOpsFlows"

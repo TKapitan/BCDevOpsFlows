@@ -7,8 +7,7 @@ function AnalyzeRepo {
     [CmdletBinding()]
     Param(
         [hashtable] $settings,
-        [switch] $skipAppsInPreview,
-        [version] $minBcVersion = [version]'0.0.0.0'
+        [switch] $allowPrerelease
     )
     $settings = $settings | Copy-HashTable
 
@@ -32,9 +31,6 @@ function AnalyzeRepo {
         if (!$settings.Contains('enableAppSourceCop')) {
             $settings.Add('enableAppSourceCop', $true)
         }
-        if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
-            throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
-        }
         if (!$settings.Contains('removeInternalsVisibleTo')) {
             $settings.Add('removeInternalsVisibleTo', $true)
         }
@@ -42,13 +38,22 @@ function AnalyzeRepo {
     else {
         throw "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
+    if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
+        throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
+    }
 
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
+    $getDependencyNuGetPackageParams = @{}
+    if ($allowPrerelease) {
+        $getDependencyNuGetPackageParams += @{
+            "allowPrerelease" = $true
+        }
+    }
     if ($settings.appDependenciesNuGet) {
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
             if ($appFile) {
                 if (!$settings.appDependencies) {
                     $settings.appDependencies = @()
@@ -62,7 +67,7 @@ function AnalyzeRepo {
     if ($settings.testDependenciesNuGet) {
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
             if ($appFile) {
                 if (!$settings.testDependencies) {
                     $settings.testDependencies = @()
@@ -101,17 +106,7 @@ function AnalyzeRepo {
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
-    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
 
-    $foundAppDependencies + $foundTestDependencies | ForEach-Object {
-        $dependency = $_
-        if ($testRunnerApps.Contains($dependency.id)) { $settings.installTestRunner = $true }
-        if ($testFrameworkApps.Contains($dependency.id)) { $settings.installTestFramework = $true }
-        if ($testLibrariesApps.Contains($dependency.id)) { $settings.installTestLibraries = $true }
-        if ($performanceToolkitApps.Contains($dependency.id)) { $settings.installPerformanceToolkit = $true }
-    }
-    Write-Host "Settings installTestRunner = $($settings.installTestRunner), installTestFramework = $($settings.installTestFramework), installTestLibraries = $($settings.installTestLibraries), installPerformanceToolkit = $($settings.installPerformanceToolkit)"
-    
     Write-Host "App.json version $($settings.appJsonVersion)"
     Write-Host "Application Dependency $($settings.applicationDependency)"
 
@@ -147,14 +142,4 @@ function AnalyzeRepo {
     Write-Host "Analyzing repository completed"
     $settings | Add-Member -NotePropertyName analyzeRepoCompleted -NotePropertyValue $true -Force
     return $settings
-}
-
-function Get-DependenciesAsTextString {
-    [CmdletBinding()]
-    Param(
-        [array] $dependencies
-    )
-    return ($dependencies | ForEach-Object {
-            $_.appFile
-        }) -join ","
 }

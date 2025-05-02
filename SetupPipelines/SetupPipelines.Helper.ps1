@@ -219,7 +219,7 @@ function Update-PipelineYMLFile {
     # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template. This runner is not configurable)
     $criticalWorkflows = @('SetupPipelines')
     if ($criticalWorkflows -notcontains $workflowName) {
-        $yamlContent = ModifyRunnersAndVariablesInWorkflows -yamlContent $yamlContent -settings $settings
+        $yamlContent = ModifyRunnersAndVariablesInWorkflows -yamlContent $yamlContent -workflowName $workflowName -settings $settings
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
@@ -249,13 +249,30 @@ function ModifyBCDevOpsFlowsInWorkflows {
 function ModifyRunnersAndVariablesInWorkflows {
     Param(
         $yamlContent,
+        $workflowName,
         [hashtable] $settings
     )
 
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsPoolName' -or $settings.BCDevOpsFlowsPoolName -eq '') {
-        throw "The BCDevOpsFlowsPoolName setting is required but was not provided."
+    # Override pool name based on workflow
+    $newPoolName = switch ($workflowName) {
+        'CICD' { 
+            if ($settings.Keys -contains 'BCDevOpsFlowsPoolNameCICD' -and $settings.BCDevOpsFlowsPoolNameCICD -ne '') {
+                $settings.BCDevOpsFlowsPoolNameCICD
+            }
+        }
+        'PublishToProduction' {
+            if ($settings.Keys -contains 'BCDevOpsFlowsPoolNamePublishToProd' -and $settings.BCDevOpsFlowsPoolNamePublishToProd -ne '') {
+                $settings.BCDevOpsFlowsPoolNamePublishToProd
+            } 
+        }
     }
-    $yamlContent.pool.name = $settings.BCDevOpsFlowsPoolName
+    if ($null -eq $newPoolName) {
+        if ($settings.Keys -notcontains 'BCDevOpsFlowsPoolName' -or $settings.BCDevOpsFlowsPoolName -eq '') {
+            throw "The BCDevOpsFlowsPoolName setting is required but was not provided."
+        }
+        $newPoolName = $settings.BCDevOpsFlowsPoolName
+    }
+    $yamlContent.pool.name = $newPoolName
     if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
         throw "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
     }
