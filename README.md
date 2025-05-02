@@ -7,7 +7,7 @@
 
 This section describes most important points how to use and configure BCDevOps Flows.
 
-1. [Create Azure DevOps Agent Pool and at least one self-hosted Agent](.Scenarios/HowToStart/ConfigureAgentPool.mdd)
+1. [Create Azure DevOps Agent Pool and at least one self-hosted Agent](.Scenarios/HowToStart/ConfigureAgentPool.md)
 1. [Create a fork/clone of this repository](.Scenarios/HowToStart/ForkRepository.md)
 1. [Connect Azure DevOps with your fork/clone](.Scenarios/HowToStart/ConnectAzureDevOpsWithGitHub.md)
 1. [Configure Azure DevOps variables](.Scenarios/HowToStart/ConfigAzureDevOpsVariables.md)
