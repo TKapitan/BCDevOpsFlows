@@ -1,6 +1,6 @@
 # Build Service Permissions (Project Level)
 
-Build Service is special account in Azure DevOps that is used when interacting with Azure DevOps from pipelines. In BC DevOps Flows it includes actions such as pushing updated versions back to Azure DevOps.
+Build Service is a special account in Azure DevOps that is used when interacting with Azure DevOps from pipelines. In BC DevOps Flows it includes actions such as pushing updated versions back to Azure DevOps.
 
 Every project has its own Build Service, meaning the permission is always managed per-project.
 
