@@ -19,6 +19,13 @@ This section describes how to start using BCDevOps Flows.
 1. [Add BCDevOps Flows to Existing Project](.Scenarios/AddBCDevOpsFlowsToExistingProject.md)
 1. [Configure Pipelines](.Scenarios/ConfigurePipelines.md)
 
+## Permissions & Security overview
+
+This section describes all important security/permission settings.
+1. [Build Service Permissions (Project Level)](.Scenarios/Permissions/BuildServicePermissions.md)
+1. All pipelines must have access to configured Agent Pool
+1. All pipelines must have access to configured Variable Group
+
 ## Important/Interesting setting
 
 The list of supported configuration is available in [Settings Overview](.Scenarios/SettingsOverview.md). Below is a list of the most important setting you should know about or that is different from AL-Go.
