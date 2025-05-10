@@ -37,7 +37,7 @@ try {
     Invoke-GitPush "HEAD:$($settings.pipelineBranch)"
 
     $pipelineDevOpsFolderPath = Get-PipelineDevOpsFolderPath -settings $settings
-    $yamlFiles = Get-ChildItem -Path $yamlPipelineFolder -Filter *.yml -File | Where-Object { $_.Name -ne "SetupPipelines.yml" }
+    $yamlFiles = Get-ChildItem -Path $yamlPipelineFolder -Filter *.yml -File | Where-Object { $_.Name.ToLower() -ne "setuppipelines.yml" }
     OutputDebug "Preparing pipelines for project '$ENV:SYSTEM_TEAMPROJECT' in organization '$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'"
     foreach ($pipelineYamlFilePath in $yamlFiles) {
         $pipelineName = $pipelineYamlFilePath.BaseName
