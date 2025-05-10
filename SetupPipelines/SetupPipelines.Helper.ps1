@@ -150,18 +150,11 @@ function Update-PipelineYMLFile {
         [string]$filePath
     )
     
-    # Read settings without workflow specific settings
-    $settings = ReadSettings -pipelineName '' -setupPipelineName '' -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
-
+    # Get Yaml content and workflow name
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
-    foreach ($key in @($workflowScheduleKey, $workflowTriggerKey)) {
-        if ($settings.Keys -contains $key -and ($settings."$key")) {
-            throw "The $key setting is not allowed in the global repository settings. Please use the workflow specific settings file or conditional settings."
-        }
-    }
 
-    # Re-read settings and this time include workflow specific settings + setup pipeline settings
+    # Read settings including workflow specific settings + setup pipeline settings
     $settings = ReadSettings -pipelineName $workflowName -setupPipelineName "$ENV:AL_PIPELINENAME" -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
 
     # Any workflow (except for the Pull_Request) can have concurrency and schedule defined

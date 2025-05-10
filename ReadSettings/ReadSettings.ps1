@@ -20,6 +20,11 @@ try {
         $getSettings = @()
     }
 
+    # Add default settings to publish as environment variables
+    if ($getSettings -notcontains "failPublishTestsOnFailureToPublishResults") {
+        $getSettings += @("failPublishTestsOnFailureToPublishResults")
+    }
+
     # Determine versioning strategy
     if ($ENV:BUILD_REASON -in @("PullRequest")) {
         $settings.versioningStrategy = 15
