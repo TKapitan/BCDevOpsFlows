@@ -3,6 +3,7 @@
 function Set-GitUser {
     invoke-git config --global user.email "BCDevOpsFlows@dev.azure.com"
     invoke-git config --global user.name "BCDevOps Flows Pipeline"
+    invoke-git config --global core.ignoreCase true
 }
 function Invoke-RestoreUnstagedChanges {
     Param(
