@@ -80,7 +80,7 @@ try {
 
     # Find repository settings 
     $repositorySettings = ReadSettings -baseFolder $baseFolder
-    $appFilePath = Join-Path $baseFolder "App\app.json"
+    $appFilePath = Join-Path $baseFolder "$($settings.appFolders[0])\app.json"
 
     # Restore unstaged changes for changed file
     Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
