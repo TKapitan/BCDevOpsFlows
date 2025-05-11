@@ -46,7 +46,13 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Verbose "- PackageBaseAddress=$($this.packageBaseAddressUrl)"
         }
         catch {
-            throw (GetExtendedErrorMessage $_)
+            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+            Write-Host $_.ScriptStackTrace
+            if ($_.PSMessageDetails) {
+                Write-Host $_.PSMessageDetails
+            }
+            Write-Host "##vso[task.complete result=Failed]"
+            throw ($_.Exception.Message)
         }
     }
 
@@ -127,7 +133,13 @@ class BcDevOpsFlowsNuGetFeed {
                 $global:ProgressPreference = $prev
             }
             catch {
-                throw (GetExtendedErrorMessage $_)
+                Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+                Write-Host $_.ScriptStackTrace
+                if ($_.PSMessageDetails) {
+                    Write-Host $_.PSMessageDetails
+                }
+                Write-Host "##vso[task.complete result=Failed]"
+                throw ($_.Exception.Message)
             }
             # Check that the found pattern matches the package name and the trusted patterns
             $matching = @($searchResult.data | Where-Object { $_.id -like "*$($packageName)*" -and $this.IsTrusted($_.id) } | Sort-Object { $_.id.replace('.symbols', '') } | ForEach-Object { @{ "id" = $_.id; "versions" = @($_.versions.version) } } )
@@ -159,7 +171,13 @@ class BcDevOpsFlowsNuGetFeed {
                 $global:ProgressPreference = $prev
             }
             catch {
-                throw (GetExtendedErrorMessage $_)
+                Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+                Write-Host $_.ScriptStackTrace
+                if ($_.PSMessageDetails) {
+                    Write-Host $_.PSMessageDetails
+                }
+                Write-Host "##vso[task.complete result=Failed]"
+                throw ($_.Exception.Message)
             }
             $versionsArr = @($versions.versions)
     
@@ -304,7 +322,13 @@ class BcDevOpsFlowsNuGetFeed {
             $global:ProgressPreference = $prev
         }
         catch {
-            throw (GetExtendedErrorMessage $_)
+            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+            Write-Host $_.ScriptStackTrace
+            if ($_.PSMessageDetails) {
+                Write-Host $_.PSMessageDetails
+            }
+            Write-Host "##vso[task.complete result=Failed]"
+            throw ($_.Exception.Message)
         }
         return [xml]$nuspec
     }
@@ -337,7 +361,13 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host "Package successfully downloaded"
         }
         catch {
-            throw (GetExtendedErrorMessage $_)
+            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+            Write-Host $_.ScriptStackTrace
+            if ($_.PSMessageDetails) {
+                Write-Host $_.PSMessageDetails
+            }
+            Write-Host "##vso[task.complete result=Failed]"
+            throw ($_.Exception.Message)
         }
         return $tmpFolder
     }
@@ -379,15 +409,33 @@ class BcDevOpsFlowsNuGetFeed {
                     Write-Host -ForegroundColor Yellow "NuGet package already exists"
                 }
                 else {
-                    throw (GetExtendedErrorMessage $_)
+                    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+                    Write-Host $_.ScriptStackTrace
+                    if ($_.PSMessageDetails) {
+                        Write-Host $_.PSMessageDetails
+                    }
+                    Write-Host "##vso[task.complete result=Failed]"
+                    throw ($_.Exception.Message)
                 }
             }
             else {
-                throw (GetExtendedErrorMessage $_)
+                Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+                Write-Host $_.ScriptStackTrace
+                if ($_.PSMessageDetails) {
+                    Write-Host $_.PSMessageDetails
+                }
+                Write-Host "##vso[task.complete result=Failed]"
+                throw ($_.Exception.Message)
             }
         }
         catch {
-            throw (GetExtendedErrorMessage $_)
+            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
+            Write-Host $_.ScriptStackTrace
+            if ($_.PSMessageDetails) {
+                Write-Host $_.PSMessageDetails
+            }
+            Write-Host "##vso[task.complete result=Failed]"
+            throw ($_.Exception.Message)
         }
         finally {
             Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
