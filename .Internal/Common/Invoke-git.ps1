@@ -1,4 +1,4 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath ".\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
 
 <# 
  .Synopsis
