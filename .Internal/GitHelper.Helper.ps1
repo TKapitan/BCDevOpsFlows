@@ -84,6 +84,51 @@ function Invoke-GitPush {
 
     Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
+
+    Invoke-GitMerge -sourceBranch $targetBranch -targetBranches @('test', 'preview')
+}
+function Invoke-GitMerge {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $sourceBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)",
+        [Parameter(Mandatory = $false)]
+        [string[]] $targetBranches = @('test', 'preview')
+    )
+
+    Write-Host "Merging changes from $sourceBranch to $targetBranches"
+    $sourceBranchName = $sourceBranch.Split(':')[-1]
+    if ($sourceBranchName -in $targetBranches) {
+        Write-Host "Source branch $sourceBranchName is same as target branch, skipping it..."
+        $targetBranches = $targetBranches | Where-Object { $_ -ne $sourceBranchName }
+    }
+
+    if ($targetBranches.Count -eq 0) {
+        Write-Host "No target branches to merge into, skipping..."
+        return
+    }
+
+    foreach ($branch in $targetBranches) {
+        $branchExists = invoke-git branch --list $branch
+        if ($branchExists) {
+            Write-Host "Merging to $branch branch"
+            try {
+                invoke-git checkout $branch
+                invoke-git merge $sourceBranchName --no-ff
+                Write-Host "Successfully merged to $branch"
+                Invoke-GitPush -targetBranch "HEAD:$branch"
+            }
+            catch {
+                Write-Warning "Failed to merge to $branch - $($_.Exception.Message)"
+                invoke-git merge --abort
+            }
+            finally {
+                invoke-git checkout $sourceBranchName
+            }
+        }
+        else {
+            OutputDebug -Message "Branch $branch does not exist, skipping..."
+        }
+    }
 }
 function Invoke-GitAddCommit {
     Param(
