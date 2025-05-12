@@ -111,7 +111,8 @@ function Invoke-GitMerge {
     invoke-git fetch --all
 
     $branch = 'test'
-    Invoke-RestoreUnstagedChanges -appFolderPath $ENV:BUILD_REPOSITORY_LOCALPATH
+    $appFolder = Join-Path $ENV:BUILD_REPOSITORY_LOCALPATH $($settings.appFolders[0])
+    Invoke-RestoreUnstagedChanges -appFolderPath $appFolder
     invoke-git switch $branch
     try {
         invoke-git merge $sourceBranchName --no-ff
