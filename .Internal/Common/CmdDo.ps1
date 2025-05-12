@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
+
 function CmdDo {
     Param(
         [string] $command = "",
@@ -45,6 +47,8 @@ function CmdDo {
         }
         
         $message = $message.Trim()
+        OutputDebug -Message "Command output: $($message)"
+        OutputDebug -Message "Process: $($p | ConvertTo-Json -Depth 1)"
 
         if ($p.ExitCode -eq 0) {
             if (!$silent) {
@@ -69,6 +73,10 @@ function CmdDo {
     }
     catch [System.ComponentModel.Win32Exception] {
         if ($_.Exception.NativeErrorCode -eq 2) {
+            if ($returnSuccess) {
+                Write-Host "Error when executing command: $($_.Exception.Message)"
+                return $false
+            }
             if ($messageIfCmdNotFound) {
                 throw $messageIfCmdNotFound
             }
@@ -77,9 +85,12 @@ function CmdDo {
             }
         }
         else {
+            if ($returnSuccess) {
+                Write-Host "Error when executing command: $($_.Exception.Message)"
+                return $false
+            }
             throw
         }
-        return $false
     }
     finally {
         try { [Console]::OutputEncoding = $oldEncoding } catch {}
