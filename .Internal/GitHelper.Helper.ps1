@@ -109,29 +109,43 @@ function Invoke-GitMerge {
         return
     }
 
-    foreach ($branch in $targetBranches) {
-        $branchExists = git branch --list $branch
-        OutputDebug -Message "Branch $branch exists: $branchExists"
-        if ($branchExists) {
-            Write-Host "Merging to $branch branch"
-            try {
-                invoke-git checkout $branch
-                invoke-git merge $sourceBranchName --no-ff
-                Write-Host "Successfully merged to $branch"
-                Invoke-GitPush -targetBranch "HEAD:$branch"
-            }
-            catch {
-                Write-Warning "Failed to merge to $branch - $($_.Exception.Message)"
-                invoke-git merge --abort
-            }
-            finally {
-                invoke-git checkout $sourceBranchName
-            }
-        }
-        else {
-            OutputDebug -Message "Branch $branch does not exist, skipping..."
-        }
+    $branch = 'test'
+    try {
+        invoke-git checkout $branch
+        invoke-git merge $sourceBranchName --no-ff
+        Write-Host "Successfully merged to $branch"
+        Invoke-GitPush -targetBranch "HEAD:$branch"
     }
+    catch {
+        Write-Warning "Failed to merge to $branch - $($_.Exception.Message)"
+        invoke-git merge --abort
+    }
+    finally {
+        invoke-git checkout $sourceBranchName
+    }
+    # foreach ($branch in $targetBranches) {
+    #     $branchExists = git branch --list $branch
+    #     OutputDebug -Message "Branch $branch exists: $branchExists"
+    #     if ($branchExists) {
+    #         Write-Host "Merging to $branch branch"
+    #         try {
+    #             invoke-git checkout $branch
+    #             invoke-git merge $sourceBranchName --no-ff
+    #             Write-Host "Successfully merged to $branch"
+    #             Invoke-GitPush -targetBranch "HEAD:$branch"
+    #         }
+    #         catch {
+    #             Write-Warning "Failed to merge to $branch - $($_.Exception.Message)"
+    #             invoke-git merge --abort
+    #         }
+    #         finally {
+    #             invoke-git checkout $sourceBranchName
+    #         }
+    #     }
+    #     else {
+    #         OutputDebug -Message "Branch $branch does not exist, skipping..."
+    #     }
+    # }
 }
 function Invoke-GitAddCommit {
     Param(
