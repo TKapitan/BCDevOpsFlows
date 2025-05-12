@@ -110,7 +110,7 @@ function Invoke-GitMerge {
     }
 
     foreach ($branch in $targetBranches) {
-        $branchExists = invoke-git branch --list $branch
+        $branchExists = git branch --list $branch
         if ($branchExists) {
             Write-Host "Merging to $branch branch"
             try {
