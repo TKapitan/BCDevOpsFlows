@@ -61,6 +61,7 @@ function CmdDo {
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
             if ($returnSuccess) {
                 $p.ExitCode = 0
+                Write-Host "Error when executing command: $message"
                 return $false
             }
             throw $message
