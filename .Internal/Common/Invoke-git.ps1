@@ -25,7 +25,7 @@ function invoke-git {
             }
         }
         if ($arguments -contains '--exit-code') {
-            $silent = $true
+            $arguments += " -returnSuccess"
         }
         return cmdDo -command git -arguments $arguments -silent:$silent -returnValue:$returnValue -inputStr $inputStr -messageIfCmdNotFound "Git not found. Please install it from https://git-scm.com/downloads"
     }

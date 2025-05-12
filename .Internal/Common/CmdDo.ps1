@@ -5,7 +5,8 @@ function CmdDo {
         [switch] $silent,
         [switch] $returnValue,
         [string] $inputStr = "",
-        [string] $messageIfCmdNotFound = ""
+        [string] $messageIfCmdNotFound = "",
+        [switch] $returnSuccess
     )
 
     $oldNoColor = "$env:NO_COLOR"
@@ -54,13 +55,15 @@ function CmdDo {
             }
         }
         else {
-            if ($silent -and $returnValue) {
+            $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
+            if ($returnSuccess) {
                 return $false
             }
-            $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
             throw $message
         }
-        return $true
+        if ($returnSuccess) {
+            return $true
+        }
     }
     catch [System.ComponentModel.Win32Exception] {
         if ($_.Exception.NativeErrorCode -eq 2) {
