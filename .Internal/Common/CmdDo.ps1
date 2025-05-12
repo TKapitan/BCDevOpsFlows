@@ -55,6 +55,9 @@ function CmdDo {
                 $message.Replace("`r", "").Split("`n")
             }
             if ($returnSuccess) {
+                if ([string]::IsNullOrWhiteSpace($message)) { 
+                    return $false 
+                }
                 Write-Host "Command executed successfuly: $message"
                 return $true
             }
