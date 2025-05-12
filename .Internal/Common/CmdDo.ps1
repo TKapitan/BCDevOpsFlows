@@ -53,6 +53,9 @@ function CmdDo {
             if ($returnValue) {
                 $message.Replace("`r", "").Split("`n")
             }
+            if ($returnSuccess) {
+                return $true
+            }
         }
         else {
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
@@ -61,9 +64,6 @@ function CmdDo {
                 return $false
             }
             throw $message
-        }
-        if ($returnSuccess) {
-            return $true
         }
     }
     catch [System.ComponentModel.Win32Exception] {
