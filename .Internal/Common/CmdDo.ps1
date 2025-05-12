@@ -47,9 +47,6 @@ function CmdDo {
         }
         
         $message = $message.Trim()
-        OutputDebug -Message "Command output: $($message)"
-        OutputDebug -Message "Process: $($p | ConvertTo-Json -Depth 1)"
-
         if ($p.ExitCode -eq 0) {
             if (!$silent) {
                 Write-Host $message
@@ -58,13 +55,13 @@ function CmdDo {
                 $message.Replace("`r", "").Split("`n")
             }
             if ($returnSuccess) {
+                Write-Host "Command executed successfuly: $message"
                 return $true
             }
         }
         else {
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
             if ($returnSuccess) {
-                $p.ExitCode = 0
                 Write-Host "Error when executing command: $message"
                 return $false
             }
