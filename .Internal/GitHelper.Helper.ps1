@@ -88,35 +88,34 @@ function Invoke-GitPush {
     if ($targetBranch -match "(HEAD:)?(main|master)$") {
         Invoke-GitPushToTestBranches
     }
-    
-    function Invoke-GitPushToTestBranches {
-        param (
-            [Parameter(Mandatory = $false)]
-            [string[]] $targetBranches = @('test', 'preview')
-        )
+}
+function Invoke-GitPushToTestBranches {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string[]] $targetBranches = @('test', 'preview')
+    )
 
-        Write-Host "Merging changes to $targetBranches"
-        $sourceBranchName = $ENV:BUILD_SOURCEBRANCH.Split(':')[-1]
-        if ($sourceBranchName -in $targetBranches) {
-            Write-Host "Source branch $sourceBranchName is same as target branch, skipping it..."
-            $targetBranches = $targetBranches | Where-Object { $_ -ne $sourceBranchName }
-        }
+    Write-Host "Merging changes to $targetBranches"
+    $sourceBranchName = $ENV:BUILD_SOURCEBRANCH.Split(':')[-1]
+    if ($sourceBranchName -in $targetBranches) {
+        Write-Host "Source branch $sourceBranchName is same as target branch, skipping it..."
+        $targetBranches = $targetBranches | Where-Object { $_ -ne $sourceBranchName }
+    }
 
-        if ($targetBranches.Count -eq 0) {
-            Write-Host "No target branches to merge into, skipping..."
-            return
+    if ($targetBranches.Count -eq 0) {
+        Write-Host "No target branches to merge into, skipping..."
+        return
+    }
+    invoke-git fetch --all
+    foreach ($branch in $targetBranches) {
+        $branchExists = git branch --list $branch
+        if ($branchExists) {
+            Write-Host "Merging to $branch branch"
+            Invoke-GitPush -targetBranch "HEAD:$branch"
+            Write-Host "Successfully merged to $branch"
         }
-        invoke-git fetch --all
-        foreach ($branch in $targetBranches) {
-            $branchExists = git branch --list $branch
-            if ($branchExists) {
-                Write-Host "Merging to $branch branch"
-                Invoke-GitPush -targetBranch "HEAD:$branch"
-                Write-Host "Successfully merged to $branch"
-            }
-            else {
-                OutputDebug -Message "Branch $branch does not exist, skipping..."
-            }
+        else {
+            OutputDebug -Message "Branch $branch does not exist, skipping..."
         }
     }
 }
