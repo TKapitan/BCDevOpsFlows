@@ -108,7 +108,7 @@ function Invoke-GitPushToTestBranches {
     }
     invoke-git fetch --all
     foreach ($branch in $targetBranches) {
-        if (invoke-git ls-remote --exit-code --heads origin $branch) {
+        if (git ls-remote --exit-code --heads origin $branch) {
             Write-Host "Merging to $branch branch"
             Invoke-GitPush -targetBranch "HEAD:$branch"
             Write-Host "Successfully merged to $branch"
@@ -117,6 +117,7 @@ function Invoke-GitPushToTestBranches {
             OutputDebug -Message "Branch $branch does not exist, skipping..."
         }
     }
+    return 0 # override the default exit code from git ls-remote
 }
 function Invoke-GitAddCommit {
     Param(
