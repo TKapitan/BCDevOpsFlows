@@ -111,6 +111,7 @@ function Invoke-GitMerge {
 
     foreach ($branch in $targetBranches) {
         $branchExists = git branch --list $branch
+        OutputDebug -Message "Branch $branch exists: $branchExists"
         if ($branchExists) {
             Write-Host "Merging to $branch branch"
             try {
