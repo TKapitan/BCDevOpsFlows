@@ -54,9 +54,13 @@ function CmdDo {
             }
         }
         else {
+            if ($silent) {
+                return $false
+            }
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
             throw $message
         }
+        return $true
     }
     catch [System.ComponentModel.Win32Exception] {
         if ($_.Exception.NativeErrorCode -eq 2) {
@@ -70,6 +74,7 @@ function CmdDo {
         else {
             throw
         }
+        return $false
     }
     finally {
         try { [Console]::OutputEncoding = $oldEncoding } catch {}
