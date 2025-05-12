@@ -111,8 +111,9 @@ function Invoke-GitMerge {
     invoke-git fetch --all
 
     $branch = 'test'
+    Invoke-RestoreUnstagedChanges -appFolderPath $ENV:BUILD_REPOSITORY_LOCALPATH
+    invoke-git switch $branch
     try {
-        invoke-git switch $branch
         invoke-git merge $sourceBranchName --no-ff
         Write-Host "Successfully merged to $branch"
         Invoke-GitPush -targetBranch "HEAD:$branch"
