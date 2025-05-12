@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
+
 function CmdDo {
     Param(
         [string] $command = "",
@@ -5,7 +7,8 @@ function CmdDo {
         [switch] $silent,
         [switch] $returnValue,
         [string] $inputStr = "",
-        [string] $messageIfCmdNotFound = ""
+        [string] $messageIfCmdNotFound = "",
+        [switch] $returnSuccess
     )
 
     $oldNoColor = "$env:NO_COLOR"
@@ -44,7 +47,6 @@ function CmdDo {
         }
         
         $message = $message.Trim()
-
         if ($p.ExitCode -eq 0) {
             if (!$silent) {
                 Write-Host $message
@@ -52,14 +54,29 @@ function CmdDo {
             if ($returnValue) {
                 $message.Replace("`r", "").Split("`n")
             }
+            if ($returnSuccess) {
+                if ([string]::IsNullOrWhiteSpace($message)) { 
+                    return $false 
+                }
+                Write-Host "Command executed successfully: $message"
+                return $true
+            }
         }
         else {
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
+            if ($returnSuccess) {
+                Write-Host "Error when executing command: $message"
+                return $false
+            }
             throw $message
         }
     }
     catch [System.ComponentModel.Win32Exception] {
         if ($_.Exception.NativeErrorCode -eq 2) {
+            if ($returnSuccess) {
+                Write-Host "Error when executing command: $($_.Exception.Message)"
+                return $false
+            }
             if ($messageIfCmdNotFound) {
                 throw $messageIfCmdNotFound
             }
@@ -68,6 +85,10 @@ function CmdDo {
             }
         }
         else {
+            if ($returnSuccess) {
+                Write-Host "Error when executing command: $($_.Exception.Message)"
+                return $false
+            }
             throw
         }
     }

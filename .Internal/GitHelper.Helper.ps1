@@ -21,8 +21,8 @@ function Invoke-RestoreUnstagedChanges {
         invoke-git restore $appFilePath
     }
     else {
-        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
-            OutputDebug -Message "Restoring unstaged changes for $($_.FullName))"
+        Get-ChildItem -Path $appFolderPath -Recurse -File | ForEach-Object {
+            OutputDebug -Message "Restoring unstaged changes for $($_.FullName)"
             invoke-git restore $_.FullName
         }
     }
@@ -84,6 +84,41 @@ function Invoke-GitPush {
 
     Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
+
+    if ($targetBranch -match "(HEAD:)?(main|master)$") {
+        Invoke-GitPushToTestBranches
+    }
+}
+function Invoke-GitPushToTestBranches {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string[]] $targetBranches = @('test', 'preview')
+    )
+
+    Write-Host "Merging changes to $($targetBranches -join ', ')"
+    $sourceBranchName = $ENV:BUILD_SOURCEBRANCH.Split(':')[-1]
+    if ($sourceBranchName -in $targetBranches) {
+        Write-Host "Source branch $sourceBranchName is same as target branch, skipping it..."
+        $targetBranches = $targetBranches | Where-Object { $_ -ne $sourceBranchName }
+    }
+
+    if ($targetBranches.Count -eq 0) {
+        Write-Host "No target branches to merge into, skipping..."
+        return
+    }
+    invoke-git fetch --all
+    foreach ($branch in $targetBranches) {
+        $branchExists = invoke-git ls-remote --heads origin $branch -returnSuccess
+        if ($branchExists) {
+            Write-Host "Merging to $branch branch"
+            Invoke-GitPush -targetBranch "HEAD:$branch"
+            Write-Host "Successfully merged to $branch"
+        }
+        else {
+            OutputDebug -Message "Branch $branch does not exist, skipping..."
+        }
+    }
+    return 0 # override the default exit code from git ls-remote
 }
 function Invoke-GitAddCommit {
     Param(
