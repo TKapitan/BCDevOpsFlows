@@ -108,7 +108,7 @@ function Invoke-GitPushToTestBranches {
     }
     invoke-git fetch --all
     foreach ($branch in $targetBranches) {
-        if (git ls-remote --exit-code --heads origin $branch) {
+        if (invoke-git ls-remote --exit-code --heads origin $branch) {
             Write-Host "Merging to $branch branch"
             Invoke-GitPush -targetBranch "HEAD:$branch"
             Write-Host "Successfully merged to $branch"
