@@ -112,7 +112,7 @@ function Invoke-GitMerge {
 
     $branch = 'test'
     try {
-        invoke-git checkout $branch
+        invoke-git switch $branch
         invoke-git merge $sourceBranchName --no-ff
         Write-Host "Successfully merged to $branch"
         Invoke-GitPush -targetBranch "HEAD:$branch"
@@ -122,7 +122,7 @@ function Invoke-GitMerge {
         invoke-git merge --abort
     }
     finally {
-        invoke-git checkout $sourceBranchName
+        invoke-git switch $sourceBranchName
     }
     # foreach ($branch in $targetBranches) {
     #     $branchExists = git branch --list $branch
