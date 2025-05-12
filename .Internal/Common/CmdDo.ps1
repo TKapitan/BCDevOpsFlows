@@ -54,7 +54,7 @@ function CmdDo {
             }
         }
         else {
-            if ($silent) {
+            if ($silent -and $returnValue) {
                 return $false
             }
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
