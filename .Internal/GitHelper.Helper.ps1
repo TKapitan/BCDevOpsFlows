@@ -86,7 +86,8 @@ function Invoke-GitPush {
     invoke-git push origin $targetBranch
 
     if ($targetBranch -match "(HEAD:)?(main|master)$") {
-        Invoke-GitMerge -sourceBranch $targetBranch -targetBranches @('test', 'preview')
+        Invoke-GitPush -targetBranch "HEAD:test"
+        #Invoke-GitMerge -sourceBranch $targetBranch -targetBranches @('test', 'preview')
     }
 }
 function Invoke-GitMerge {
@@ -111,8 +112,7 @@ function Invoke-GitMerge {
     invoke-git fetch --all
 
     $branch = 'test'
-    $appFolder = Join-Path $ENV:BUILD_REPOSITORY_LOCALPATH $($settings.appFolders[0])
-    Invoke-RestoreUnstagedChanges -appFolderPath $appFolder
+    Invoke-RestoreUnstagedChanges -appFolderPath $ENV:BUILD_REPOSITORY_LOCALPATH
     invoke-git switch $branch
     try {
         invoke-git merge $sourceBranchName --no-ff
