@@ -85,7 +85,9 @@ function Invoke-GitPush {
     Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
 
-    Invoke-GitMerge -sourceBranch $targetBranch -targetBranches @('test', 'preview')
+    if ($targetBranch -match "(HEAD:)?(main|master)$") {
+        Invoke-GitMerge -sourceBranch $targetBranch -targetBranches @('test', 'preview')
+    }
 }
 function Invoke-GitMerge {
     param (
