@@ -57,6 +57,7 @@ function CmdDo {
         else {
             $message += "`n`nExitCode: " + $p.ExitCode + "`nCommandline: $command $arguments"
             if ($returnSuccess) {
+                $p.ExitCode = 0
                 return $false
             }
             throw $message
