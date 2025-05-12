@@ -108,6 +108,7 @@ function Invoke-GitMerge {
         Write-Host "No target branches to merge into, skipping..."
         return
     }
+    invoke-git pull
 
     $branch = 'test'
     try {
