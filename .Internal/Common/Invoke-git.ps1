@@ -10,8 +10,11 @@ function invoke-git {
         [string] $inputStr = "",
         [switch] $silent,
         [switch] $returnValue,
-        [parameter(mandatory = $true, position = 0)][string] $command,
-        [parameter(mandatory = $false, position = 1, ValueFromRemainingArguments = $true)] $remaining
+        [switch] $returnSuccess,
+        [parameter(mandatory = $true, position = 0)]
+        [string] $command,
+        [parameter(mandatory = $false, position = 1, ValueFromRemainingArguments = $true)] 
+        $remaining
     )
 
     Process {
@@ -24,9 +27,6 @@ function invoke-git {
                 $arguments += "$parameter "
             }
         }
-        if ($arguments -contains '--exit-code') {
-            $arguments += " -returnSuccess"
-        }
-        return cmdDo -command git -arguments $arguments -silent:$silent -returnValue:$returnValue -inputStr $inputStr -messageIfCmdNotFound "Git not found. Please install it from https://git-scm.com/downloads"
+        return cmdDo -command git -arguments $arguments -silent:$silent -returnValue:$returnValue -returnSuccess:$returnSuccess -inputStr $inputStr -messageIfCmdNotFound "Git not found. Please install it from https://git-scm.com/downloads"
     }
 }
