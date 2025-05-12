@@ -95,7 +95,7 @@ function Invoke-GitPushToTestBranches {
         [string[]] $targetBranches = @('test', 'preview')
     )
 
-    Write-Host "Merging changes to $targetBranches"
+    Write-Host "Merging changes to $($targetBranches -join ', ')"
     $sourceBranchName = $ENV:BUILD_SOURCEBRANCH.Split(':')[-1]
     if ($sourceBranchName -in $targetBranches) {
         Write-Host "Source branch $sourceBranchName is same as target branch, skipping it..."
