@@ -58,7 +58,7 @@ function CmdDo {
                 if ([string]::IsNullOrWhiteSpace($message)) { 
                     return $false 
                 }
-                Write-Host "Command executed successfuly: $message"
+                Write-Host "Command executed successfully: $message"
                 return $true
             }
         }
