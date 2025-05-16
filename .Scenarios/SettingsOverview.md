@@ -225,6 +225,7 @@ Which will ensure that for all repositories named `bcsamples-*` in this organiza
 | <a id="memoryLimit"></a>memoryLimit | Specifies the memory limit for the build container. By default, this is left to BcContainerHelper to handle and will currently be set to 8G | 8G |
 | <a id="BcContainerHelperVersion"></a>BcContainerHelperVersion | This setting can be set to a specific version (ex. 3.0.8) of BcContainerHelper to force BCDevOps Flows to use this version. **latest** means that BCDevOps Flows will use the latest released version. **preview** means that BCDevOps Flows will use the latest preview version. **dev** means that BCDevOps Flows will use the dev branch of containerhelper. | latest |
 | <a id="failPublishTestsOnFailureToPublishResults"></a>failPublishTestsOnFailureToPublishResults | By default, all projects with enabled tests expect test results. If there are no test results available, the **Publish Test Results** step fails. If you set this setting to false, missing or corrupted tests are considered as successful. | true |
+| <a id="skipAppSourceCopMandatoryAffixesEnforcement"></a>skipAppSourceCopMandatoryAffixesEnforcement | Use this option to skip mandatory enforcement of the Affixes. For example, if you have one PTE project without affixes, you can use this option in combination with custom rule set to supress enforcement and validation. | false |
 
 ______________________________________________________________________
 
