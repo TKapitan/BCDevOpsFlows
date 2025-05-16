@@ -26,10 +26,10 @@ function Get-BuildParameters {
     )
     if ($alcVersion -ge [System.Version]"12.0.12.41479") {
         $alcParameters += @(
-            "sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
-            "sourceCommit:""$ENV:BUILD_SOURCEVERSION""",
-            "buildBy:""BCDevOpsFlows""",
-            "buildUrl:""$ENV:BUILD_BUILDURI"""
+            "/sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
+            "/sourceCommit:""$ENV:BUILD_SOURCEVERSION""",
+            "/buildBy:""BCDevOpsFlows""",
+            "/buildUrl:""$ENV:BUILD_BUILDURI"""
         )
         Write-Host "Adding source code parameters:"
         Write-Host "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
