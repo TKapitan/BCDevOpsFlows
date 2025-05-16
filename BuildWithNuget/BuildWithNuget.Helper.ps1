@@ -25,12 +25,17 @@ function Get-BuildParameters {
         "/loglevel:Warning"
     )
     if ($alcVersion -ge [System.Version]"12.0.12.41479") {
-        $alcParameters = @(
+        $alcParameters += @(
             "sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
             "sourceCommit:""$ENV:BUILD_SOURCEVERSION""",
             "buildBy:""BCDevOpsFlows""",
             "buildUrl:""$ENV:BUILD_BUILDURI"""
         )
+        Write-Host "Adding source code parameters:"
+        Write-Host "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
+        Write-Host "  sourceCommit: $ENV:BUILD_SOURCEVERSION"
+        Write-Host "  buildBy: BCDevOpsFlows"
+        Write-Host "  buildUrl: $ENV:BUILD_BUILDURI"
     }
     if ($settings.ContainsKey('preprocessorSymbols')) {
         Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
