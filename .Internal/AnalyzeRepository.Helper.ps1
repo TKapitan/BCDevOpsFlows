@@ -38,7 +38,7 @@ function AnalyzeRepo {
     else {
         throw "The type, specified in $repoSettingsFile, must be either 'PTE' or 'AppSource App'. It is '$($settings.type)'."
     }
-    if ($settings.enableAppSourceCop -and (!($settings.appSourceCopMandatoryAffixes))) {
+    if ($settings.enableAppSourceCop -and !$settings.appSourceCopMandatoryAffixes -and !$settings.skipAppSourceCopMandatoryAffixesEnforcement) {
         throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
     }
 
