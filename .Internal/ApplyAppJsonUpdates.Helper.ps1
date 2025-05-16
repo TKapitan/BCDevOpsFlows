@@ -23,7 +23,7 @@ function RemoveInternalsVisibleTo {
     )
 
     if ($settings.removeInternalsVisibleTo) {
-        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\app.json"
         $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
         
         $settingExists = [bool] ($appFileJson.PSObject.Properties.Name -eq 'internalsVisibleTo')
@@ -50,7 +50,7 @@ function OverrideResourceExposurePolicy {
     )
 
     if ($settings.overrideResourceExposurePolicy) {
-        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+        $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\app.json"
         $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
     
         $resourceExposurePolicySpecified = [bool] ($appFileJson.PSObject.Properties.Name -eq 'resourceExposurePolicy')
@@ -91,7 +91,7 @@ function UpdateVersion {
         [PSCustomObject]$settings
     )
 
-    $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "App\app.json"
+    $appJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\app.json"
     $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
 
     $existingVersionAsArray = [Version]$appFileJson.version

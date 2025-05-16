@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
+
 <# 
  .Synopsis
   Invoke git command with parameters
@@ -10,8 +12,11 @@ function invoke-git {
         [string] $inputStr = "",
         [switch] $silent,
         [switch] $returnValue,
-        [parameter(mandatory = $true, position = 0)][string] $command,
-        [parameter(mandatory = $false, position = 1, ValueFromRemainingArguments = $true)] $remaining
+        [switch] $returnSuccess,
+        [parameter(mandatory = $true, position = 0)]
+        [string] $command,
+        [parameter(mandatory = $false, position = 1, ValueFromRemainingArguments = $true)] 
+        $remaining
     )
 
     Process {
@@ -23,6 +28,11 @@ function invoke-git {
             else {
                 $arguments += "$parameter "
             }
+        }
+        if ($returnSuccess) {
+            $cmdDoResults = cmdDo -command git -arguments $arguments -silent:$silent -returnValue:$returnValue -returnSuccess -inputStr $inputStr -messageIfCmdNotFound "Git not found. Please install it from https://git-scm.com/downloads"
+            OutputDebug -Message "CmdDo results: $cmdDoResults"
+            return $cmdDoResults
         }
         cmdDo -command git -arguments $arguments -silent:$silent -returnValue:$returnValue -inputStr $inputStr -messageIfCmdNotFound "Git not found. Please install it from https://git-scm.com/downloads"
     }
