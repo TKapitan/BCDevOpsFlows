@@ -42,29 +42,21 @@ function Get-BuildParameters {
     #         $alcParameters += @("/analyzer:$(Join-Path $binPath 'Analyzers\Microsoft.Dynamics.Nav.Common.dll')")
     #     }
     # }
-    if ($settings.enableCodeCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.CodeCop.dll'
-        OutputDebug -Message "Enabling CodeCop, using path: $copPath"
-        if (-not (Test-Path $copPath)) {
-            throw "The specified CodeCop analyzer does not exist: $copPath"
+    $analyzers = @(
+        @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
+        @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
+        @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
+    )
+
+    foreach ($analyzer in $analyzers) {
+        if ($settings.$($analyzer.Setting)) {
+            $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzer.FileName
+            OutputDebug -Message "Enabling $($analyzer.Name), using path: $copPath"
+            if (-not (Test-Path $copPath)) {
+                throw "The specified $($analyzer.Name) analyzer does not exist: $copPath"
+            }
+            $alcParameters += @("/analyzer:$copPath")
         }
-        $alcParameters += @("/analyzer:$copPath")
-    }
-    if ($settings.enableAppSourceCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.AppSourceCop.dll'
-        OutputDebug -Message "Enabling AppSourceCop, using path: $copPath"
-        if (-not (Test-Path $copPath)) {
-            throw "The specified AppSourceCop analyzer does not exist: $copPath"
-        }
-        $alcParameters += @("/analyzer:$copPath")
-    }
-    if ($settings.enablePerTenantExtensionCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll'
-        OutputDebug -Message "Enabling PerTenantExtensionCop, using path: $copPath"
-        if (-not (Test-Path $copPath)) {
-            throw "The specified PerTenantExtensionCop analyzer does not exist: $copPath"
-        }
-        $alcParameters += @("/analyzer:$copPath")
     }
     if ($settings.enableUICop) {
         $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.UICop.dll'
