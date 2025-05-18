@@ -43,7 +43,7 @@ function Get-BuildParameters {
     #     }
     # }
     if ($settings.enableCodeCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Analyzers\Microsoft.Dynamics.Nav.CodeCop.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.CodeCop.dll'
         OutputDebug -Message "Enabling CodeCop, using path: $copPath"
         if (-not (Test-Path $copPath)) {
             throw "The specified CodeCop analyzer does not exist: $copPath"
@@ -51,7 +51,7 @@ function Get-BuildParameters {
         $alcParameters += @("/analyzer:$copPath")
     }
     if ($settings.enableAppSourceCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Analyzers\Microsoft.Dynamics.Nav.AppSourceCop.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.AppSourceCop.dll'
         OutputDebug -Message "Enabling AppSourceCop, using path: $copPath"
         if (-not (Test-Path $copPath)) {
             throw "The specified AppSourceCop analyzer does not exist: $copPath"
@@ -59,7 +59,7 @@ function Get-BuildParameters {
         $alcParameters += @("/analyzer:$copPath")
     }
     if ($settings.enablePerTenantExtensionCop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Analyzers\Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll'
         OutputDebug -Message "Enabling PerTenantExtensionCop, using path: $copPath"
         if (-not (Test-Path $copPath)) {
             throw "The specified PerTenantExtensionCop analyzer does not exist: $copPath"
@@ -67,7 +67,7 @@ function Get-BuildParameters {
         $alcParameters += @("/analyzer:$copPath")
     }
     if ($settings.enableUICop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Analyzers\Microsoft.Dynamics.Nav.UICop.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.UICop.dll'
         OutputDebug -Message "Enabling UICop, using path: $copPath"
         if (-not (Test-Path $copPath)) {
             throw "The specified UICop analyzer does not exist: $copPath"
