@@ -35,6 +35,36 @@ function Get-BuildParameters {
             throw "The specified ruleset file does not exist: $rulesetFilePath"
         }
     }
+    # if ($EnableCodeCop -or $EnableAppSourceCop -or $EnablePerTenantExtensionCop -or $EnableUICop) {
+    #     $analyzersCommonDLLPath = Join-Path $binPath 'Analyzers\Microsoft.Dynamics.Nav.Common.dll'
+    #     if (Test-Path $analyzersCommonDLLPath) {
+    #         $alcParameters += @("/analyzer:$(Join-Path $binPath 'Analyzers\Microsoft.Dynamics.Nav.Common.dll')")
+    #     }
+    # }
+    $analyzers = @(
+        @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
+        @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
+        @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
+    )
+
+    foreach ($analyzer in $analyzers) {
+        if ($settings.$($analyzer.Setting)) {
+            $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzer.FileName
+            OutputDebug -Message "Enabling $($analyzer.Name), using path: $copPath"
+            if (-not (Test-Path $copPath)) {
+                throw "The specified $($analyzer.Name) analyzer does not exist: $copPath"
+            }
+            $alcParameters += @("/analyzer:$copPath")
+        }
+    }
+    if ($settings.enableUICop) {
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.UICop.dll'
+        OutputDebug -Message "Enabling UICop, using path: $copPath"
+        if (-not (Test-Path $copPath)) {
+            throw "The specified UICop analyzer does not exist: $copPath"
+        }
+        $alcParameters += @("/analyzer:$copPath")
+    }
     if ($settings.enableExternalRulesets) {
         OutputDebug -Message "Enabling external rulesets"
         $alcParameters += @("/enableexternalrulesets")
