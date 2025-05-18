@@ -27,8 +27,9 @@ function Get-BuildParameters {
         "/loglevel:Warning"
     )
     if ($settings.rulesetFile) {
-        OutputDebug -Message "Adding custom ruleset: $($settings.rulesetFile)"
-        $alcParameters += @("/ruleset:$($settings.rulesetfile)")
+        $rulesetFilePath = Join-Path -Path $baseRepoFolder -ChildPath $settings.rulesetFile
+        OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
+        $alcParameters += @("/ruleset:$rulesetFilePath")
     }
     if ($settings.enableExternalRulesets) {
         OutputDebug -Message "Enabling external rulesets"
