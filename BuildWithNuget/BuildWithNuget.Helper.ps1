@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+
 function Assert-Prerequisites {
     if (!$ENV:AL_NUGETINITIALIZED) {
         throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
@@ -24,6 +26,14 @@ function Get-BuildParameters {
         "/out:""$outputPath\$AppFileName""",
         "/loglevel:Warning"
     )
+    if ($settings.rulesetFile) {
+        OutputDebug -Message "Adding custom ruleset: $($settings.rulesetFile)"
+        $alcParameters += @("/ruleset:$($settings.rulesetfile)")
+    }
+    if ($settings.enableExternalRulesets) {
+        OutputDebug -Message "Enabling external rulesets"
+        $alcParameters += @("/enableexternalrulesets")
+    }
     if ($alcVersion -ge [System.Version]"12.0.12.41479") {
         $alcParameters += @(
             "/sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
@@ -31,14 +41,14 @@ function Get-BuildParameters {
             "/buildBy:""BCDevOpsFlows""",
             "/buildUrl:""$ENV:BUILD_BUILDURI"""
         )
-        Write-Host "Adding source code parameters:"
-        Write-Host "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
-        Write-Host "  sourceCommit: $ENV:BUILD_SOURCEVERSION"
-        Write-Host "  buildBy: BCDevOpsFlows"
-        Write-Host "  buildUrl: $ENV:BUILD_BUILDURI"
+        OutputDebug -Message "Adding source code parameters:"
+        OutputDebug -Message "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
+        OutputDebug -Message "  sourceCommit: $ENV:BUILD_SOURCEVERSION"
+        OutputDebug -Message "  buildBy: BCDevOpsFlows"
+        OutputDebug -Message "  buildUrl: $ENV:BUILD_BUILDURI"
     }
     if ($settings.ContainsKey('preprocessorSymbols')) {
-        Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
+        OutputDebug -Message "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
         $settings.preprocessorSymbols | where-Object { $_ } | ForEach-Object { $alcParameters += @("/D:$_") }
     }
     return $alcParameters
