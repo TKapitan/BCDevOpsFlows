@@ -31,8 +31,7 @@ function Get-BuildParameters {
         if (Test-Path -Path $rulesetFilePath) {
             OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
             $alcParameters += @("/ruleset:$rulesetFilePath")
-        }
-        else {
+        } else {
             throw "The specified ruleset file does not exist: $rulesetFilePath"
         }
     }
