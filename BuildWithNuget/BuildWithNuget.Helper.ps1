@@ -28,8 +28,12 @@ function Get-BuildParameters {
     )
     if ($settings.rulesetFile) {
         $rulesetFilePath = Join-Path -Path $baseRepoFolder -ChildPath $settings.rulesetFile
-        OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
-        $alcParameters += @("/ruleset:$rulesetFilePath")
+        if (Test-Path -Path $rulesetFilePath) {
+            OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
+            $alcParameters += @("/ruleset:$rulesetFilePath")
+        } else {
+            throw "The specified ruleset file does not exist: $rulesetFilePath"
+        }
     }
     if ($settings.enableExternalRulesets) {
         OutputDebug -Message "Enabling external rulesets"
