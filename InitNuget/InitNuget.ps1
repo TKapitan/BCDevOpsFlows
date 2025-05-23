@@ -10,9 +10,6 @@ try {
     if (!$settings) {
         throw "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
     }
-    if (!$settings.nugetBCDevToolsVersion) {
-        throw "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
-    }
 
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
