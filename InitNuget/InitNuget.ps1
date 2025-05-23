@@ -17,7 +17,14 @@ try {
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
-    nuget search Microsoft.Dynamics.BusinessCentral.Development.Tools -PreRelease -Source "https://api.nuget.org/v3/index.json"
+    $searchResults = nuget search Microsoft.Dynamics.BusinessCentral.Development.Tools -PreRelease -Verbosity quiet -Take 1 -Source "https://api.nuget.org/v3/index.json"
+    $toolsVersion = ($searchResults -split ' ')[1]
+    if (-not $toolsVersion) {
+        throw "Could not determine BC Dev Tools version from NuGet search results"
+    }
+    Write-Host "Found BC Dev Tools version: $toolsVersion"
+    
+    
     throw "Debug"
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
