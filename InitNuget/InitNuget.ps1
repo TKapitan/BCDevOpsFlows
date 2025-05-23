@@ -17,7 +17,7 @@ try {
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
-    nuget search Microsoft.Dynamics.BusinessCentral.Development.Tools -Source "https://api.nuget.org/v3/index.json"
+    nuget search Microsoft.Dynamics.BusinessCentral.Development.Tools -PreRelease -Source "https://api.nuget.org/v3/index.json"
     throw "Debug"
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
