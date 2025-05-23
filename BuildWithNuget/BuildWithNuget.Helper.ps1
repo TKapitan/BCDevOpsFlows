@@ -1,5 +1,4 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Convert-ALCOutputToAzureDevOps.Helper.ps1" -Resolve)
 
 function Assert-Prerequisites {
     if (!$ENV:AL_NUGETINITIALIZED) {
@@ -32,8 +31,7 @@ function Get-BuildParameters {
         if (Test-Path -Path $rulesetFilePath) {
             OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
             $alcParameters += @("/ruleset:$rulesetFilePath")
-        }
-        else {
+        } else {
             throw "The specified ruleset file does not exist: $rulesetFilePath"
         }
     }
@@ -73,33 +71,9 @@ function Invoke-AlCompiler {
     try {
         Write-Host ".\alc.exe $([string]::Join(' ', $Parameters))"
         Set-Location $ENV:AL_BCDEVTOOLSFOLDER
-        $result = & .\alc.exe $Parameters
+        & .\alc.exe $Parameters
     }
     finally {
         Pop-Location
     }
-    return $result
-}
-
-function Write-ALCOutput {
-    param(
-        $alcResults
-    )
-    
-    $devOpsResult = ""
-    if ($result) {
-        $Parameters = @{
-            "FailOn"           = $FailOn
-            "AlcOutput"        = $result
-            "DoNotWriteToHost" = $true
-        }
-        if ($basePath) {
-            $Parameters += @{
-                "basePath" = $basePath
-            }
-        }
-        $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
-    }
-    $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
-    $result | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
 }
