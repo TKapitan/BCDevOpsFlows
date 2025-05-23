@@ -83,14 +83,18 @@ function Invoke-AlCompiler {
 
 function Write-ALCOutput {
     param(
-        $alcResults
+        [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        $alcOutput,
+        [Parameter(Position = 1)]
+        [ValidateSet('none', 'error', 'warning')]
+        [string] $failOn
     )
 
     $devOpsResult = ""
-    if ($result) {
+    if ($alcOutput) {
         $Parameters = @{
-            "FailOn"           = $FailOn
-            "AlcOutput"        = $result
+            "FailOn"           = $failOn
+            "AlcOutput"        = $alcOutput
             "DoNotWriteToHost" = $true
         }
         if ($basePath) {
@@ -101,5 +105,5 @@ function Write-ALCOutput {
         $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
     }
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
-    $result | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
+    $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
 }

@@ -32,7 +32,7 @@ try {
 
     $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appFileJson $appFileJson
     $result = Invoke-AlCompiler -Parameters $buildParameters
-    Write-ALCOutput -alcResults $result
+    Write-ALCOutput -alcResults $result -failOn $settings.failOn
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error while building the app with NuGet. Error message: $($_.Exception.Message)"

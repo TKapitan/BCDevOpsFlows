@@ -22,7 +22,7 @@ Function Convert-AlcOutputToAzureDevOps {
         [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         $alcOutput,
         [Parameter(Position = 1)]
-        [ValidateSet('none', 'error', 'warning', 'newWarning')]
+        [ValidateSet('none', 'error', 'warning')]
         [string] $failOn,
         [switch] $doNotWriteToHost,
         [string] $basePath = ''
