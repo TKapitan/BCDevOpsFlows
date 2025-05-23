@@ -105,5 +105,7 @@ function Write-ALCOutput {
         $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
     }
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
-    $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
+    if ($alcOutput) {
+        $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
+    }
 }
