@@ -31,7 +31,8 @@ try {
     $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 
     $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appFileJson $appFileJson
-    Invoke-AlCompiler -Parameters $buildParameters
+    $result = Invoke-AlCompiler -Parameters $buildParameters
+    Write-ALCOutput -alcResults $result
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error while building the app with NuGet. Error message: $($_.Exception.Message)"
