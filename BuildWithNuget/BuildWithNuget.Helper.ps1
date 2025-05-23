@@ -90,22 +90,21 @@ function Write-ALCOutput {
         [string] $failOn
     )
 
-    $devOpsResult = ""
-    if ($alcOutput) {
-        $Parameters = @{
-            "FailOn"           = $failOn
-            "AlcOutput"        = $alcOutput
-            "DoNotWriteToHost" = $true
-        }
-        if ($basePath) {
-            $Parameters += @{
-                "basePath" = $basePath
-            }
-        }
-        $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
+    OutputDebug -Message "Converting ALC output to Azure DevOps format"
+    OutputDebug -Message "failOn: $failOn"
+    OutputDebug -Message "alcOutput: $alcOutput"
+    $Parameters = @{
+        "FailOn"           = $failOn
+        "AlcOutput"        = $alcOutput
+        "DoNotWriteToHost" = $true
     }
+    if ($basePath) {
+        $Parameters += @{
+            "basePath" = $basePath
+        }
+    }
+    $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
+    OutputDebug -Message "DevOpsResult: $devOpsResult"
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
-    if ($alcOutput) {
-        $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
-    }
+    $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
 }
