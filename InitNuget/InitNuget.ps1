@@ -17,6 +17,9 @@ try {
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
+    nuget list Microsoft.Dynamics.BusinessCentral.Development.Tools -AllVersions
+    throw "Debug"
+
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 
     $bcDevToolsFolder = Join-Path -Path (GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion) -ChildPath "Tools\net8.0\any"
