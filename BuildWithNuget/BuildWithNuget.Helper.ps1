@@ -87,12 +87,10 @@ function Write-ALCOutput {
         $alcOutput,
         [Parameter(Position = 1)]
         [ValidateSet('none', 'error', 'warning')]
-        [string] $failOn
+        [string] $failOn,
+        [scriptblock] $outputTo = { Param($line) Write-Host $line }
     )
 
-    OutputDebug -Message "Converting ALC output to Azure DevOps format"
-    OutputDebug -Message "failOn: $failOn"
-    OutputDebug -Message "alcOutput: $alcOutput"
     $Parameters = @{
         "FailOn"           = $failOn
         "AlcOutput"        = $alcOutput
@@ -104,7 +102,6 @@ function Write-ALCOutput {
         }
     }
     $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
-    OutputDebug -Message "DevOpsResult: $devOpsResult"
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
     $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
 }
