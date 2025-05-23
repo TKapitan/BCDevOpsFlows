@@ -12,12 +12,10 @@ try {
     }
 
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
+    $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Select-Object -First 1
+    $bcDevToolsPackageVersion = $searchResults.Version
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
-        $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Select-Object -First 1
-        $bcDevToolsPackageVersion = $searchResults.Version
-        if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
-            throw "Could not determine BC Dev Tools version from NuGet search results"
-        }
+        throw "Could not determine BC Dev Tools version from NuGet search results"
     }
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
