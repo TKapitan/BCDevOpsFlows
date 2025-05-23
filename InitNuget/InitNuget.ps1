@@ -17,7 +17,7 @@ try {
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
 
-    $searchResults = Find-Package -Name Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -Source "https://api.nuget.org/v3/index.json" | Select-Object -First 1
+    $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Select-Object -First 1
     Write-Host $searchResults
     $toolsVersion = $searchResults.Version
     if (-not $toolsVersion) {
