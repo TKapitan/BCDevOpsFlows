@@ -32,7 +32,7 @@ function Get-BuildParameters {
             OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
             $alcParameters += @("/ruleset:$rulesetFilePath")
         } else {
-            throw "The specified ruleset file does not exist: $rulesetFilePath"
+            throw "The specified ruleset file does not exist: $rulesetFilePath. Please verify that the 'rulesetFile' setting in your configuration is correct and confirm that the file exists at the specified location."
         }
     }
     if ($settings.enableExternalRulesets) {
