@@ -26,7 +26,7 @@ function Get-BuildParameters {
         "/out:""$outputPath\$AppFileName""",
         "/loglevel:Warning"
     )
-    if ($settings.rulesetFile) {
+    if ($settings.rulesetFile -is [string] -and -not [string]::IsNullOrWhiteSpace($settings.rulesetFile)) {
         $rulesetFilePath = Join-Path -Path $baseRepoFolder -ChildPath $settings.rulesetFile
         if (Test-Path -Path $rulesetFilePath) {
             OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
