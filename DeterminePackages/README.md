@@ -19,6 +19,8 @@ No input parameters.
 
 ## ENV INPUT variables used only when AL_RUNWITH is NuGet
 
+| Name | Description |
+| :--                   | :-- |
 | AL_NUGETINITIALIZED   | If not set to true, the step fails. |
 | AL_TRUSTEDNUGETFEEDS_INTERNAL | Specifies details about nuget feeds to be used to retrieve dependencies. You do not need to include Microsoft NuGet feeds as they are included automatically. See chapter below for details about the content. In default setup, configure AL_TRUSTEDNUGETFEEDS variable in your library and pass it to AL_TRUSTEDNUGETFEEDS_INTERNAL variable in yaml file (secret variables must be explicitly configured in yaml files). |
 
@@ -45,9 +47,16 @@ No input parameters.
 
 | AL_BCCONTAINERHELPERPATH | If specified and valid, system will not download and import a new BCContainerHelper. This is usually configured in the background to prevent downloading/importing bccontainerhelper in every step. |
 
+## ENV OUTPUT variables
+
+| Name | Description |
+| :--                   | :-- |
+| AL_ALLOWPRERELEASE   | If set to true, pipeline will use public releases as well as preview/prerelease builds. |
+
 ## ENV OUTPUT variables generated only when AL_RUNWITH is BCContainerHelper
 
 | Name | Description |
+| :--                   | :-- |
 | AL_SETTINGS       | Compressed json file with BCDevOpsFlows settings.     |
 | AL_ARTIFACT | The ArtifactUrl to use for the build |
 | AL_BCCONTAINERHELPERPATH  | Path to used BC Container Helper module.  |

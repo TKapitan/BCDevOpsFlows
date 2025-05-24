@@ -27,6 +27,9 @@ try {
     if ($getSettings -notcontains "runWith") {
         $getSettings += @("runWith")
     }
+    if ($getSettings -notcontains "allowPrerelease") {
+        $getSettings += @("allowPrerelease")
+    }
 
     # Determine versioning strategy
     if ($ENV:BUILD_REASON -in @("PullRequest")) {

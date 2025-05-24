@@ -1,7 +1,4 @@
-Param(
-    [Parameter(HelpMessage = "Specifies whether to allow prerelease/preview apps as dependencies.", Mandatory = $false)]
-    [switch] $allowPrerelease
-)
+Param()
 
 if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
     throw "You must specify runWith in setting file or use default value."
@@ -9,18 +6,11 @@ if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
 
-$parameters = @{}
-if ($allowPrerelease) {
-    $parameters += @{
-        "allowPrerelease" = $true
-    }
-}
-
 if ($runWith -eq 'nuget') {
     Write-Host "Using NuGet"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) @parameters
+    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve)
 }
 elseif ($runWith -eq 'bccontainerhelper') {
     Write-Host "Using BCContainerHelper"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "WithBCContainerHelper\BuildWithBCContainerHelper.ps1" -Resolve) @parameters
+    . (Join-Path -Path $PSScriptRoot -ChildPath "WithBCContainerHelper\BuildWithBCContainerHelper.ps1" -Resolve)
 }

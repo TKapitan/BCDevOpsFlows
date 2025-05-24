@@ -6,8 +6,7 @@
 function AnalyzeRepo {
     [CmdletBinding()]
     Param(
-        [hashtable] $settings,
-        [switch] $allowPrerelease
+        [hashtable] $settings
     )
     $settings = $settings | Copy-HashTable
 
@@ -45,7 +44,7 @@ function AnalyzeRepo {
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     $getDependencyNuGetPackageParams = @{}
-    if ($allowPrerelease) {
+    if ($ENV:AL_ALLOWPRERELEASE) {
         $getDependencyNuGetPackageParams += @{
             "allowPrerelease" = $true
         }

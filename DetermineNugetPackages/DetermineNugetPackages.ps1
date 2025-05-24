@@ -12,4 +12,8 @@ Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
+$ENV:AL_ALLOWPRERELEASE = $false
+Write-Host "##vso[task.setvariable variable=AL_ALLOWPRERELEASE;]$false"
+OutputDebug -Message "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForNuGet\DetermineNugetPackages.ps1" -Resolve)

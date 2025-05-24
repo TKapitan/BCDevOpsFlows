@@ -2,9 +2,7 @@ Param(
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
     [string] $artifact = "",
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
-    [string] $buildMode = 'Default',
-    [Parameter(HelpMessage = "Specifies whether to allow prerelease/preview apps as dependencies.", Mandatory = $false)]
-    [switch] $allowPrerelease
+    [string] $buildMode = 'Default'
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
@@ -57,18 +55,11 @@ try {
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
-        $analyzeRepoParams = @{}
-        if ($allowPrerelease) {
-            $analyzeRepoParams += @{
-                "allowPrerelease" = $true
-            }
-        }
-
         if ($artifact) {
             Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
             $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
         }
-        $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
+        $settings = AnalyzeRepo -settings $settings
     }
     else {
         Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
@@ -245,12 +236,12 @@ try {
                             "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
                         }
                     }
-                    if ($allowPrerelease) {
+                    if ($ENV:AL_ALLOWPRERELEASE) {
                         $publishParams += @{
                             "allowPrerelease" = $true
                         }
                     }
-                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $allowPrerelease"
+                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
                     if ($parameters.ContainsKey('containerName')) {
                         Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
                     }

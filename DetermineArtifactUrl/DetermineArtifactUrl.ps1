@@ -15,11 +15,9 @@ Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-$parameters = @{}
-if (-not $skipAppsInPreview) {
-    $parameters += @{
-        "allowPrerelease" = $true
-    }
-}
+$allowPrerelease = -not $skipAppsInPreview
+$ENV:AL_ALLOWPRERELEASE = $allowPrerelease
+Write-Host "##vso[task.setvariable variable=AL_ALLOWPRERELEASE;]$allowPrerelease"
+OutputDebug -Message "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForBCCOntainerHelper\DetermineArtifactUrl.ps1" -Resolve) @parameters
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)

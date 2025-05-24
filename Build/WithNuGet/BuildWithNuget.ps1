@@ -2,9 +2,7 @@ Param(
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
     [string] $artifact = "////Current",
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
-    [string] $buildMode = 'Default',
-    [Parameter(HelpMessage = "Specifies whether to allow prerelease/preview apps as dependencies.", Mandatory = $false)]
-    [switch] $allowPrerelease
+    [string] $buildMode = 'Default'
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)

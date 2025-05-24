@@ -15,14 +15,7 @@ try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-
-    $analyzeRepoParams = @{}
-    if ($skipAppsInPreview) {
-        $analyzeRepoParams += @{
-            "allowPrerelease" = $true
-        }
-    }
-    $settings = AnalyzeRepo -settings $settings @analyzeRepoParams
+    $settings = AnalyzeRepo -settings $settings
     $artifactUrl = DetermineArtifactUrl -settings $settings
 
     # Set output variables

@@ -22,4 +22,6 @@ No parameters.
 
 ## ENV OUTPUT variables generated only when AL_RUNWITH is NuGet
 
+| Name | Description |
+| :--                   | :-- |
 | AL_BCDEVTOOLSFOLDER   | Specifies the folder used where the Business Central Developer Tools for NuGet build are stored.   |

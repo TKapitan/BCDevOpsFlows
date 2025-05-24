@@ -2,9 +2,7 @@ Param(
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
     [string] $artifact = "",
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
-    [string] $buildMode = 'Default',
-    [Parameter(HelpMessage = "Specifies whether to allow prerelease/preview apps as dependencies.", Mandatory = $false)]
-    [switch] $allowPrerelease
+    [string] $buildMode = 'Default'
 )
 
 if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
@@ -17,12 +15,6 @@ $buildParameters = @{
     "artifact"  = $artifact
     "buildMode" = $buildMode
 }
-if ($allowPrerelease) {
-    $buildParameters += @{
-        "allowPrerelease" = $true
-    }
-}
-
 if ($runWith -eq 'nuget') {
     Write-Host "Using NuGet"
     . (Join-Path -Path $PSScriptRoot -ChildPath "WithNuGet\BuildWithNuget.ps1" -Resolve) @buildParameters

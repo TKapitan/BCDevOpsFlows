@@ -129,6 +129,7 @@ function ReadSettings {
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
         "runWith"                                     = "BcContainerHelper"
+        "allowPrerelease"                             = $false
     }
 
     # Read settings from files and merge them into the settings object

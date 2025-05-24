@@ -1,7 +1,4 @@
-Param(
-    [Parameter(HelpMessage = "Specifies whether to allow prerelease/preview apps as dependencies.", Mandatory = $false)]
-    [switch] $allowPrerelease
-)
+Param()
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Nuget.Helper.ps1" -Resolve)
@@ -35,7 +32,7 @@ try {
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     
     $parameters = @{}
-    if ($allowPrerelease) {
+    if ($ENV:AL_ALLOWPRERELEASE) {
         $parameters += @{
             "allowPrerelease" = $true
         }
