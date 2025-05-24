@@ -128,6 +128,7 @@ function ReadSettings {
         "BCDevOpsFlowsVariableGroup"                  = "BCDevOpsFlows"
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
+        "runWith"                                     = "BcContainerHelper"
     }
 
     # Read settings from files and merge them into the settings object
