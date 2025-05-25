@@ -2,7 +2,6 @@ Param()
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "WorkflowInitialize.Helper.ps1" -Resolve)
 
 try {
     # Create a json object that contains an entry for the workflowstarttime
@@ -13,8 +12,6 @@ try {
     $env:AL_TELEMETRYSCOPE = $scopeJson
     Write-Host "##vso[task.setvariable variable=AL_TELEMETRYSCOPE;]$scopeJson"
     OutputDebug -Message "Set environment variable AL_TELEMETRYSCOPE to ($env:AL_TELEMETRYSCOPE)"
-
-    InitNuGetTools
 }
 catch {
     Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
