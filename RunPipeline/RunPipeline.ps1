@@ -30,7 +30,7 @@ $buildParameters = @{
 $allowPrerelease = -not $skipAppsInPreview
 $ENV:AL_ALLOWPRERELEASE = $allowPrerelease
 Write-Host "##vso[task.setvariable variable=AL_ALLOWPRERELEASE;]$allowPrerelease"
-OutputDebug -Message "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
+Write-Host "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
 if ($installAppsJson -ne '[]' -or $installTestAppsJson -ne '[]') {
     throw "$installAppsJson and $installTestAppsJson parameters are no longer supported"
 }
