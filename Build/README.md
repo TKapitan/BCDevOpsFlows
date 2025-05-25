@@ -12,7 +12,7 @@ BCContainerHelper
 
 | Name | Required | Description | Default value |
 | :-- | :-: | :-- | :-- |
-| artifact | | ArtifactUrl to use for the build. If left blank, the value is determined automatically using DetermineArtifactUrl. |  |
+| artifact | Yes | ArtifactUrl to use for the build. |  |
 | buildMode | | Specifies a mode to use for the build step. Supported values are Default, Translated. Translated creates the translation file during the build. | Default |
 
 ## ENV INPUT variables

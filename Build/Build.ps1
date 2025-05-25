@@ -1,6 +1,6 @@
 Param(
     [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
-    [string] $artifact = "",
+    [string] $artifact,
     [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
     [string] $buildMode = 'Default'
 )
