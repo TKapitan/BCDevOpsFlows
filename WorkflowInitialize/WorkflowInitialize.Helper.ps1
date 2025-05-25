@@ -6,11 +6,6 @@ function InitNuGetTools {
     Param()
 
     Write-Host "Initializing NuGet tools."
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-    if (!$settings) {
-        throw "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
-    }
-
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Sort-Object Version -Descending | Select-Object -First 1
     $bcDevToolsPackageVersion = $searchResults.Version
