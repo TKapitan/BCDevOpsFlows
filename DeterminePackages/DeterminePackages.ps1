@@ -12,5 +12,5 @@ if ($runWith -eq 'nuget') {
 }
 elseif ($runWith -eq 'bccontainerhelper') {
     Write-Host "Using BCContainerHelper"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "WithBCContainerHelper\BuildWithBCContainerHelper.ps1" -Resolve)
+    . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
 }
