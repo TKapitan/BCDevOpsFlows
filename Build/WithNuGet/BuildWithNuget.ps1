@@ -13,10 +13,10 @@ Param(
 
 try {
     if ($artifact -ne "////Current") {
-        throw "Build with NuGet supports currently only artifact '////Current'"
+        throw "Build with NuGet supports currently only artifact '////Current'. Currently set artifact is '$artifact'."
     }
     if ($buildMode -ne "Default") {
-        throw "Build with NuGet supports currently only buildMode 'Default'"
+        throw "Build with NuGet supports currently only buildMode 'Default'. Currently set buildMode is '$buildMode'."
     }
 
     Assert-Prerequisites
