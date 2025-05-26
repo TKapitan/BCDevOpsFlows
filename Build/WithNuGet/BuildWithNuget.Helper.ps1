@@ -1,5 +1,5 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Convert-ALCOutputToAzureDevOps.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Convert-ALCOutputToAzureDevOps.Helper.ps1" -Resolve)
 
 function Assert-Prerequisites {
     if (!$ENV:AL_NUGETINITIALIZED) {

@@ -1,13 +1,12 @@
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "FindDependencies.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\DetermineArtifactUrl\DetermineArtifactUrl.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForBCContainerHelper\DetermineArtifactUrl.Helper.ps1" -Resolve)
 
 function AnalyzeRepo {
     [CmdletBinding()]
     Param(
-        [hashtable] $settings,
-        [switch] $allowPrerelease
+        [hashtable] $settings
     )
     $settings = $settings | Copy-HashTable
 
@@ -45,7 +44,7 @@ function AnalyzeRepo {
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     $getDependencyNuGetPackageParams = @{}
-    if ($allowPrerelease) {
+    if ($ENV:AL_ALLOWPRERELEASE) {
         $getDependencyNuGetPackageParams += @{
             "allowPrerelease" = $true
         }
