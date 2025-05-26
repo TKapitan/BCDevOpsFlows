@@ -12,8 +12,8 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 try {
-    if ($artifact -ne "////Current") {
-        throw "Build with NuGet supports currently only artifact '////Current'. Currently set artifact is '$artifact'."
+    if ($artifact -ne "////latest") {
+        throw "Build with NuGet supports currently only artifact '////latest'. Currently set artifact is '$artifact'."
     }
     if ($buildMode -ne "Default") {
         throw "Build with NuGet supports currently only buildMode 'Default'. Currently set buildMode is '$buildMode'."

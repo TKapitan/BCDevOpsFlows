@@ -12,4 +12,4 @@ Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\Build\WithNuGet\BuildWithNuget.ps1" -Resolve) -artifact "////Current"
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\Build\WithNuGet\BuildWithNuget.ps1" -Resolve) -artifact "////latest"

@@ -4,7 +4,7 @@ Build the app (and tests if configured) using configured build method (NuGet or 
 NuGet
  - Quicker, does not require container. 
  - Tests cannot be run and not all validations are run.
- - Build with NuGet supports currently only ////Current artifact
+ - Build with NuGet supports currently only ////latest artifact
 BCContainerHelper
  - Run the Business Central app using BCContainerHelper Run-ALPipeline. Supports full validations but is slow.
 
