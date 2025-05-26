@@ -29,8 +29,6 @@ try {
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
     mkdir $dependenciesPackageCachePath
     
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-    
     $parameters = @{}
     if ($ENV:AL_ALLOWPRERELEASE) {
         $parameters += @{
