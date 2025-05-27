@@ -29,7 +29,7 @@ function Download-File {
         [string] $description = '',
         [hashtable] $headers = @{"UserAgent" = "BcContainerHelper $bcContainerHelperVersion" },
         [switch] $dontOverwrite,
-        [int]    $timeout = $bccontainerHelperConfig.defaultDownloadTimeout
+        [int]    $timeout = 100
     )
 
     function DownloadFileLow {
