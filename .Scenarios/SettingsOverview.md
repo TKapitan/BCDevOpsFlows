@@ -57,7 +57,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | Fail the build on error             | Supported         | Supported |
 | Fail the build on warning           | Supported         | -         |
 | Build with standard Cops            | Supported         | Supported |
-| Build with custom Cops              | Supported         | -         |
+| Build with custom Cops              | Supported         | Supported |
 | Use custom RuleSets                 | Supported         | Supported |
 | Use custom external RuleSets        | Supported         | Supported |
 | Validate upgrade breaking changes   | Supported         | -         |
