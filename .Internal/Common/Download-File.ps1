@@ -1,4 +1,6 @@
-﻿<#
+﻿. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
+
+<#
  .Synopsis
   Download File
  .Description
@@ -138,6 +140,7 @@ function Download-File {
                     throw ($_.Exception.Message)
                 }
                 Write-Host "Error downloading..., retrying in $waitTime seconds..."
+                OutputDebug -Message $_
                 Start-Sleep -Seconds $waitTime
             }
         }

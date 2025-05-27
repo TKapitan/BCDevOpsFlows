@@ -71,9 +71,6 @@ function Get-BuildParameters {
             $copPath = $_
             if ($_ -like 'https://*') {
                 $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $(Split-Path $_ -Leaf)
-                if (Test-Path -Path $copPath) {
-                    Remove-Item -Path $copPath -Force
-                }
                 Download-File -SourceUrl $_ -destinationFile $copPath
             }
             $alcParameters += @("/analyzer:$copPath")
