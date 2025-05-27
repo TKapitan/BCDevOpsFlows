@@ -49,6 +49,7 @@ function Get-BuildParameters {
         @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
         @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
         @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
+        @{ Name = "UICop"; Setting = "enableUICop"; FileName = "Microsoft.Dynamics.Nav.UICop.dll" }
     )
 
     foreach ($analyzer in $analyzers) {
@@ -61,13 +62,22 @@ function Get-BuildParameters {
             $alcParameters += @("/analyzer:$copPath")
         }
     }
-    if ($settings.enableUICop) {
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'Microsoft.Dynamics.Nav.UICop.dll'
-        OutputDebug -Message "Enabling UICop, using path: $copPath"
-        if (-not (Test-Path $copPath)) {
-            throw "The specified UICop analyzer does not exist: $copPath"
+    $CustomCodeCops = @()
+    if ($settings.ContainsKey('customCodeCops')) {
+        $CustomCodeCops = $settings.customCodeCops
+    }
+    if ($CustomCodeCops.Count -gt 0) {
+        $CustomCodeCops | ForEach-Object {
+            $copPath = $_
+            if ($_ -like 'https://*') {
+                $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $(Split-Path $_ -Leaf)
+                if (Test-Path -Path $copPath) {
+                    Remove-Item -Path $copPath -Force
+                }
+                Download-File -SourceUrl $_ -destinationFile $copPath
+            }
+            $alcParameters += @("/analyzer:$copPath")
         }
-        $alcParameters += @("/analyzer:$copPath")
     }
     if ($settings.enableExternalRulesets) {
         OutputDebug -Message "Enabling external rulesets"
