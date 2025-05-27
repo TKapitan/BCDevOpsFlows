@@ -44,6 +44,26 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 | <a id="workflowSchedule"></a>workflowSchedule | Specifies schedule when the pipeline should be automatically run. See documentation at Microsoft Learn to learn more about structure https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers. This settings is available for all pipelines except "PullRequest". | Set for TestCurrent, TestNextMinor and TestNextMajor |
 | <a id="updateVersionNumber"></a>updateVersionNumber | Specifies the version (relative or absolute) to what the app version should be updated to. This setting is applied only to CICD and PublishToProduction pipelines. You can use both relative (+1, +0.1, ...) or absolute (1, 23.5, ...) notations. You must use only values allowed by the versionStrategy. If the version strategy calculates automatically last two digits, you cannot specify version that includes the third digit etc. |  |
 | <a id="externalSettingsLink"></a>externalSettingsLink | Specifies link to json file that contains settings that should be used for all projects and repositories. This path could be http or https. While technically changing this value does not require running the **SetupPipelines** pipeline, it is highly recommended to do so, as the file can contain any of the options above. |  |
+| <a id="runWith"></a>runWith | Specifies the engine that is used for Build tasks in pipelines. By default, the BCContainerHelper is used for all builds except CICD and PublishToProduction pipelines. | BcContainerHelper/NuGet |
+| <a id="allowPrerelease"></a>allowPrerelease | Specifies whether the prerelease (preview) packages should be used as AL dependencies. | No |
+
+#### Differences in runWith - BCContainerHelper vs. NuGet
+
+Table below shows what functionality is currently supported in BCDevOps Flows by the engine.
+
+|                                     | BCContainerHelper | NuGet     |
+| :--                                 | :--               | :--       |
+| Build an app file                   | Supported         | Supported |
+| Fail the build on error             | Supported         | Supported |
+| Fail the build on warning           | Supported         | -         |
+| Build with standard Cops            | Supported         | Supported |
+| Build with custom Cops              | Supported         | Supported |
+| Use custom RuleSets                 | Supported         | Supported |
+| Use custom external RuleSets        | Supported         | Supported |
+| Validate upgrade breaking changes   | Supported         | -         |
+| Validate mandatory affixes          | Supported         | -         |
+| Run Page Scripting                  | -                 | -         |
+| Run Automated Tests                 | Supported         | -         |
 
 #### Example of "workflowTrigger" (used as default for CICD pipeline)
 

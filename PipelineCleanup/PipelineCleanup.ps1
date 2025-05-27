@@ -7,7 +7,7 @@ try {
     if ($ENV:AL_CONTAINERNAME) {
         Write-Host "Cleaning container $ENV:AL_CONTAINERNAME"
         . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
-        . (Join-Path -Path $PSScriptRoot -ChildPath "..\RunPipeline\RunPipeline.Helper.ps1" -Resolve)
+        . (Join-Path -Path $PSScriptRoot -ChildPath "..\Build\WithBCContainerHelper\BuildWithBCContainerHelper.Helper.ps1" -Resolve)
 
         DownloadAndImportBcContainerHelper
         Write-Host "Removing container $ENV:AL_CONTAINERNAME"

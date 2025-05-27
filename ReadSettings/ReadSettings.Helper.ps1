@@ -110,7 +110,6 @@ function ReadSettings {
         "cacheKeepDays"                               = 3
         "buildModes"                                  = @()
         "writableFolderPath"                          = ""
-        "nugetBCDevToolsVersion"                      = "15.0.18.19684-beta"   
         "trustMicrosoftNuGetFeeds"                    = $true
         "artifactUrlCacheKeepHours"                   = 6
         "overrideResourceExposurePolicy"              = $false
@@ -129,6 +128,8 @@ function ReadSettings {
         "BCDevOpsFlowsVariableGroup"                  = "BCDevOpsFlows"
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
+        "runWith"                                     = "BcContainerHelper"
+        "allowPrerelease"                             = $false
     }
 
     # Read settings from files and merge them into the settings object

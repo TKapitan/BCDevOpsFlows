@@ -24,6 +24,12 @@ try {
     if ($getSettings -notcontains "failPublishTestsOnFailureToPublishResults") {
         $getSettings += @("failPublishTestsOnFailureToPublishResults")
     }
+    if ($getSettings -notcontains "runWith") {
+        $getSettings += @("runWith")
+    }
+    if ($getSettings -notcontains "allowPrerelease") {
+        $getSettings += @("allowPrerelease")
+    }
 
     # Determine versioning strategy
     if ($ENV:BUILD_REASON -in @("PullRequest")) {
@@ -68,6 +74,7 @@ try {
     Write-Host "AppBuild: $($settings.appBuild); AppRevision: $($settings.appRevision)"
 
     # Set output variables
+    
     $outSettings = @{}
     $settings.Keys | ForEach-Object {
         $setting = $_

@@ -3,7 +3,7 @@ function DetermineArtifactUrl {
         [hashtable] $settings
     )
 
-    . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\CacheArtifactUrl.Helper.ps1" -Resolve)
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\CacheArtifactUrl.Helper.ps1" -Resolve)
 
     $artifact = $settings.artifact
     if ($artifact.Contains('{INSIDERSASTOKEN}')) {

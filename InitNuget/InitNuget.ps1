@@ -1,7 +1,6 @@
 Param()
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
-
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
@@ -10,12 +9,13 @@ try {
     if (!$settings) {
         throw "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
     }
-    if (!$settings.nugetBCDevToolsVersion) {
-        throw "Nuget package version not found in settings file. Do not specify 'nugetBCDevToolsVersion' in setting files to use the default version."
-    }
 
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
-    $bcDevToolsPackageVersion = $settings.nugetBCDevToolsVersion
+    $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Sort-Object Version -Descending | Select-Object -First 1
+    $bcDevToolsPackageVersion = $searchResults.Version
+    if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
+        throw "Could not determine BC Dev Tools version from NuGet search results"
+    }
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 
