@@ -121,7 +121,6 @@ function Download-File {
     }
     else {
         $waitTime = 2
-        $sourceUrl = ReplaceCDN -sourceUrl $sourceUrl
         while ($true) {
             try {
                 DownloadFileLow -sourceUrl $sourceUrl -destinationFile $destinationFile -dontOverwrite:$dontOverwrite -timeout $timeout -headers $headers
