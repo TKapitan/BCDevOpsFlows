@@ -1,4 +1,5 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Convert-ALCOutputToAzureDevOps.Helper.ps1" -Resolve)
 
 function Assert-Prerequisites {
     if (!$ENV:AL_NUGETINITIALIZED) {
@@ -26,13 +27,14 @@ function Get-BuildParameters {
         "/out:""$outputPath\$AppFileName""",
         "/loglevel:Warning"
     )
-    if ($settings.rulesetFile) {
+    if ($settings.rulesetFile -is [string] -and -not [string]::IsNullOrWhiteSpace($settings.rulesetFile)) {
         $rulesetFilePath = Join-Path -Path $baseRepoFolder -ChildPath $settings.rulesetFile
         if (Test-Path -Path $rulesetFilePath) {
             OutputDebug -Message "Adding custom ruleset: $rulesetFilePath"
             $alcParameters += @("/ruleset:$rulesetFilePath")
-        } else {
-            throw "The specified ruleset file does not exist: $rulesetFilePath"
+        }
+        else {
+            throw "The specified ruleset file does not exist: $rulesetFilePath. Please verify that the 'rulesetFile' setting in your configuration is correct and confirm that the file exists at the specified location."
         }
     }
     # if ($EnableCodeCop -or $EnableAppSourceCop -or $EnablePerTenantExtensionCop -or $EnableUICop) {
@@ -101,9 +103,35 @@ function Invoke-AlCompiler {
     try {
         Write-Host ".\alc.exe $([string]::Join(' ', $Parameters))"
         Set-Location $ENV:AL_BCDEVTOOLSFOLDER
-        & .\alc.exe $Parameters
+        $result = & .\alc.exe $Parameters
     }
     finally {
         Pop-Location
     }
+    return $result
+}
+
+function Write-ALCOutput {
+    param(
+        [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        $alcOutput,
+        [Parameter(Position = 1)]
+        [ValidateSet('none', 'error', 'warning')]
+        [string] $failOn,
+        [scriptblock] $outputTo = { Param($line) Write-Host $line }
+    )
+
+    $Parameters = @{
+        "FailOn"           = $failOn
+        "AlcOutput"        = $alcOutput
+        "DoNotWriteToHost" = $true
+    }
+    if ($basePath) {
+        $Parameters += @{
+            "basePath" = $basePath
+        }
+    }
+    $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
+    $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
+    $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
 }
