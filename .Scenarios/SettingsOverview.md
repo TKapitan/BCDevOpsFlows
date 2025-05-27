@@ -51,19 +51,19 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 
 Table below shows what functionality is currently supported in BCDevOps Flows by the engine.
 
-|  | BCContainerHelper | NuGet |
-| :-- | :-- | :-- |
-| Build an app file | Supported | Supported |
-| Fail the build on error | Supported | Supported |
-| Fail the build on warning | Supported | - |
-| Build with standard Cops | Supported | - |
-| Build with custom Cops | Supported | - |
-| Use custom RuleSets | Supported | Supported |
-| Use custom external RuleSets | Supported | Supported |
-| Validate upgrade breaking changes | Supported | - |
-| Validate mandatory affixes | Supported | - |
-| Run Page Scripting | - | - |
-| Run Automated Tests | Supported | - |
+|                                     | BCContainerHelper | NuGet     |
+| :--                                 | :--               | :--       |
+| Build an app file                   | Supported         | Supported |
+| Fail the build on error             | Supported         | Supported |
+| Fail the build on warning           | Supported         | -         |
+| Build with standard Cops            | Supported         | Supported |
+| Build with custom Cops              | Supported         | -         |
+| Use custom RuleSets                 | Supported         | Supported |
+| Use custom external RuleSets        | Supported         | Supported |
+| Validate upgrade breaking changes   | Supported         | -         |
+| Validate mandatory affixes          | Supported         | -         |
+| Run Page Scripting                  | -                 | -         |
+| Run Automated Tests                 | Supported         | -         |
 
 #### Example of "workflowTrigger" (used as default for CICD pipeline)
 
