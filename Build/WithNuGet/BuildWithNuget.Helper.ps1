@@ -37,6 +37,45 @@ function Get-BuildParameters {
             throw "The specified ruleset file does not exist: $rulesetFilePath. Please verify that the 'rulesetFile' setting in your configuration is correct and confirm that the file exists at the specified location."
         }
     }
+    if ($EnableCodeCop -or $EnableAppSourceCop -or $EnablePerTenantExtensionCop -or $EnableUICop) {
+        $analyzersCommonDLLPath = Join-Path $binPath 'Analyzers\Microsoft.Dynamics.Nav.Common.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
+        if (-not (Test-Path $copPath)) {
+            throw "The specified Common analyzer does not exist: $copPath"
+        }
+        $alcParameters += @("/analyzer:$copPath")
+    }
+    $analyzers = @(
+        @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
+        @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
+        @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
+        @{ Name = "UICop"; Setting = "enableUICop"; FileName = "Microsoft.Dynamics.Nav.UICop.dll" }
+    )
+
+    foreach ($analyzer in $analyzers) {
+        if ($settings.$($analyzer.Setting)) {
+            $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzer.FileName
+            OutputDebug -Message "Enabling $($analyzer.Name), using path: $copPath"
+            if (-not (Test-Path $copPath)) {
+                throw "The specified $($analyzer.Name) analyzer does not exist: $copPath"
+            }
+            $alcParameters += @("/analyzer:$copPath")
+        }
+    }
+    $CustomCodeCops = @()
+    if ($settings.ContainsKey('customCodeCops')) {
+        $CustomCodeCops = $settings.customCodeCops
+    }
+    if ($CustomCodeCops.Count -gt 0) {
+        $CustomCodeCops | ForEach-Object {
+            $copPath = $_
+            if ($_ -like 'https://*') {
+                $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $(Split-Path $_ -Leaf)
+                Download-File -SourceUrl $_ -destinationFile $copPath
+            }
+            $alcParameters += @("/analyzer:$copPath")
+        }
+    }
     if ($settings.enableExternalRulesets) {
         OutputDebug -Message "Enabling external rulesets"
         $alcParameters += @("/enableexternalrulesets")

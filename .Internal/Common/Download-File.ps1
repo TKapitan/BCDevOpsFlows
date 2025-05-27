@@ -1,4 +1,6 @@
-﻿<#
+﻿. (Join-Path -Path $PSScriptRoot -ChildPath "..\WriteOutput.Helper.ps1" -Resolve)
+
+<#
  .Synopsis
   Download File
  .Description
@@ -27,7 +29,7 @@ function Download-File {
         [string] $description = '',
         [hashtable] $headers = @{"UserAgent" = "BcContainerHelper $bcContainerHelperVersion" },
         [switch] $dontOverwrite,
-        [int]    $timeout = $bccontainerHelperConfig.defaultDownloadTimeout
+        [int]    $timeout = 100
     )
 
     function DownloadFileLow {
@@ -121,7 +123,6 @@ function Download-File {
     }
     else {
         $waitTime = 2
-        $sourceUrl = ReplaceCDN -sourceUrl $sourceUrl
         while ($true) {
             try {
                 DownloadFileLow -sourceUrl $sourceUrl -destinationFile $destinationFile -dontOverwrite:$dontOverwrite -timeout $timeout -headers $headers
@@ -139,6 +140,7 @@ function Download-File {
                     throw ($_.Exception.Message)
                 }
                 Write-Host "Error downloading..., retrying in $waitTime seconds..."
+                OutputDebug -Message $_
                 Start-Sleep -Seconds $waitTime
             }
         }
