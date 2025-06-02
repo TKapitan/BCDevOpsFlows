@@ -37,21 +37,22 @@ function Get-BuildParameters {
             throw "The specified ruleset file does not exist: $rulesetFilePath. Please verify that the 'rulesetFile' setting in your configuration is correct and confirm that the file exists at the specified location."
         }
     }
-    if ($EnableCodeCop -or $EnableAppSourceCop -or $EnablePerTenantExtensionCop -or $EnableUICop) {
-        $analyzersCommonDLLPath = Join-Path $binPath 'Analyzers\Microsoft.Dynamics.Nav.Common.dll'
-        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
-        if (-not (Test-Path $copPath)) {
-            throw "The specified Common analyzer does not exist: $copPath"
-        }
-        $alcParameters += @("/analyzer:$copPath")
-    }
+
     $analyzers = @(
         @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
         @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
         @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
         @{ Name = "UICop"; Setting = "enableUICop"; FileName = "Microsoft.Dynamics.Nav.UICop.dll" }
     )
-
+    $anyAnalyzerEnabled = $analyzers | Where-Object { $settings.$($_.Setting) } | Select-Object -First 1
+    if ($anyAnalyzerEnabled) {
+        $analyzersCommonDLLPath = 'Microsoft.Dynamics.Nav.Common.dll'
+        $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
+        if (-not (Test-Path $copPath)) {
+            throw "The specified Common analyzer does not exist: $copPath"
+        }
+        $alcParameters += @("/analyzer:$copPath")
+    }
     foreach ($analyzer in $analyzers) {
         if ($settings.$($analyzer.Setting)) {
             $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzer.FileName
