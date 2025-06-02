@@ -139,7 +139,7 @@ function Invoke-GitPushToAllBranches {
     foreach ($branch in $branches) {
         Write-Host "Pushing to $branch branch"
         try {
-            Invoke-GitPush -targetBranch "HEAD:$branch"
+            invoke-git push origin $branch
             Write-Host "Successfully pushed to $branch"
         }
         catch {
