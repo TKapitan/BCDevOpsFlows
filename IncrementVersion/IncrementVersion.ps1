@@ -97,6 +97,11 @@ try {
     Invoke-GitAdd -appFilePath $appSourceCopJsonFilePath
     Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
+
+    # Delete AppSourceCop to skip validation in this build
+    if (Test-Path $appSourceCopJsonFilePath) {
+        Remove-Item -Path $appSourceCopJsonFilePath -Force
+    }
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error while updating app.json or pushing changes to Azure DevOps. Error message: $($_.Exception.Message)"
