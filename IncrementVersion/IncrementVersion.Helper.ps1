@@ -215,7 +215,9 @@ function Restore-AppSourceCopJson {
         [Parameter(Mandatory)]
         [string] $appSourceCopJsonFilePath,
         [Parameter(Mandatory)]
-        [PSCustomObject] $originalAppSourceCopJsonContent
+        [PSCustomObject] $originalAppSourceCopJsonContent,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $settings
     )
 
     if ($settings.enableAppSourceCop) {
