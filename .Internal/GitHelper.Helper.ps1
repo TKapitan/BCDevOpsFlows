@@ -135,13 +135,17 @@ function Invoke-GitPushToAllBranches {
         $_ -match "^origin/" -and 
         $_ -notmatch "HEAD"
     } | ForEach-Object { $_.Replace("origin/", "") }
-Write-Host "Branches to push: $($branches -join ', ')"
-
+    $detachedBranches = $branches | Where-Object { $_ -match '^\s*\w{40}' } | ForEach-Object { $_.Trim() }
+    if ($detachedBranches) {
+        Write-Host "Skipping detached HEAD branches: $($detachedBranches -join ', ')"
+    }
+    $branches = $branches | Where-Object { $_ -notin $detachedBranches }
+    
     foreach ($branch in $branches) {
         Write-Host "Pushing to $branch branch"
         try {
-            invoke-git push origin $branch
-            Write-Host "Successfully pushed to $branch"
+            invoke-git push origin "HEAD:$branch"
+            Write-Host "Successfully pushed to HEAD:$branch"
         }
         catch {
             Write-Host "Failed to push to $($branch): $($_.Exception.Message)" -ForegroundColor Yellow
