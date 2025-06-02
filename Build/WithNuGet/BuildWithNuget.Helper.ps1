@@ -46,7 +46,7 @@ function Get-BuildParameters {
     )
     $anyAnalyzerEnabled = $analyzers | Where-Object { $settings.$($_.Setting) } | Select-Object -First 1
     if ($anyAnalyzerEnabled) {
-        $analyzersCommonDLLPath = 'Microsoft.Dynamics.Nav.Common.dll'
+        $analyzersCommonDLLPath = 'Microsoft.Dynamics.Nav.Analyzers.Common.dll'
         $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
         if (-not (Test-Path $copPath)) {
             throw "The specified Common analyzer does not exist: $copPath"
