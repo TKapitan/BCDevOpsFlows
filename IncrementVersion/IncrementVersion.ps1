@@ -88,7 +88,13 @@ try {
     # Set version in app manifests (app.json file)
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
+    # Update AppSourceCop json
+    $appSourceCopJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\AppSourceCop.json"
+    Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
+    Update-AppSourceCopJson -appJsonFilePath $appFilePath -appSourceCopJsonFilePath $appSourceCopJsonFilePath -settings $settings
+
     # Commit changes
+    Invoke-GitAdd -appFilePath $appSourceCopJsonFilePath
     Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 }

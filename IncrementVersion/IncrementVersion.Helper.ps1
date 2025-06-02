@@ -31,7 +31,7 @@ function Set-VersionInSettingsFile {
         [Parameter(Mandatory = $true)]
         [string] $settingName,
         [Parameter(Mandatory = $true)]
-        [string] $newValue,
+        [string] $newValue, 
         [switch] $Force
     )
 
@@ -184,4 +184,29 @@ function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
     $newVersion = Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue
     OutputDebug -Message "New version applied to app.json: $newVersion"
     return $newVersion
+}
+function Update-AppSourceCopJson {
+    Param(
+        [Parameter(Mandatory)]
+        [string] $appJsonFilePath,
+        [Parameter(Mandatory)]
+        [string] $appSourceCopJsonFilePath,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $settings
+    )
+
+    if ($settings.enableAppSourceCop) {
+        $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        if (Test-Path $appSourceCopJsonFilePath) {
+            $appSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
+        }
+        else {
+            $appSourceCopJson = [PSCustomObject]@{}
+        }
+        Write-Host "Updating AppSourceCop.json file to $(appFileJson.name) version $($appFileJson.version) by $($appFileJson.publisher)"
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'name' -Value $appFileJson.name -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'publisher' -Value $appFileJson.publisher -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'version' -Value $appFileJson.version -Force
+        Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
+    }
 }
