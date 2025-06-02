@@ -125,10 +125,7 @@ function Invoke-GitPushToTestBranches {
     return 0 # override the default exit code from git ls-remote
 }
 function Invoke-GitPushToAllBranches {
-    param (
-        [Parameter(Mandatory = $false)]
-        [string] $skipPattern = ""
-    )
+    param ()
 
     Write-Host "Pushing changes to all branches"
     invoke-git fetch --all
@@ -136,8 +133,7 @@ function Invoke-GitPushToAllBranches {
     # Get all remote branches
     $branches = invoke-git branch --remotes | ForEach-Object { $_.Trim() } | Where-Object { 
         $_ -match "^origin/" -and 
-        $_ -notmatch "HEAD" -and 
-        $_ -notmatch $skipPattern 
+        $_ -notmatch "HEAD"
     } | ForEach-Object { $_.Replace("origin/", "") }
 
     foreach ($branch in $branches) {
