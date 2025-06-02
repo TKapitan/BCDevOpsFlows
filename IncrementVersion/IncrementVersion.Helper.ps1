@@ -210,3 +210,23 @@ function Update-AppSourceCopJson {
         Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
     }
 }
+function Restore-AppSourceCopJson {
+    Param(
+        [Parameter(Mandatory)]
+        [string] $appSourceCopJsonFilePath,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $originalAppSourceCopJsonContent
+    )
+
+    if ($settings.enableAppSourceCop) {
+        if (Test-Path $appSourceCopJsonFilePath) {
+            Remove-Item -Path $appSourceCopJsonFilePath -Force
+        }
+
+        Write-Host "Restoring original AppSourceCop.json"
+        Write-Host "Removing version from original AppSourceCop.json content"
+        $appSourceCopJson = $originalAppSourceCopJsonContent | Select-Object -Property * -ExcludeProperty version
+
+        Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
+    }
+}
