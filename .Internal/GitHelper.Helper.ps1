@@ -82,9 +82,13 @@ function Invoke-GitPush {
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
+    if ($ENV:AL_PIPELINENAME -eq 'SetupPipelines') {
+        Invoke-GitPushToAllBranches
+        return
+    }
+
     Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
-
     if ($targetBranch -match "(HEAD:)?(main|master)$") {
         Invoke-GitPushToTestBranches
     }
@@ -119,6 +123,35 @@ function Invoke-GitPushToTestBranches {
         }
     }
     return 0 # override the default exit code from git ls-remote
+}
+function Invoke-GitPushToAllBranches {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $skipPattern = ""
+    )
+
+    Write-Host "Pushing changes to all branches"
+    invoke-git fetch --all
+
+    # Get all remote branches
+    $branches = invoke-git branch -r | ForEach-Object { $_.Trim() } | Where-Object { 
+        $_ -match "^origin/" -and 
+        $_ -notmatch "HEAD" -and 
+        $_ -notmatch $skipPattern 
+    } | ForEach-Object { $_.Replace("origin/", "") }
+
+    foreach ($branch in $branches) {
+        Write-Host "Pushing to $branch branch"
+        try {
+            Invoke-GitPush -targetBranch "HEAD:$branch"
+            Write-Host "Successfully pushed to $branch"
+        }
+        catch {
+            Write-Host "Failed to push to $($branch): $($_.Exception.Message)" -ForegroundColor Yellow
+            continue
+        }
+    }
+    return 0
 }
 function Invoke-GitAddCommit {
     Param(
