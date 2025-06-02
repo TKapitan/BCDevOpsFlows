@@ -196,7 +196,7 @@ function Update-AppSourceCopJson {
     )
 
     if ($settings.enableAppSourceCop) {
-        $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
+        $appFileJson = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
         if (Test-Path $appSourceCopJsonFilePath) {
             $appSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
         }
