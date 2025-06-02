@@ -131,10 +131,11 @@ function Invoke-GitPushToAllBranches {
     invoke-git fetch --all
 
     # Get all remote branches
-    $branches = invoke-git branch --remotes | ForEach-Object { $_.Trim() } | Where-Object { 
+    $branches = git branch --remotes | ForEach-Object { $_.Trim() } | Where-Object { 
         $_ -match "^origin/" -and 
         $_ -notmatch "HEAD"
     } | ForEach-Object { $_.Replace("origin/", "") }
+Write-Host "Branches to push: $($branches -join ', ')"
 
     foreach ($branch in $branches) {
         Write-Host "Pushing to $branch branch"
