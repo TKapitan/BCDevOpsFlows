@@ -7,7 +7,7 @@ Param(
     [string] $installAppsJson = '[]',
     [Parameter(HelpMessage = "A JSON-formatted list of test apps to install", Mandatory = $false)]
     [string] $installTestAppsJson = '[]',
-    [Parameter(HelpMessage = "Specifies whether to include preview apps as dependencies.", Mandatory = $false)]
+    [Parameter(HelpMessage = "Specifies whether to skip preview apps as dependencies.", Mandatory = $false)]
     [switch] $skipAppsInPreview
 )
 
