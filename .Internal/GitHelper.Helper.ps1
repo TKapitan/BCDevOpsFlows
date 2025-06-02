@@ -134,7 +134,7 @@ function Invoke-GitPushToAllBranches {
     invoke-git fetch --all
 
     # Get all remote branches
-    $branches = invoke-git branch -r | ForEach-Object { $_.Trim() } | Where-Object { 
+    $branches = invoke-git branch --remotes | ForEach-Object { $_.Trim() } | Where-Object { 
         $_ -match "^origin/" -and 
         $_ -notmatch "HEAD" -and 
         $_ -notmatch $skipPattern 
