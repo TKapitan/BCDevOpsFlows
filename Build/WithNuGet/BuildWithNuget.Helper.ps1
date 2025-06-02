@@ -136,11 +136,6 @@ function Write-ALCOutput {
         "AlcOutput"        = $alcOutput
         "DoNotWriteToHost" = $true
     }
-    if ($basePath) {
-        $Parameters += @{
-            "basePath" = $basePath
-        }
-    }
     $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
     $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
