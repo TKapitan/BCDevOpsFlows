@@ -41,7 +41,7 @@ function Get-BuildParameters {
     $analyzers = @(
         @{ Name = "CodeCop"; Setting = "enableCodeCop"; FileName = "Microsoft.Dynamics.Nav.CodeCop.dll" },
         @{ Name = "AppSourceCop"; Setting = "enableAppSourceCop"; FileName = "Microsoft.Dynamics.Nav.AppSourceCop.dll" },
-        @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" }
+        @{ Name = "PerTenantExtensionCop"; Setting = "enablePerTenantExtensionCop"; FileName = "Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll" },
         @{ Name = "UICop"; Setting = "enableUICop"; FileName = "Microsoft.Dynamics.Nav.UICop.dll" }
     )
     $anyAnalyzerEnabled = $analyzers | Where-Object { $settings.$($_.Setting) } | Select-Object -First 1
