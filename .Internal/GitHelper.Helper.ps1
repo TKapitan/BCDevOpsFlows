@@ -82,9 +82,13 @@ function Invoke-GitPush {
         [string] $targetBranch = "HEAD:$($ENV:BUILD_SOURCEBRANCH)"
     )
 
+    if ($ENV:AL_PIPELINENAME -eq 'SetupPipelines') {
+        Invoke-GitPushToAllBranches
+        return
+    }
+
     Write-Host "Pushing changes to $targetBranch"
     invoke-git push origin $targetBranch
-
     if ($targetBranch -match "(HEAD:)?(main|master)$") {
         Invoke-GitPushToTestBranches
     }
@@ -119,6 +123,36 @@ function Invoke-GitPushToTestBranches {
         }
     }
     return 0 # override the default exit code from git ls-remote
+}
+function Invoke-GitPushToAllBranches {
+    param ()
+
+    Write-Host "Pushing changes to all branches"
+    invoke-git fetch --all
+
+    # Get all remote branches
+    $branches = git branch --remotes | ForEach-Object { $_.Trim() } | Where-Object { 
+        $_ -match "^origin/" -and 
+        $_ -notmatch "HEAD"
+    } | ForEach-Object { $_.Replace("origin/", "") }
+    $detachedBranches = $branches | Where-Object { $_ -match '^\s*\w{40}' } | ForEach-Object { $_.Trim() }
+    if ($detachedBranches) {
+        Write-Host "Skipping detached HEAD branches: $($detachedBranches -join ', ')"
+    }
+    $branches = $branches | Where-Object { $_ -notin $detachedBranches }
+    
+    foreach ($branch in $branches) {
+        Write-Host "Pushing to $branch branch"
+        try {
+            invoke-git push origin "HEAD:$branch"
+            Write-Host "Successfully pushed to HEAD:$branch"
+        }
+        catch {
+            Write-Host "Failed to push to $($branch): $($_.Exception.Message)" -ForegroundColor Yellow
+            continue
+        }
+    }
+    return 0
 }
 function Invoke-GitAddCommit {
     Param(
