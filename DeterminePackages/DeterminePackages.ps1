@@ -14,6 +14,9 @@ elseif ($runWith -eq 'bccontainerhelper') {
     Write-Host "Using BCContainerHelper"
     . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
 }
+else {
+    throw "Unknown AL_RUNWITH value: $ENV:AL_RUNWITH. Supported values are 'NuGet' and 'BCContainerHelper'."
+}
 
 if ([string]::IsNullOrEmpty($ENV:AL_ARTIFACT)) {
     throw "AL_ARTIFACT is empty. Make sure you have 'artifact' set in your settings file."
