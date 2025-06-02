@@ -8,6 +8,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "IncrementVersion.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\GitHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.Helper.ps1" -Resolve)
 
 try {
@@ -90,7 +91,8 @@ try {
 
     # Update AppSourceCop json
     $appSourceCopJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\AppSourceCop.json"
-    Invoke-RestoreUnstagedChanges -appFilePath $appFilePath
+    $originalAppSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
+    Invoke-RestoreUnstagedChanges -appFilePath $appSourceCopJsonFilePath
     Update-AppSourceCopJson -appJsonFilePath $appFilePath -appSourceCopJsonFilePath $appSourceCopJsonFilePath -settings $settings
 
     # Commit changes
@@ -98,10 +100,11 @@ try {
     Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 
-    # Delete AppSourceCop to skip validation in this build
+    # Delete AppSourceCop to skip validation in this build and restore the original AppSourceCop.json
     if (Test-Path $appSourceCopJsonFilePath) {
         Remove-Item -Path $appSourceCopJsonFilePath -Force
     }
+    Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $originalAppSourceCopJson
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error while updating app.json or pushing changes to Azure DevOps. Error message: $($_.Exception.Message)"
