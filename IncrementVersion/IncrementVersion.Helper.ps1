@@ -203,7 +203,7 @@ function Update-AppSourceCopJson {
         else {
             $appSourceCopJson = [PSCustomObject]@{}
         }
-        Write-Host "Updating AppSourceCop.json file to $(appFileJson.name) version $($appFileJson.version) by $($appFileJson.publisher)"
+        Write-Host "Updating AppSourceCop.json file to $($appFileJson.name) version $($appFileJson.version) by $($appFileJson.publisher)"
         $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'name' -Value $appFileJson.name -Force
         $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'publisher' -Value $appFileJson.publisher -Force
         $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'version' -Value $appFileJson.version -Force
