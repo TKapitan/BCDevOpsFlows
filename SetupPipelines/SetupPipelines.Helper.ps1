@@ -72,7 +72,16 @@ function Add-AzureDevOpsPipelineFromYaml {
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
-        Write-Host "Pipeline $pipelineName in folder $pipelineFolder already exists. Skipping creation."
+        Write-Host "Pipeline $pipelineName in folder $pipelineFolder already exists. Updating existing..."
+        az pipelines update `
+            --id $existingPipelineDetails[0].id `
+            --new-name "$pipelineName" `
+            --new-folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath"
         return
     }
 

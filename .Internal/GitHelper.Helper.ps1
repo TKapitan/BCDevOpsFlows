@@ -56,10 +56,10 @@ function Invoke-GitCommit {
     )
 
     if ($commitMessage -eq '') {
-        $commitMessage = "BCDevOps Flows Update"
+        $commitMessage = "BCDevOps Flows Update [skip azurepipelines]"
     }
     else {
-        $commitMessage = "$commitMessage"
+        $commitMessage = "$commitMessage [skip azurepipelines]"
     }
 
     try {
