@@ -44,6 +44,7 @@ try {
         $pipelineYamlFileRelativePath = "$scriptsFolderName\$($pipelineYamlFilePath.BaseName).yml"
     
         Add-AzureDevOpsPipelineFromYaml `
+            -settings $settings `
             -pipelineName $pipelineName `
             -pipelineFolder $pipelineDevOpsFolderPath `
             -pipelineBranch $settings.pipelineBranch `
