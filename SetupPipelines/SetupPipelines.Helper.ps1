@@ -54,7 +54,9 @@ function Add-AzureDevOpsPipelineFromYaml {
         [Parameter(Mandatory = $true)]
         [string] $pipelineYamlFileRelativePath,
         [Parameter(Mandatory = $false)]
-        [bool] $skipPipelineFirstRun = $false
+        [bool] $skipPipelineFirstRun = $false,
+        [Parameter(Mandatory = $true)]
+        $settings
     )
 
     OutputDebug "Preparing pipeline '$pipelineName' for branch '$pipelineBranch' with YAML file '$pipelineYamlFileRelativePath' in folder '$pipelineFolder'"
@@ -71,6 +73,10 @@ function Add-AzureDevOpsPipelineFromYaml {
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
+        if (-not $settings.recreatePipelineInSetupPipeline) {
+            Write-Host "Pipeline $pipelineName exists. Skipping..."
+            return
+        }
         Write-Host "Pipeline $pipelineName exists. Removing..."
         foreach ($pipeline in $existingPipelineDetails) {
             az pipelines delete `
