@@ -68,7 +68,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         [string] $installedCountry = '',
         [Parameter(Mandatory = $false)]
         [PSCustomObject[]] $installedApps = @(),
-        [ValidateSet('all', 'own', 'allButMicrosoft', 'allButApplication', 'allButPlatform', 'none')]
+        [ValidateSet('all', 'own', 'Microsoft', 'allButMicrosoft', 'allButApplication', 'allButPlatform', 'none')]
         [string] $downloadDependencies = 'allButApplication',
         [switch] $allowPrerelease,
         [switch] $checkLocalVersion
