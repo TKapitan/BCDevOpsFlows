@@ -1,7 +1,5 @@
 # Copy of NuGet class from BCContainerHelper, required changed to support Azure DevOps preview packages
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
-
 <# 
  .Synopsis
   PROOF OF CONCEPT PREVIEW: Get Business Central NuGet Package from NuGet Server
