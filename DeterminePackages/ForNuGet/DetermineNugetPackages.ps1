@@ -41,11 +41,15 @@ try {
         "downloadDependencies" = "Microsoft"
     }
     if ($artifact.ToLower() -eq "////latest") {
+        $parameters += @{
+            "select" = "Latest"
+        }
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     } 
     elseif ($artifact.ToLower() -eq "////appJson") {
         $parameters += @{
             "version" = $appJsonContent.application
+            "select" = "LatestMinor"
         }
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     }else {
