@@ -314,7 +314,7 @@ class BcDevOpsFlowsNuGetFeed {
         }
 
         $bestVersion = ''
-        foreach ($version in $versions ) {
+        foreach ($version in $versions) {
             if ($excludeVersions -contains $version) {
                 continue
             }
@@ -336,7 +336,7 @@ class BcDevOpsFlowsNuGetFeed {
                     $bestVersion = $version
                 }
             }
-            if (($select -eq 'Exact' -and [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($nuGetVersionRange) -eq [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($version)) -or ($select -ne 'Exact' -and [BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($version, $nuGetVersionRange))) {
+            elseif (($select -eq 'Exact' -and [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($nuGetVersionRange) -eq [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($version)) -or ($select -ne 'Exact' -and [BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($version, $nuGetVersionRange))) {
                 if ($nuGetVersionRange -eq '0.0.0.0') {
                     Write-Host "$select version is $version"
                 }
