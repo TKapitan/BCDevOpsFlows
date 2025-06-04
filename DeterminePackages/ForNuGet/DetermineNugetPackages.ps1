@@ -43,13 +43,13 @@ try {
     if ($artifact.ToLower() -eq "////latest") {
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     } 
-    elseif ($artifact.ToLower() -eq "////appJsonContent") {
+    elseif ($artifact.ToLower() -eq "////appJson") {
         $parameters += @{
             "version" = $appJsonContent.application
         }
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     }else {
-        throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJsonContent'."
+        throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
     }
 
     # Init dependency parameters
