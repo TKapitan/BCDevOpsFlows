@@ -22,26 +22,51 @@ try {
     if ($settings.country) {
         $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
     }
-    $manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
  
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
     mkdir $buildCacheFolder
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
     mkdir $dependenciesPackageCachePath
     
-    $parameters = @{}
+
+    $artifact = $settings.artifact
+    Write-Host "Getting application package $applicationPackage for artifact $artifact"
+    
+    # Init application/platform parameters
+    $parameters = @{
+        "trustedNugetFeeds" = $trustedNuGetFeeds
+        "packageName" = $applicationPackage
+        "appSymbolsFolder" = $buildCacheFolder
+        "downloadDependencies" = "Microsoft"
+    }
+    if ($artifact.ToLower() -eq "////latest") {
+        Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
+    } 
+    elseif ($artifact.ToLower() -eq "////appJsonContent") {
+        $parameters += @{
+            "version" = $appJsonContent.application
+        }
+        Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
+    }else {
+        throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJsonContent'."
+    }
+
+    # Init dependency parameters
+    $parameters = @{
+        "trustedNugetFeeds" = $trustedNuGetFeeds
+        "appSymbolsFolder" = $dependenciesPackageCachePath
+        "downloadDependencies" = "allButMicrosoft"
+    }
     if ($ENV:AL_ALLOWPRERELEASE) {
         $parameters += @{
             "allowPrerelease" = $true
         }
     }
-
-    Write-Host "Getting application package $applicationPackage"
-    Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $applicationPackage -appSymbolsFolder $buildCacheFolder -downloadDependencies 'all' | Out-Null
-    foreach ($dependency in $manifestObject.dependencies) {
+    foreach ($dependency in $appJsonContent.dependencies) {
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName -appSymbolsFolder $dependenciesPackageCachePath -downloadDependencies 'allButMicrosoft' @parameters | Out-Null
+        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters | Out-Null
     }
     
     # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
