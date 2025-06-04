@@ -51,28 +51,6 @@ Function Find-BCDevOpsFlowsNuGetPackage {
         [switch] $allowPrerelease
     )
 
-    function IsSameMajorVersion {
-        param(
-            [string]$version1,
-            [string]$version2
-        )
-        $v1Parts = $version1 -split '\.'
-        $v2Parts = $version2 -split '\.'
-        OutputDebug -Message "Comparing Major versions: $version1 vs $version2"
-        return $v1Parts[0] -eq $v2Parts[0]
-    }
-
-    function IsSameMajorMinorVersion {
-        param(
-            [string]$version1,
-            [string]$version2
-        )
-        $v1Parts = $version1 -split '\.'
-        $v2Parts = $version2 -split '\.'
-        OutputDebug -Message "Comparing Major.Minor versions: $version1 vs $version2"
-        return $v1Parts[0] -eq $v2Parts[0] -and $v1Parts[1] -eq $v2Parts[1]
-    }
-
     $bestmatch = $null
     # Search all trusted feeds for the package
     foreach ($feed in ($trustedNugetFeeds)) {
@@ -93,19 +71,9 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                         continue
                     }
                     elseif ($bestmatch) {
-                        if ($select -eq 'LatestMajor') {
-                            if (-not (IsSameMajorVersion -version1 $packageVersion -version2 $version)) {
-                                continue
-                            }
-                        }
-                        if ($select -eq 'LatestMinor') {
-                            if (-not (IsSameMajorMinorVersion -version1 $packageVersion -version2 $version)) {
-                                continue
-                            }
-                        }
                         # We already have a match, check if this is a better match
                         if (($select -eq 'Earliest' -and ([BcDevOpsFlowsNuGetFeed]::CompareVersions($packageVersion, $bestmatch.PackageVersion) -eq -1)) -or 
-                            ($select -in @('Latest', 'LatestMinor', 'LatestMajor') -and ([BcDevOpsFlowsNuGetFeed]::CompareVersions($packageVersion, $bestmatch.PackageVersion) -eq 1))) {
+                            ($select -eq 'Latest' -and ([BcDevOpsFlowsNuGetFeed]::CompareVersions($packageVersion, $bestmatch.PackageVersion) -eq 1))) {
                             $bestmatch = [PSCustomObject]@{
                                 "Feed"           = $nuGetFeed
                                 "PackageId"      = $packageId
@@ -125,16 +93,6 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                         }
                     }
                     else {
-                        if ($select -eq 'LatestMajor') {
-                            if (-not (IsSameMajorVersion -version1 $packageVersion -version2 $version)) {
-                                continue
-                            }
-                        }
-                        if ($select -eq 'LatestMinor') {
-                            if (-not (IsSameMajorMinorVersion -version1 $packageVersion -version2 $version)) {
-                                continue
-                            }
-                        }
                         $bestmatch = [PSCustomObject]@{
                             "Feed"           = $nuGetFeed
                             "PackageId"      = $packageId
