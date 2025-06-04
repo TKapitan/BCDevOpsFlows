@@ -1,5 +1,7 @@
 # Copy of NuGet class from BCContainerHelper, required changed to support Azure DevOps preview packages
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+
 <# 
  .Synopsis
   PROOF OF CONCEPT PREVIEW: Get Business Central NuGet Package from NuGet Server
@@ -56,6 +58,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
         )
         $v1Parts = $version1 -split '\.'
         $v2Parts = $version2 -split '\.'
+        OutputDebug -Message "Comparing Major versions: $version1 vs $version2"
         return $v1Parts[0] -eq $v2Parts[0]
     }
 
@@ -66,6 +69,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
         )
         $v1Parts = $version1 -split '\.'
         $v2Parts = $version2 -split '\.'
+        OutputDebug -Message "Comparing Major.Minor versions: $version1 vs $version2"
         return $v1Parts[0] -eq $v2Parts[0] -and $v1Parts[1] -eq $v2Parts[1]
     }
 
