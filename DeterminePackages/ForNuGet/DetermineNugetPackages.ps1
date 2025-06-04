@@ -44,7 +44,7 @@ try {
     if ($artifact.ToLower() -eq "////latest") {
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     } 
-    elseif ($artifact.ToLower() -eq "////appJson") {
+    elseif ($artifact.ToLower() -eq "////appjson") {
         $versionParts = $appJsonContent.application.Split('.')
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
         $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
