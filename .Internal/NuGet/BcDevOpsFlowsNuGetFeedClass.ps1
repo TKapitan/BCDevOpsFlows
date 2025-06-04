@@ -231,6 +231,7 @@ class BcDevOpsFlowsNuGetFeed {
     static [bool] IsVersionIncludedInRange([string] $versionStr, [string] $nuGetVersionRange) {
         $versionStr = [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($versionStr)
         $version = $versionStr -replace '-.+$' -as [System.Version]
+        Write-Host "Checking if version $versionStr is included in range $nuGetVersionRange"
         if ($nuGetVersionRange -match '^\s*([\[(]?)([\d\.]*)(,?)([\d\.]*)([\])]?)\s*$') {
             $inclFrom = $matches[1] -ne '('
             $range = $matches[3] -eq ','
