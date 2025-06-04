@@ -94,12 +94,12 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                     }
                     elseif ($bestmatch) {
                         if ($select -eq 'LatestMajor') {
-                            if (!IsSameMajorVersion -version1 $packageVersion -version2 $version) {
+                            if (-not (IsSameMajorVersion -version1 $packageVersion -version2 $version)) {
                                 continue
                             }
                         }
                         if ($select -eq 'LatestMinor') {
-                            if (!IsSameMajorMinorVersion -version1 $packageVersion -version2 $version) {
+                            if (-not (IsSameMajorMinorVersion -version1 $packageVersion -version2 $version)) {
                                 continue
                             }
                         }
@@ -126,12 +126,12 @@ Function Find-BCDevOpsFlowsNuGetPackage {
                     }
                     else {
                         if ($select -eq 'LatestMajor') {
-                            if (!IsSameMajorVersion -version1 $packageVersion -version2 $version) {
+                            if (-not (IsSameMajorVersion -version1 $packageVersion -version2 $version)) {
                                 continue
                             }
                         }
                         if ($select -eq 'LatestMinor') {
-                            if (!IsSameMajorMinorVersion -version1 $packageVersion -version2 $version) {
+                            if (-not (IsSameMajorMinorVersion -version1 $packageVersion -version2 $version)) {
                                 continue
                             }
                         }
