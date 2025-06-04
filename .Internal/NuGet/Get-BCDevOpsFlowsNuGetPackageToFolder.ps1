@@ -17,8 +17,6 @@
   - Earliest: Select the earliest version
   - EarliestMatching: Select the earliest version matching the already installed dependencies
   - Latest: Select the latest version (default)
-  - LatestMajor: Select the latest version of the major version
-  - LatestMinor: Select the latest version of the minor version
   - LatestMatching: Select the latest version matching the already installed dependencies
   - Exact: Select the exact version
   - Any: Select the first version found
@@ -57,7 +55,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         [Parameter(Mandatory = $false)]
         [string] $version = '0.0.0.0',
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Earliest', 'EarliestMatching', 'Latest', 'LatestMajor', 'LatestMinor', 'LatestMatching', 'Exact', 'Any')]
+        [ValidateSet('Earliest', 'EarliestMatching', 'Latest', 'LatestMatching', 'Exact', 'Any')]
         [string] $select = 'Latest',
         [Parameter(Mandatory = $true)]
         [alias('appSymbolsFolder')]

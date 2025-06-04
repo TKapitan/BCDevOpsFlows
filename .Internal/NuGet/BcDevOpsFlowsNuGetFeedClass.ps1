@@ -291,52 +291,53 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host "Exclude versions: $($excludeVersions -join ', ')"
         }
 
-        function IsSameMajorVersion {
-            param(
-                [string]$version1,
-                [string]$version2
-            )
-            $v1Parts = $version1 -split '\.'
-            $v2Parts = $version2 -split '\.'
-            OutputDebug -Message "Comparing Major versions: $version1 vs $version2"
-            return $v1Parts[0] -eq $v2Parts[0]
-        }
+        # function IsSameMajorVersion {
+        #     param(
+        #         [string]$version1,
+        #         [string]$version2
+        #     )
+        #     $v1Parts = $version1 -split '\.'
+        #     $v2Parts = $version2 -split '\.'
+        #     OutputDebug -Message "Comparing Major versions: $version1 vs $version2"
+        #     return $v1Parts[0] -eq $v2Parts[0]
+        # }
 
-        function IsSameMajorMinorVersion {
-            param(
-                [string]$version1,
-                [string]$version2
-            )
-            $v1Parts = $version1 -split '\.'
-            $v2Parts = $version2 -split '\.'
-            OutputDebug -Message "Comparing Major.Minor versions: $version1 vs $version2"
-            return $v1Parts[0] -eq $v2Parts[0] -and $v1Parts[1] -eq $v2Parts[1]
-        }
+        # function IsSameMajorMinorVersion {
+        #     param(
+        #         [string]$version1,
+        #         [string]$version2
+        #     )
+        #     $v1Parts = $version1 -split '\.'
+        #     $v2Parts = $version2 -split '\.'
+        #     OutputDebug -Message "Comparing Major.Minor versions: $version1 vs $version2"
+        #     return $v1Parts[0] -eq $v2Parts[0] -and $v1Parts[1] -eq $v2Parts[1]
+        # }
 
         $bestVersion = ''
         foreach ($version in $versions) {
             if ($excludeVersions -contains $version) {
                 continue
             }
-            if ($nuGetVersionRange -ne '0.0.0.0' -and $select -in ('LatestMajor', 'LatestMinor')) {
-                if ($select -eq 'LatestMajor') {
-                    if (-not (IsSameMajorVersion -version1 $nuGetVersionRange -version2 $version)) {
-                        continue
-                    }
-                }
-                if ($select -eq 'LatestMinor') {
-                    if (-not (IsSameMajorMinorVersion -version1 $nuGetVersionRange -version2 $version)) {
-                        continue
-                    }
-                }
-                if ($bestVersion -eq '') {
-                    $bestVersion = $version
-                }
-                elseif ([BcDevOpsFlowsNuGetFeed]::CompareVersions($version, $bestVersion) -eq 1) {
-                    $bestVersion = $version
-                }
-            }
-            elseif (($select -eq 'Exact' -and [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($nuGetVersionRange) -eq [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($version)) -or ($select -ne 'Exact' -and [BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($version, $nuGetVersionRange))) {
+            # if ($nuGetVersionRange -ne '0.0.0.0' -and $select -in ('LatestMajor', 'LatestMinor')) {
+            #     if ($select -eq 'LatestMajor') {
+            #         if (-not (IsSameMajorVersion -version1 $nuGetVersionRange -version2 $version)) {
+            #             continue
+            #         }
+            #     }
+            #     if ($select -eq 'LatestMinor') {
+            #         if (-not (IsSameMajorMinorVersion -version1 $nuGetVersionRange -version2 $version)) {
+            #             continue
+            #         }
+            #     }
+            #     if ($bestVersion -eq '') {
+            #         $bestVersion = $version
+            #     }
+            #     elseif ([BcDevOpsFlowsNuGetFeed]::CompareVersions($version, $bestVersion) -eq 1) {
+            #         $bestVersion = $version
+            #     }
+            # }
+            # else
+            if (($select -eq 'Exact' -and [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($nuGetVersionRange) -eq [BcDevOpsFlowsNuGetFeed]::NormalizeVersionStr($version)) -or ($select -ne 'Exact' -and [BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($version, $nuGetVersionRange))) {
                 if ($nuGetVersionRange -eq '0.0.0.0') {
                     Write-Host "$select version is $version"
                 }

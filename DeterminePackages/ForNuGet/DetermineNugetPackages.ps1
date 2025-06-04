@@ -35,31 +35,32 @@ try {
     
     # Init application/platform parameters
     $parameters = @{
-        "trustedNugetFeeds" = $trustedNuGetFeeds
-        "packageName" = $applicationPackage
-        "appSymbolsFolder" = $buildCacheFolder
+        "trustedNugetFeeds"    = $trustedNuGetFeeds
+        "packageName"          = $applicationPackage
+        "appSymbolsFolder"     = $buildCacheFolder
         "downloadDependencies" = "Microsoft"
+        "select"               = "Latest"
     }
     if ($artifact.ToLower() -eq "////latest") {
-        $parameters += @{
-            "select" = "Latest"
-        }
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     } 
     elseif ($artifact.ToLower() -eq "////appJson") {
+        $versionParts = $appJsonContent.application.Split('.')
+        $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
+        $version = "[$appJsonContent.application,$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
         $parameters += @{
-            "version" = $appJsonContent.application
-            "select" = "LatestMinor"
+            "version" = $version
         }
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
-    }else {
+    }
+    else {
         throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
     }
 
     # Init dependency parameters
     $parameters = @{
-        "trustedNugetFeeds" = $trustedNuGetFeeds
-        "appSymbolsFolder" = $dependenciesPackageCachePath
+        "trustedNugetFeeds"    = $trustedNuGetFeeds
+        "appSymbolsFolder"     = $dependenciesPackageCachePath
         "downloadDependencies" = "allButMicrosoft"
     }
     if ($ENV:AL_ALLOWPRERELEASE) {

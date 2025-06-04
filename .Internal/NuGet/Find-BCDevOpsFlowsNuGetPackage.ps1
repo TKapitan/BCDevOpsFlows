@@ -24,8 +24,6 @@
   Select the package to download if more than one package is found matching the name and version
   - Earliest: Select the earliest version
   - Latest: Select the latest version (default)
-  - LatestMajor: Select the latest version of the major version
-  - LatestMinor: Select the latest version of the minor version
   - Exact: Select the exact version
   - Any: Select the first version found
  .PARAMETER allowPrerelease
@@ -46,7 +44,7 @@ Function Find-BCDevOpsFlowsNuGetPackage {
         [Parameter(Mandatory = $false)]
         [string[]] $excludeVersions = @(),
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Earliest', 'Latest', 'LatestMajor', 'LatestMinor', 'Exact', 'Any')]
+        [ValidateSet('Earliest', 'Latest', 'Exact', 'Any')]
         [string] $select = 'Latest',
         [switch] $allowPrerelease
     )
