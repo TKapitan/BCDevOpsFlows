@@ -47,7 +47,7 @@ try {
     elseif ($artifact.ToLower() -eq "////appJson") {
         $versionParts = $appJsonContent.application.Split('.')
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
-        $version = "[$appJsonContent.application,$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
+        $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
         $parameters += @{
             "version" = $version
         }
