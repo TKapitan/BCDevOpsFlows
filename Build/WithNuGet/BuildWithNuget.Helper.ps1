@@ -88,14 +88,16 @@ function Get-BuildParameters {
         OutputDebug -Message "  buildBy: BCDevOpsFlows"
         OutputDebug -Message "  buildUrl: $ENV:BUILD_BUILDURI"
     }
+    $existingSymbols = @{}
     if ($settings.artifact.ToLower() -eq '////appjson' -and $appFileJson.PSObject.Properties.Name -contains 'preprocessorSymbols') {
         OutputDebug -Message "Adding Preprocessor symbols from app.json: $($appFileJson.preprocessorSymbols -join ',')"
-        $appFileJson.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $alcParameters += @("/D:$_") }
+        $appFileJson.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
     }
     if ($settings.ContainsKey('preprocessorSymbols')) {
         OutputDebug -Message "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
-        $settings.preprocessorSymbols | where-Object { $_ } | ForEach-Object { $alcParameters += @("/D:$_") }
+        $settings.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
     }
+    $existingSymbols.Keys | ForEach-Object { $alcParameters += @("/D:$_") }
     return $alcParameters
 }
 
