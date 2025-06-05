@@ -121,6 +121,15 @@ function AddArtifactDefaultValues {
     $country = $segments[3]; if ($country -eq "") { $country = $settings.country }
     $select = $segments[4]; if ($select -eq "") { $select = "latest" }
 
+    if ($select -eq "appjson") {
+        $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
+        $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+
+        $appJsonVersionSegments = $appJsonContent.application.Split('.')
+        $version = "$($appJsonVersionSegments[0]).$($appJsonVersionSegments[1])"
+        $select = "latest"
+    }
+
     return "$storageAccount/$artifactType/$version/$country/$select"
 }
 
