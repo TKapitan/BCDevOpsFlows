@@ -88,9 +88,19 @@ try {
     # Set version in app manifests (app.json file)
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
+    # Update AppSourceCop json
+    $appSourceCopJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\AppSourceCop.json"
+    $originalAppSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
+    Invoke-RestoreUnstagedChanges -appFilePath $appSourceCopJsonFilePath
+    Update-AppSourceCopJson -appJsonFilePath $appFilePath -appSourceCopJsonFilePath $appSourceCopJsonFilePath -settings $settings
+
     # Commit changes
+    Invoke-GitAdd -appFilePath $appSourceCopJsonFilePath
     Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
+
+    # Delete AppSourceCop to skip validation in this build and restore the original AppSourceCop.json
+    Restore-AppSourceCopJson -appSourceCopJsonFilePath $appSourceCopJsonFilePath -originalAppSourceCopJsonContent $originalAppSourceCopJson -settings $settings
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error while updating app.json or pushing changes to Azure DevOps. Error message: $($_.Exception.Message)"

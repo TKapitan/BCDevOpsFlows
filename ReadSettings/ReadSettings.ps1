@@ -47,8 +47,13 @@ try {
             }
             2 {
                 # USE DATETIME
-                $settings.appBuild = [Int32]([DateTime]::UtcNow.ToString('yyyyMMdd'))
-                $settings.appRevision = [Int32]([DateTime]::UtcNow.ToString('HHmmss'))
+                if ($settings.versioningTimeOffset) {
+                    $dateTime = [DateTime]::UtcNow.AddHours([double]$settings.versioningTimeOffset)
+                } else {
+                    $dateTime = [DateTime]::UtcNow
+                }
+                $settings.appBuild = [Int32]($dateTime.ToString('yyyyMMdd'))
+                $settings.appRevision = [Int32]($dateTime.ToString('HHmmss'))
             }
             3 {
                 # USE BUIlD from app.json and BUILD_NUMBER
