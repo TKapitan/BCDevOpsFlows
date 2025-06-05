@@ -37,9 +37,8 @@ try {
         }
     }
 
-    $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-
-    $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appFileJson $appFileJson
+    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appJsonContent $appJsonContent
     $alcOutput = Invoke-AlCompiler -Parameters $buildParameters
     Write-ALCOutput -alcOutput $alcOutput -failOn $settings.failOn
 }

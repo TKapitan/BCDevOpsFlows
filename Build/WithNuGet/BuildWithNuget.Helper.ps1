@@ -1,3 +1,4 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\Build.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Convert-ALCOutputToAzureDevOps.Helper.ps1" -Resolve)
 
@@ -7,10 +8,10 @@ function Get-BuildParameters {
         [string]$baseRepoFolder,
         [string]$baseAppFolder,
         [string]$packageCachePath,
-        [object]$appFileJson
+        [object]$appJsonContent
     )
 
-    $AppFileName = (("{0}_{1}_{2}.app" -f $appFileJson.publisher, $appFileJson.name, $appFileJson.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
+    $AppFileName = (("{0}_{1}_{2}.app" -f $appJsonContent.publisher, $appJsonContent.name, $appJsonContent.version).Split([System.IO.Path]::GetInvalidFileNameChars()) -join '')
     $outputPath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output"
 
     $alcItem = Get-Item -Path (Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'alc.exe')
@@ -88,15 +89,7 @@ function Get-BuildParameters {
         OutputDebug -Message "  buildBy: BCDevOpsFlows"
         OutputDebug -Message "  buildUrl: $ENV:BUILD_BUILDURI"
     }
-    $existingSymbols = @{}
-    if ($settings.artifact.ToLower() -eq '////appjson' -and $appFileJson.PSObject.Properties.Name -contains 'preprocessorSymbols') {
-        OutputDebug -Message "Adding Preprocessor symbols from app.json: $($appFileJson.preprocessorSymbols -join ',')"
-        $appFileJson.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
-    }
-    if ($settings.ContainsKey('preprocessorSymbols')) {
-        OutputDebug -Message "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
-        $settings.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
-    }
+    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
     $existingSymbols.Keys | ForEach-Object { $alcParameters += @("/D:$_") }
     return $alcParameters
 }
