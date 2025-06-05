@@ -52,6 +52,7 @@ No input parameters.
 | Name | Description |
 | :--                   | :-- |
 | AL_ALLOWPRERELEASE   | If set to true, pipeline will use public releases as well as preview/prerelease builds. |
+| AL_APPJSONARTIFACT | Specifies whether the requested artifact was requested as appjson artifact. AppJson artifact allows to use artifact (application and platform) based on the application version from the app.json file. |
 
 ## ENV OUTPUT variables generated only when AL_RUNWITH is BCContainerHelper
 

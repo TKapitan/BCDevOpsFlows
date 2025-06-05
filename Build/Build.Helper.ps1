@@ -7,7 +7,7 @@ function Get-PreprocessorSymbols {
     )
 
     $existingSymbols = @{}
-    if ($settings.artifact.ToLower() -eq '////appjson' -and $appJsonContent.PSObject.Properties.Name -contains 'preprocessorSymbols') {
+    if ($ENV:AL_APPJSONARTIFACT -and $appJsonContent.PSObject.Properties.Name -contains 'preprocessorSymbols') {
         OutputDebug -Message "Adding Preprocessor symbols from app.json: $($appJsonContent.preprocessorSymbols -join ',')"
         $appJsonContent.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
     }

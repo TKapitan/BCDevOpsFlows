@@ -41,10 +41,12 @@ try {
         "downloadDependencies" = "Microsoft"
         "select"               = "Latest"
     }
+
+    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
     if ($artifact.ToLower() -eq "////latest") {
         Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
     } 
-    elseif ($artifact.ToLower() -eq "////appjson") {
+    elseif ($isAppJsonArtifact) {
         $versionParts = $appJsonContent.application.Split('.')
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
         $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
@@ -56,6 +58,9 @@ try {
     else {
         throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
     }
+    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
+    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
+    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
 
     # Init dependency parameters
     $parameters = @{
