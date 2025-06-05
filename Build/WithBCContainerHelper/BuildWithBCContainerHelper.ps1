@@ -8,6 +8,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "BuildWithBCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\Build.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
@@ -281,14 +282,19 @@ try {
         Write-Host "Adding translationfile feature"
         $runAlPipelineParams["features"] += "translationfile"
     }
+    
+    $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
+    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
+
+    $runAlPipelineParams["preprocessorsymbols"] = @()
+    if ($existingSymbols.Count -gt 0) {
+        Write-Host "Adding existing Preprocessor symbols: $($existingSymbols.Keys -join ',')"
+        $runAlPipelineParams["preprocessorsymbols"] = @($existingSymbols.Keys)
+    }
 
     if ($runAlPipelineParams.Keys -notcontains 'preprocessorsymbols') {
         $runAlPipelineParams["preprocessorsymbols"] = @()
-    }
-
-    if ($settings.ContainsKey('preprocessorSymbols')) {
-        Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
-        $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()

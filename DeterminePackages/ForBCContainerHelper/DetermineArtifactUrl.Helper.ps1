@@ -22,6 +22,11 @@ function DetermineArtifactUrl {
         }
     }
 
+    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
+    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
+    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
+    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
+
     $artifact = AddArtifactDefaultValues -artifact $artifact
     if ($artifact -ne "" -and $artifact -notlike "https://*") {
         # Check if the artifact is in the cache
@@ -120,6 +125,15 @@ function AddArtifactDefaultValues {
     $version = $segments[2]
     $country = $segments[3]; if ($country -eq "") { $country = $settings.country }
     $select = $segments[4]; if ($select -eq "") { $select = "latest" }
+
+    if ($select -eq "appjson") {
+        $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
+        $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+
+        $appJsonVersionSegments = $appJsonContent.application.Split('.')
+        $version = "$($appJsonVersionSegments[0]).$($appJsonVersionSegments[1])"
+        $select = "latest"
+    }
 
     return "$storageAccount/$artifactType/$version/$country/$select"
 }

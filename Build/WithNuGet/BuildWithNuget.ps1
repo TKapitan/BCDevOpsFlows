@@ -10,16 +10,13 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "BuildWithNuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\NuGet.Helper.ps1" -Resolve)
 
 try {
-    if ($artifact -ne "////latest") {
-        throw "Build with NuGet supports currently only artifact '////latest'. Currently set artifact is '$artifact'."
+    if (!$ENV:AL_NUGETINITIALIZED) {
+        throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
     }
-    if ($buildMode -ne "Default") {
-        throw "Build with NuGet supports currently only buildMode 'Default'. Currently set buildMode is '$buildMode'."
-    }
-
-    Assert-Prerequisites
+    ValidateNuGetParameters -artifact $artifact -buildMode $buildMode
     
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     Update-AppJson -settings $settings -forNuGetBuild
@@ -40,9 +37,8 @@ try {
         }
     }
 
-    $appFileJson = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-
-    $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appFileJson $appFileJson
+    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appJsonContent $appJsonContent
     $alcOutput = Invoke-AlCompiler -Parameters $buildParameters
     Write-ALCOutput -alcOutput $alcOutput -failOn $settings.failOn
 }

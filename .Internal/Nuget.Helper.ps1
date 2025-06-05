@@ -123,3 +123,20 @@ function Get-BCCTrustedNuGetFeeds {
     }
     return $requiredTrustedNuGetFeeds
 }
+function ValidateNuGetParameters {
+    Param(
+        [Parameter(HelpMessage = "ArtifactUrl to use for the build", Mandatory = $true)]
+        [string] $artifact,
+        [Parameter(HelpMessage = "Specifies a mode to use for the build steps", Mandatory = $false)]
+        [string] $buildMode = "Default"
+    )
+
+    $validArtifacts = @("////latest", "////appjson")
+    $validBuildModes = @("Default")
+    if ($artifact.ToLower() -notin $validArtifacts) {
+        throw "Invalid artifact setting ($artifact) in BuildWithNuget. Valid artifacts are: $($validArtifacts -join ', ')."
+    }
+    if ($buildMode.ToLower() -notin $validBuildModes) {
+        throw "Invalid build mode ($buildMode) in BuildWithNuget. Valid build modes are: $($validBuildModes -join ', ')."
+    }
+}
