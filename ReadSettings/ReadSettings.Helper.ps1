@@ -62,7 +62,7 @@ function ReadSettings {
         "repoVersion"                                 = "1.0"
         "repoName"                                    = $repoName
         "versioningStrategy"                          = 0
-        "versioningTimeOffset"                        = 0
+        "versioningTimeOffset"                        = 0.0
         "buildNumberOffset"                           = 0
         "appBuild"                                    = 0
         "appRevision"                                 = 0
