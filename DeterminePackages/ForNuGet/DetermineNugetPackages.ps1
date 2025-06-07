@@ -29,11 +29,11 @@ try {
  
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
     if (!(Test-Path $buildCacheFolder)) {
-        New-Item -Path $buildCacheFolder -ItemType Directory
+        New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
     }
     $dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
     if (!(Test-Path $dependenciesPackageCachePath)) {
-        New-Item -Path $dependenciesPackageCachePath -ItemType Directory
+        New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
     }
     
     $parameters = @{}
