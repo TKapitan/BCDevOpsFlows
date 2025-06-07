@@ -31,7 +31,7 @@ try {
     if (!(Test-Path $buildCacheFolder)) {
         New-Item -Path $buildCacheFolder -ItemType Directory
     }
-    $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
+    $dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
     if (!(Test-Path $dependenciesPackageCachePath)) {
         New-Item -Path $dependenciesPackageCachePath -ItemType Directory
     }

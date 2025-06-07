@@ -27,7 +27,7 @@ try {
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
     $baseAppFolder = "$baseRepoFolder\App"
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
-    $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
+    $dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
     if (Test-Path $dependenciesPackageCachePath) {
         $dependencies = Get-ChildItem -Path $dependenciesPackageCachePath | Where-Object { $_.Name -notlike 'Microsoft.*' }
         foreach ($dependency in $dependencies) {
