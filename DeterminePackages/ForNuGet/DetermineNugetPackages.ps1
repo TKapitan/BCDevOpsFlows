@@ -28,9 +28,13 @@ try {
     $manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
  
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
-    mkdir $buildCacheFolder
+    if (!(Test-Path $buildCacheFolder)) {
+        New-Item -Path $buildCacheFolder -ItemType Directory
+    }
     $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
-    mkdir $dependenciesPackageCachePath
+    if (!(Test-Path $dependenciesPackageCachePath)) {
+        New-Item -Path $dependenciesPackageCachePath -ItemType Directory
+    }
     
     $parameters = @{}
     if ($ENV:AL_ALLOWPRERELEASE) {
