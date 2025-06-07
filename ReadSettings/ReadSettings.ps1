@@ -9,6 +9,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "ReadSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 try {
     # Find requested settings
@@ -52,7 +53,8 @@ try {
                 # USE DATETIME
                 if ($settings.versioningTimeOffset) {
                     $dateTime = [DateTime]::UtcNow.AddHours([double]$settings.versioningTimeOffset)
-                } else {
+                }
+                else {
                     $dateTime = [DateTime]::UtcNow
                 }
                 $settings.appBuild = [Int32]($dateTime.ToString('yyyyMMdd'))

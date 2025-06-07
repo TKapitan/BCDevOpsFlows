@@ -11,7 +11,6 @@ try {
 
     # Determine artifacts to use
     . (Join-Path -Path $PSScriptRoot -ChildPath "DetermineArtifactUrl.Helper.ps1" -Resolve)
-    . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
