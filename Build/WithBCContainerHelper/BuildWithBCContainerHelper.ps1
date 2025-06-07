@@ -216,33 +216,46 @@ try {
     if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
-                Param([Hashtable]$parameters)
+                Param(
+                    [Hashtable]$parameters
+                )
+
                 $parameters.missingDependencies | ForEach-Object {
-                    $appid = $_.Split(':')[0]
-                    $appName = $_.Split(':')[1]
-                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
-                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
-                    $publishParams = @{
-                        "packageName" = $appId
-                        "version"     = $version
-                    }
-                    if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
-                        $publishParams += @{
-                            "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
-                        }
-                    }
-                    if ($ENV:AL_ALLOWPRERELEASE) {
-                        $publishParams += @{
-                            "allowPrerelease" = $true
-                        }
-                    }
-                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
                     if ($parameters.ContainsKey('containerName')) {
-                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
+                        $appName = $_.Split(':')[1]
+                        $publishParams = @{
+                            "containerName" = $parameters.containerName
+                            "tenant"        = $parameters.tenant
+                            "appFile"       = Join-Path -Path $parameters.appSymbolsFolder -ChildPath $appName
+                        }
+                        if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
+                            $publishParams += @{
+                                "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
+                            }
+                        }
+                        Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
                     }
-                    else {
-                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
-                    }
+                    
+                    # $appid = $_.Split(':')[0]
+                    # $appName = $_.Split(':')[1]
+                    # $version = $appName.SubString($appName.LastIndexOf('_') + 1)
+                    # $version = [System.Version]$version.SubString(0, $version.Length - 4)
+                    # $publishParams = @{
+                    #     "packageName" = $appId
+                    #     "version"     = $version
+                    # }
+                    # if ($ENV:AL_ALLOWPRERELEASE) {
+                    #     $publishParams += @{
+                    #         "allowPrerelease" = $true
+                    #     }
+                    # }
+                    # OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
+                    # if ($parameters.ContainsKey('containerName')) {
+                    #     Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
+                    # }
+                    # else {
+                    #     Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
+                    # }
                 }
             }
         }
