@@ -132,7 +132,7 @@ try {
     }
 
     $buildArtifactFolder = Join-Path $baseFolder ".buildartifacts"
-    if (!(Test-Path $bcContainerHelperRootFolder)) {
+    if (!(Test-Path $buildArtifactFolder)) {
         New-Item -Path $buildArtifactFolder -ItemType Directory | Out-Null
     }
 
