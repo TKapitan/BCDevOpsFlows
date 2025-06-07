@@ -13,7 +13,7 @@ $settings = Get-PreviousReleaseFromNuGet -settings $settings
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appFolder "App"
 
 if ($runWith -eq 'nuget') {
     Write-Host "Using NuGet"
@@ -21,6 +21,10 @@ if ($runWith -eq 'nuget') {
 }
 elseif ($runWith -eq 'bccontainerhelper') {
     Write-Host "Using BCContainerHelper"
+    
+    # Tests are supported only in BCC, find test app dependencies
+    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appFolder "Test"
+    # Find BCC artifact
     . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
 }
 else {

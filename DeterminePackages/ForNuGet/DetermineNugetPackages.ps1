@@ -1,4 +1,7 @@
-Param()
+Param(
+    [Parameter(Mandatory = $false)]
+    [string] $appFolder = "App"
+)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Nuget.Helper.ps1" -Resolve)
@@ -16,7 +19,7 @@ try {
     }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-    $baseAppFolder = "$baseRepoFolder\App"
+    $baseAppFolder = "$baseRepoFolder\$appFolder"
 
     $applicationPackage = "Microsoft.Application.symbols"
     if ($settings.country) {
