@@ -53,7 +53,7 @@ try {
         throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if ($artifact -and ($artifact -ne $settings.artifact)) {
+    if ($artifact -and -not $artifact.StartsWith("https://*") -and ($artifact -ne $settings.artifact)) {
         throw "The Artifact passed as parameter ($artifact) does not match the artifact in the settings file $($settings.artifact). Please check your settings file."
     }
     $appBuild = $settings.appBuild
