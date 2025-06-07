@@ -13,9 +13,11 @@ $settings = Get-PreviousReleaseFromNuGet -settings $settings
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve)
+
 if ($runWith -eq 'nuget') {
     Write-Host "Using NuGet"
-    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve)
+    # No special steps needed
 }
 elseif ($runWith -eq 'bccontainerhelper') {
     Write-Host "Using BCContainerHelper"
