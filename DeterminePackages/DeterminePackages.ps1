@@ -7,8 +7,8 @@ if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
 }
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-Get-DependenciesFromNuGet -settings $settings
-Get-PreviousReleaseFromNuGet -settings $settings
+$settings = Get-DependenciesFromNuGet -settings $settings
+$settings = Get-PreviousReleaseFromNuGet -settings $settings
 
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
