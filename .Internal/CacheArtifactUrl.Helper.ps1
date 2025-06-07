@@ -3,12 +3,13 @@
 function AddArtifactUrlToCache {
     param(
         [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
         [string] $artifact,
         [Parameter(Mandatory = $true)]
         [string] $artifactUrl
     )
 
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     if ($settings.artifactUrlCacheKeepHours -eq 0) {
         OutputDebug -Message "Skipping caching of artifact URL because artifactUrlcacheKeepHours is set to 0"
         return
@@ -50,10 +51,11 @@ function AddArtifactUrlToCache {
 function GetArtifactUrlFromCache {
     param(
         [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
         [string] $artifact
     )
 
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     if ($settings.artifactUrlCacheKeepHours -eq 0) {
         OutputDebug -Message "Artifact URL caching is disabled because artifactUrlcacheKeepHours is set to 0"
         return
