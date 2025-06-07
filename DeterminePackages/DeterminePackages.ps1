@@ -1,8 +1,15 @@
 Param()
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "DeterminePackages.Helper.ps1" -Resolve)
+
 if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
     throw "You must specify runWith in setting file or use default value."
 }
+
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+Get-DependenciesFromNuGet -settings $settings
+Get-PreviousReleaseFromNuGet -settings $settings
+
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
 

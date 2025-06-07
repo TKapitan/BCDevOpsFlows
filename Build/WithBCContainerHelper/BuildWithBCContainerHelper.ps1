@@ -54,17 +54,9 @@ try {
         throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
-        if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
-            $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
-        }
-        $settings = AnalyzeRepo -settings $settings
+    if ($artifact -and ($artifact -ne $settings.artifact)) {
+        throw "The Artifact passed as parameter ($artifact) does not match the artifact in the settings file $($settings.artifact). Please check your settings file."
     }
-    else {
-        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
-    }
-
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
