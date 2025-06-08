@@ -14,7 +14,11 @@ try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    $artifactUrl = DetermineArtifactUrl -settings $settings
+    $artifactUrl = $settings.artifactUrl 
+    $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
+    if (!($folders)) {
+        throw "Unable to download artifacts from $($artifactUrl.Split('?')[0])."
+    }
 
     # Set output variables
     $ENV:AL_ARTIFACT = $artifactUrl

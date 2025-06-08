@@ -42,15 +42,8 @@ function AnalyzeRepo {
     # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
     if ($settings.artifact -notlike "https://*" -and $settings.runWith -ne "NuGet") {
         $artifactUrl = DetermineArtifactUrl -settings $settings
-        $version = $artifactUrl.Split('/')[4]
-        Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
-        $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
-        if (!($folders)) {
-            throw "Unable to download artifacts from $($artifactUrl.Split('?')[0]), please check $repoSettingsFile."
-        }
         $settings.artifact = $artifactUrl
-
-        if ([Version]$settings.applicationDependency -gt [Version]$version) {
+        if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
             throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
         }
     }
