@@ -30,6 +30,9 @@ if (-not $settings.ContainsKey('runWith')) {
 $ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
+$ENV:AL_RUNWITH = 'NuGet'
+Write-Host "##vso[task.setvariable variable=AL_RUNWITH;]NuGet"
+OutputDebug -Message "Set environment variable AL_RUNWITH to ($ENV:AL_RUNWITH)"
 
 # Run
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\Build\Build.ps1" -Resolve) @buildParameters
