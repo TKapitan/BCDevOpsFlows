@@ -6,10 +6,17 @@ if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
     throw "You must specify runWith in setting file or use default value."
 }
 
+# Update settings from app configuration
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 $settings = Get-DependenciesFromNuGet -settings $settings
 $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
+# Set output variables
+$ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
+
+# Determine packages
 Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
 $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
 
