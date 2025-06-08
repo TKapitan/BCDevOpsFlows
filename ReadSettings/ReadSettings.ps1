@@ -9,6 +9,7 @@ Param(
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "ReadSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 try {
     # Find requested settings
@@ -21,12 +22,15 @@ try {
     }
 
     # Add default settings to publish as environment variables
+    # Set AL_FAILPUBLISHTESTSONFAILURETOPUBLISHRESULTS
     if ($getSettings -notcontains "failPublishTestsOnFailureToPublishResults") {
         $getSettings += @("failPublishTestsOnFailureToPublishResults")
     }
+    # Set AL_RUNWITH
     if ($getSettings -notcontains "runWith") {
         $getSettings += @("runWith")
     }
+    # Set AL_ALLOWPRERELEASE
     if ($getSettings -notcontains "allowPrerelease") {
         $getSettings += @("allowPrerelease")
     }
@@ -49,7 +53,8 @@ try {
                 # USE DATETIME
                 if ($settings.versioningTimeOffset) {
                     $dateTime = [DateTime]::UtcNow.AddHours([double]$settings.versioningTimeOffset)
-                } else {
+                }
+                else {
                     $dateTime = [DateTime]::UtcNow
                 }
                 $settings.appBuild = [Int32]($dateTime.ToString('yyyyMMdd'))
@@ -99,7 +104,13 @@ try {
             }
         }
     }
-
+    
+    # Analyze the repository and update settings accordingly
+    if ($ENV:AL_PIPELINENAME -ne "SetupPipelines") {
+        $outSettings = AnalyzeRepo -settings $outSettings
+    }
+        
+    # Set output variables
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
     Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

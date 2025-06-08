@@ -12,7 +12,6 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
 try {
@@ -54,17 +53,11 @@ try {
         throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
-        if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
-            $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
+    if ($artifact.StartsWith('https://') -eq $false) {
+        if ($artifact -and ($artifact -ne $settings.artifact)) {
+            throw "The Artifact passed as parameter ($artifact) does not match the artifact in the settings file $($settings.artifact). Please check your settings file."
         }
-        $settings = AnalyzeRepo -settings $settings
     }
-    else {
-        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
-    }
-
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
@@ -139,7 +132,9 @@ try {
     }
 
     $buildArtifactFolder = Join-Path $baseFolder ".buildartifacts"
-    New-Item $buildArtifactFolder -ItemType Directory | Out-Null
+    if (!(Test-Path $buildArtifactFolder)) {
+        New-Item -Path $buildArtifactFolder -ItemType Directory | Out-Null
+    }
 
     $allTestResults = "testresults*.xml"
     $testResultsFile = Join-Path $baseFolder "TestResults.xml"
@@ -221,33 +216,30 @@ try {
     if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
-                Param([Hashtable]$parameters)
-                $parameters.missingDependencies | ForEach-Object {
-                    $appid = $_.Split(':')[0]
-                    $appName = $_.Split(':')[1]
-                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
-                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
+                Param(
+                    [Hashtable]$parameters
+                )
+
+                if ($parameters.ContainsKey('containerName')) {
+                    $appSymbolsFolder = $parameters.appSymbolsFolder
+                    $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
+                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | ForEach-Object {
+                        if ($appSymbolsFolder) {
+                            Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
+                        }
+                        $_.FullName
+                    }
                     $publishParams = @{
-                        "packageName" = $appId
-                        "version"     = $version
+                        "containerName" = $parameters.containerName
+                        "tenant"        = $parameters.tenant
+                        "appFile"       = $appFiles
                     }
                     if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
                         $publishParams += @{
                             "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
                         }
                     }
-                    if ($ENV:AL_ALLOWPRERELEASE) {
-                        $publishParams += @{
-                            "allowPrerelease" = $true
-                        }
-                    }
-                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
-                    if ($parameters.ContainsKey('containerName')) {
-                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
-                    }
-                    else {
-                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
-                    }
+                    Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
                 }
             }
         }

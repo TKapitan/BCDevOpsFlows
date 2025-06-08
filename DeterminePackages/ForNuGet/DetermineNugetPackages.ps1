@@ -1,4 +1,7 @@
-Param()
+Param(
+    [Parameter(Mandatory = $false)]
+    [string] $appFolder = "App"
+)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Nuget.Helper.ps1" -Resolve)
@@ -16,7 +19,7 @@ try {
     }
 
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-    $baseAppFolder = "$baseRepoFolder\App"
+    $baseAppFolder = "$baseRepoFolder\$appFolder"
 
     $applicationPackage = "Microsoft.Application.symbols"
     if ($settings.country) {
@@ -25,9 +28,13 @@ try {
     $manifestObject = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
  
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
-    mkdir $buildCacheFolder
-    $dependenciesPackageCachePath = "$baseRepoFolder\.dependencyPackages"
-    mkdir $dependenciesPackageCachePath
+    if (!(Test-Path $buildCacheFolder)) {
+        New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
+    }
+    $dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
+    if (!(Test-Path $dependenciesPackageCachePath)) {
+        New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
+    }
     
     $parameters = @{}
     if ($ENV:AL_ALLOWPRERELEASE) {
