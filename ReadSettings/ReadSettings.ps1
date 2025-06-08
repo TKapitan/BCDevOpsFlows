@@ -106,7 +106,7 @@ try {
     }
     
     # Analyze the repository and update settings accordingly
-    $settings = AnalyzeRepo -settings $settings
+    $outSettings = AnalyzeRepo -settings $outSettings
         
     # Set output variables
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
