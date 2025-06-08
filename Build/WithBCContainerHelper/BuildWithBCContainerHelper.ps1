@@ -222,11 +222,13 @@ try {
 
                 $parameters.missingDependencies | ForEach-Object {
                     if ($parameters.ContainsKey('containerName')) {
+                        $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
                         $appName = $_.Split(':')[1]
+                        
                         $publishParams = @{
                             "containerName" = $parameters.containerName
                             "tenant"        = $parameters.tenant
-                            "appFile"       = Join-Path -Path $parameters.appSymbolsFolder -ChildPath $appName
+                            "appFile"       = Join-Path -Path $dependenciesPackageCachePath -ChildPath $appName
                         }
                         if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
                             $publishParams += @{
