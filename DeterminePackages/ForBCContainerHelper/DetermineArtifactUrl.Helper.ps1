@@ -30,7 +30,7 @@ function DetermineArtifactUrl {
     $artifact = AddArtifactDefaultValues -artifact $artifact
     if ($artifact -ne "" -and $artifact -notlike "https://*") {
         # Check if the artifact is in the cache
-        $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -artifact $artifact
+        $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -settings $settings -artifact $artifact
         if ($artifactUrlFromCacheUrl) {
             # If found, the value is https url
             $artifact = $artifactUrlFromCacheUrl;
@@ -75,7 +75,7 @@ function DetermineArtifactUrl {
             }
         }
 
-        AddArtifactUrlToCache -artifact $artifact -ArtifactUrl $artifactUrl
+        AddArtifactUrlToCache -settings $settings -artifact $artifact -ArtifactUrl $artifactUrl
         $version = $artifactUrl.Split('/')[4]
         $storageAccount = $artifactUrl.Split('/')[2]
     }
