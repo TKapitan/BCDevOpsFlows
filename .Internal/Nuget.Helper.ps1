@@ -49,7 +49,12 @@ function GetNugetPackagePath() {
 function Remove-AllNugetPackageSources() {
     Param()
 
+    OutputDebug -Message "Removing all existing NuGet package sources"
     $sources = Get-PackageSource -ProviderName NuGet -ErrorAction SilentlyContinue
+    if (!$sources) {
+        OutputDebug -Message "No NuGet package sources found"
+        return
+    }
     foreach ($source in $sources) {
         RemoveNugetPackageSource -sourceName $source.Name
     }
@@ -107,7 +112,6 @@ function Get-BCCTrustedNuGetFeeds {
         [switch] $skipSymbolsFeeds
     )
 
-    OutputDebug -Message "Removing all existing NuGet package sources"
     Remove-AllNugetPackageSources
 
     $requiredTrustedNuGetFeeds = @()
