@@ -19,8 +19,13 @@ $ENV:AL_ALLOWPRERELEASE = $false
 Write-Host "##vso[task.setvariable variable=AL_ALLOWPRERELEASE;]$false"
 Write-Host "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
 
-# Set runner type for backwards compatibility
+# Reset the artifact to ////latest for backwards compatibility
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+if ($settings.ContainsKey('artifact') -and $settings.artifact.StartsWith('https://')) {
+    $settings.artifact = '////latest'
+}
+
+# Set runner type for backwards compatibility
 if (-not $settings.ContainsKey('runWith')) {
     $settings.Add('runWith', 'NuGet')
 } else {

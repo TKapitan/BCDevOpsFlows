@@ -36,6 +36,7 @@
   Allowed values are:
     - all: Download all dependencies
     - own: Download only dependencies that has the same publisher as the package
+    - Microsoft: Download only dependencies with publisher Microsoft
     - allButMicrosoft: Download all dependencies except packages with publisher Microsoft
     - allButApplication: Download all dependencies except the Application and Platform packages (Microsoft.Application and Microsoft.Platform)
     - allButPlatform: Download all dependencies except the Platform package (Microsoft.Platform)
@@ -67,7 +68,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         [string] $installedCountry = '',
         [Parameter(Mandatory = $false)]
         [PSCustomObject[]] $installedApps = @(),
-        [ValidateSet('all', 'own', 'allButMicrosoft', 'allButApplication', 'allButPlatform', 'none')]
+        [ValidateSet('all', 'own', 'Microsoft', 'allButMicrosoft', 'allButApplication', 'allButPlatform', 'none')]
         [string] $downloadDependencies = 'allButApplication',
         [switch] $allowPrerelease,
         [switch] $checkLocalVersion
@@ -195,7 +196,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                             $downloadIt = $false
                         }
                         else {
-                            $downloadIt = ($downloadDependencies -eq 'all')
+                            $downloadIt = ($downloadDependencies -eq 'all' -or $downloadDependencies -eq 'Microsoft')
                         }
                     }
                     elseif ($dependencyId -match '^([^\.]+\.)?Application(\.[^\.]+)?(\.symbols)?$') {
@@ -210,7 +211,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                             $downloadIt = $false
                         }
                         else {
-                            $downloadIt = ($downloadDependencies -eq 'all' -or $downloadDependencies -eq 'allButPlatform')
+                            $downloadIt = ($downloadDependencies -eq 'all' -or $downloadDependencies -eq 'allButPlatform' -or $downloadDependencies -eq 'Microsoft')
                         }
                     }
                     else {
@@ -236,6 +237,10 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                         elseif ($downloadDependencies -eq 'allButMicrosoft') {
                             # Download if publisher isn't Microsoft (including if publisher is empty)
                             $downloadIt = ($dependencyPublisher -ne 'Microsoft')
+                        }
+                        elseif ($downloadDependencies -eq 'Microsoft') {
+                            # Download only if publisher is Microsoft
+                            $downloadIt = ($dependencyPublisher -eq 'Microsoft')
                         }
                         elseif ($dependencyId -match '^([^\.]+)\.([^\.]+)\.runtime\-[0-9]+\-[0-9]+\-[0-9]+\-[0-9]+$') {
                             $downloadIt = $true

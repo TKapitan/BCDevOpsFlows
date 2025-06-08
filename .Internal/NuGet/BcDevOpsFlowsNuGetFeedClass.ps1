@@ -290,7 +290,7 @@ class BcDevOpsFlowsNuGetFeed {
         if ($excludeVersions) {
             Write-Host "Exclude versions: $($excludeVersions -join ', ')"
         }
-        foreach ($version in $versions ) {
+        foreach ($version in $versions) {
             if ($excludeVersions -contains $version) {
                 continue
             }
