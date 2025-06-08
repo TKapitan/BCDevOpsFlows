@@ -50,7 +50,7 @@ function Remove-AllNugetPackageSources() {
     Param()
 
     OutputDebug -Message "Removing all existing NuGet package sources"
-    $sources = Get-PackageSource -ProviderName NuGet | Out-Null
+    $sources = Get-PackageSource -ProviderName NuGet -WarningAction SilentlyContinue
     if (!$sources) {
         OutputDebug -Message "No NuGet package sources found"
         return
