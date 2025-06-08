@@ -12,8 +12,8 @@ $settings = Get-DependenciesFromNuGet -settings $settings
 $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
 # Set output variables
-$ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
-Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
+$ENV:AL_SETTINGS = $settings
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$settings"
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
 # Determine packages
