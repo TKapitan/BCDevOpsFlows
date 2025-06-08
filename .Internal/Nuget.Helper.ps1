@@ -50,13 +50,13 @@ function Remove-AllNugetPackageSources() {
     Param()
 
     OutputDebug -Message "Removing all existing NuGet package sources"
-    $sources = Get-PackageSource -ProviderName NuGet -ErrorAction SilentlyContinue
+    $sources = Get-PackageSource -ProviderName NuGet | Out-Null
     if (!$sources) {
         OutputDebug -Message "No NuGet package sources found"
         return
     }
     foreach ($source in $sources) {
-        RemoveNugetPackageSource -sourceName $source.Name
+        Remove-NugetPackageSource -sourceName $source.Name
     }
 }
 function Add-NugetPackageSource() {
@@ -73,7 +73,7 @@ function Add-NugetPackageSource() {
         OutputDebug -Message "Nuget source $($feed.name) already exists"
     }
 }
-function RemoveNugetPackageSource() {
+function Remove-NugetPackageSource() {
     Param(
         [string] $sourceName
     )
