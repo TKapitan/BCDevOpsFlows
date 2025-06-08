@@ -12,8 +12,21 @@ Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
+# Set default value for backwards compatibility
 $ENV:AL_ALLOWPRERELEASE = $false
 Write-Host "##vso[task.setvariable variable=AL_ALLOWPRERELEASE;]$false"
 Write-Host "Set environment variable AL_ALLOWPRERELEASE to ($ENV:AL_ALLOWPRERELEASE)"
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForNuGet\DetermineNugetPackages.ps1" -Resolve)
+# Set runner type for backwards compatibility
+$settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+if (-not $settings.ContainsKey('runWith')) {
+    $settings.Add('runWith', 'NuGet')
+} else {
+    $settings.runWith = 'NuGet'
+}
+$ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
+
+# Run
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\DeterminePackages.ps1" -Resolve)
