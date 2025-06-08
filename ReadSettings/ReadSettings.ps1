@@ -106,7 +106,9 @@ try {
     }
     
     # Analyze the repository and update settings accordingly
-    $outSettings = AnalyzeRepo -settings $outSettings
+    if ($ENV:AL_PIPELINENAME -ne "SetupPipelines") {
+        $outSettings = AnalyzeRepo -settings $outSettings
+    }
         
     # Set output variables
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
