@@ -196,17 +196,25 @@ function Update-AppSourceCopJson {
     )
 
     if ($settings.enableAppSourceCop) {
-        $appFileJson = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
+        $appJsonContent = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
         if (Test-Path $appSourceCopJsonFilePath) {
             $appSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
         }
         else {
             $appSourceCopJson = [PSCustomObject]@{}
         }
-        Write-Host "Updating AppSourceCop.json file to $($appFileJson.name) version $($appFileJson.version) by $($appFileJson.publisher)"
-        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'name' -Value $appFileJson.name -Force
-        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'publisher' -Value $appFileJson.publisher -Force
-        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'version' -Value $appFileJson.version -Force
+
+        $version = [System.Version]($appJsonContent.version)
+        $versionMajor = $version.Major
+        $versionMinor = $version.Minor
+        $versionBuild = if ($null -eq $settings.appBuild) { $version.Build } else { $settings.appBuild }
+        $versionRevision = if ($null -eq $settings.appRevision) { $version.Revision } else { $settings.appRevision }
+        $newVersion = "$versionMajor.$versionMinor.$versionBuild.$versionRevision"
+
+        Write-Host "Updating AppSourceCop.json file to $($appJsonContent.name) version $newVersion by $($appJsonContent.publisher)"
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'name' -Value $appJsonContent.name -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'publisher' -Value $appJsonContent.publisher -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'version' -Value $newVersion -Force
         Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
     }
 }
