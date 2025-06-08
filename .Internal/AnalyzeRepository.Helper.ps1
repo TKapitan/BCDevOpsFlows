@@ -38,15 +38,6 @@ function AnalyzeRepo {
     if ($settings.enableAppSourceCop -and !$settings.appSourceCopMandatoryAffixes -and !$settings.skipAppSourceCopMandatoryAffixesEnforcement) {
         throw "For AppSource Apps with AppSourceCop enabled, you need to specify AppSourceCopMandatoryAffixes in $repoSettingsFile"
     }
-
-    # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
-    if ($settings.artifact -notlike "https://*" -and $settings.runWith -ne "NuGet") {
-        $artifactUrl = DetermineArtifactUrl -settings $settings
-        $settings.artifact = $artifactUrl
-        if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
-            throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
-        }
-    }
     Write-Host "::endgroup::"
 
     Write-Host "Analyzing repository completed"
