@@ -40,7 +40,7 @@ function AnalyzeRepo {
     }
 
     # Avoid checking the artifact setting in AnalyzeRepo if we have an artifactUrl
-    if ($settings.artifact -notlike "https://*") {
+    if ($settings.artifact -notlike "https://*" -and $settings.runWith -ne "NuGet") {
         $artifactUrl = DetermineArtifactUrl -settings $settings
         $version = $artifactUrl.Split('/')[4]
         Write-Host "Downloading artifacts from $($artifactUrl.Split('?')[0])"
