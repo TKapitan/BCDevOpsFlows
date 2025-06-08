@@ -221,6 +221,7 @@ try {
                 )
 
                 if ($parameters.ContainsKey('containerName')) {
+                    $appSymbolsFolder = $parameters.appSymbolsFolder
                     $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
                     $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | ForEach-Object {
                         if ($appSymbolsFolder) {
@@ -240,28 +241,6 @@ try {
                     }
                     Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
                 }
-                    
-                # $appid = $_.Split(':')[0]
-                # $appName = $_.Split(':')[1]
-                # $version = $appName.SubString($appName.LastIndexOf('_') + 1)
-                # $version = [System.Version]$version.SubString(0, $version.Length - 4)
-                # $publishParams = @{
-                #     "packageName" = $appId
-                #     "version"     = $version
-                # }
-                # if ($ENV:AL_ALLOWPRERELEASE) {
-                #     $publishParams += @{
-                #         "allowPrerelease" = $true
-                #     }
-                # }
-                # OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
-                # if ($parameters.ContainsKey('containerName')) {
-                #     Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
-                # }
-                # else {
-                #     Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
-                # }
-                #}
             }
         }
     }
