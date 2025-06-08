@@ -9,7 +9,6 @@ function Get-DependenciesFromNuGet {
     )
 
     $settings = $settings | Copy-HashTable
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     $getDependencyNuGetPackageParams = @{}
     if ($ENV:AL_ALLOWPRERELEASE) {
@@ -18,6 +17,7 @@ function Get-DependenciesFromNuGet {
         }
     }
     if ($settings.appDependenciesNuGet) {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
@@ -32,6 +32,7 @@ function Get-DependenciesFromNuGet {
     }
 
     if ($settings.testDependenciesNuGet) {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
