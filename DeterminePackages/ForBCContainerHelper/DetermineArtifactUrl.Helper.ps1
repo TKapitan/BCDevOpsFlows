@@ -127,6 +127,7 @@ function AddArtifactDefaultValues {
     $select = $segments[4]; if ($select -eq "") { $select = "latest" }
 
     if ($select -eq "appjson") {
+        Write-Host "Using app.json artifact"
         $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
         $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 
@@ -134,8 +135,9 @@ function AddArtifactDefaultValues {
         $version = "$($appJsonVersionSegments[0]).$($appJsonVersionSegments[1])"
         $select = "latest"
     }
-
-    return "$storageAccount/$artifactType/$version/$country/$select"
+    $calculatedArtifact = "$storageAccount/$artifactType/$version/$country/$select"
+    Write-Host "Calculated artifact: $calculatedArtifact"
+    return $calculatedArtifact
 }
 
 # Copy a HashTable to ensure non case sensitivity (Issue #385)
