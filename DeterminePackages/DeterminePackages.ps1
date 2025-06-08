@@ -1,6 +1,7 @@
 Param()
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeterminePackages.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
     throw "You must specify runWith in setting file or use default value."
