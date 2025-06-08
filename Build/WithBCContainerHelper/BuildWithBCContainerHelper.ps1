@@ -212,9 +212,7 @@ try {
         }
     }
 
-    # Initialize trusted NuGet feeds
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
-    if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+    if ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies') {
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
                 Param(

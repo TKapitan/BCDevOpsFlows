@@ -13,11 +13,6 @@ try {
     }
 
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
-    $TrustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-    foreach ($feed in $TrustedNuGetFeeds) {
-        Add-NugetPackageSource -feed $feed
-    }
-
     $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
     $baseAppFolder = "$baseRepoFolder\$appFolder"
 
@@ -35,13 +30,13 @@ try {
     if (!(Test-Path $dependenciesPackageCachePath)) {
         New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
     }
-    
 
     $artifact = $settings.artifact
     Write-Host "Getting application package $applicationPackage for artifact $artifact"
     
     # Init application/platform parameters
     if ($ENV:AL_RUNWITH -eq "NuGet") {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
         $parameters = @{
             "trustedNugetFeeds"    = $trustedNuGetFeeds
             "packageName"          = $applicationPackage
@@ -72,6 +67,7 @@ try {
     }
 
     # Init dependency parameters
+    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
     $parameters = @{
         "trustedNugetFeeds"    = $trustedNuGetFeeds
         "appSymbolsFolder"     = $dependenciesPackageCachePath

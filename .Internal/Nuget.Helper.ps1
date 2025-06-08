@@ -46,6 +46,19 @@ function GetNugetPackagePath() {
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     return $nugetPackagePath
 }
+function Remove-AllNugetPackageSources() {
+    Param()
+
+    OutputDebug -Message "Removing all existing NuGet package sources"
+    $sources = Get-PackageSource -ProviderName NuGet -WarningAction SilentlyContinue | Out-Null
+    if (!$sources) {
+        OutputDebug -Message "No NuGet package sources found"
+        return
+    }
+    foreach ($source in $sources) {
+        Remove-NugetPackageSource -sourceName $source.Name
+    }
+}
 function Add-NugetPackageSource() {
     Param(
         [Parameter(Mandatory = $true)]
@@ -60,7 +73,7 @@ function Add-NugetPackageSource() {
         OutputDebug -Message "Nuget source $($feed.name) already exists"
     }
 }
-function RemoveNugetPackageSource() {
+function Remove-NugetPackageSource() {
     Param(
         [string] $sourceName
     )
@@ -91,15 +104,19 @@ function New-NuGetFeedConfig {
 }
 function Get-BCCTrustedNuGetFeeds {
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string]$fromTrustedNuGetFeeds,
         [Parameter(Mandatory = $false)]
         [bool]$trustMicrosoftNuGetFeeds = $true,
+        [switch] $includeMicrosoftNuGetFeeds,
         [switch] $skipSymbolsFeeds
     )
 
+    Remove-AllNugetPackageSources
+
     $requiredTrustedNuGetFeeds = @()
     if ($fromTrustedNuGetFeeds) {
+        OutputDebug -Message "Getting trusted NuGet feeds from trustedNuGetFeeds variable"
         $trustedNuGetFeeds = $fromTrustedNuGetFeeds | ConvertFrom-Json
         if ($trustedNuGetFeeds -and $trustedNuGetFeeds.Count -gt 0) {
             Write-Host "Adding trusted NuGet feeds from environment variable"
@@ -108,7 +125,11 @@ function Get-BCCTrustedNuGetFeeds {
                 })
         }
     }
-    if ($trustMicrosoftNuGetFeeds) {
+    if ($includeMicrosoftNuGetFeeds) {
+        OutputDebug -Message "Getting Microsoft NuGet feeds"
+        if (-not $trustMicrosoftNuGetFeeds) {
+            throw "Microsoft NuGet feeds are required but not trusted. Set trustMicrosoftNuGetFeeds to true."
+        }
         $feedConfig = New-NuGetFeedConfig -name "MSApps" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSApps/nuget/v3/index.json"
         $requiredTrustedNuGetFeeds += @($feedConfig)
         if (-not $skipSymbolsFeeds) {
@@ -117,9 +138,6 @@ function Get-BCCTrustedNuGetFeeds {
             $feedConfig = New-NuGetFeedConfig -name "AppSourceSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
             $requiredTrustedNuGetFeeds += @($feedConfig)
         }
-    }
-    if ($skipSymbolsFeeds) {
-        $requiredTrustedNuGetFeeds = @($requiredTrustedNuGetFeeds | Where-Object { $_.url -notlike "*AppSourceSymbols*" -and $_.url -notlike "*MSSymbols*" })
     }
     return $requiredTrustedNuGetFeeds
 }
