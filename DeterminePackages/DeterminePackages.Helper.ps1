@@ -118,7 +118,7 @@ function Update-CustomCodeCops {
     $appJsonFile = Join-Path $folder "app.json"
     if (Test-Path $appJsonFile) {
         $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-        $majorVersion = [Version]::Parse($appJson.version).Major
+        $majorVersion = [Version]::Parse($appJson.application).Major
         # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
         switch ($majorVersion) {
             25 { $linterCopURL = "BusinessCentral.LinterCop.AL-14.3.1327807.dll" }
