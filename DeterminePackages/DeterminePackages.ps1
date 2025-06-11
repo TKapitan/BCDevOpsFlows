@@ -9,6 +9,7 @@ if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
 
 # Update settings from app configuration
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+$settings = Update-CustomCodeCops -settings $settings
 $settings = Get-DependenciesFromNuGet -settings $settings
 $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
