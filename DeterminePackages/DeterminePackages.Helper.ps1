@@ -126,6 +126,7 @@ function Update-CustomCodeCops {
             23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
             default { $linterCopURL = "BusinessCentral.LinterCop.dll" }
         }
+        Write-Host "Using LinterCop for version $majorVersion, URL: $linterCopURL"
         if (!$settings.customCodeCops) {
             $settings.customCodeCops = @()
         }
