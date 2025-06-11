@@ -7,9 +7,12 @@ if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
     throw "You must specify runWith in setting file or use default value."
 }
 
+Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
+$runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
+
 # Update settings from app configuration
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-$settings = Update-CustomCodeCops -settings $settings
+$settings = Update-CustomCodeCops -settings $settings -runWith $runWith
 $settings = Get-DependenciesFromNuGet -settings $settings
 $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
@@ -19,9 +22,6 @@ Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
 # Determine packages
-Write-Host "Identifying what engine to use for packages: " $ENV:AL_RUNWITH
-$runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
-
 . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appFolder "App"
 
 if ($runWith -eq 'nuget') {
