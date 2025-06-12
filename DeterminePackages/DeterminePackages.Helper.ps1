@@ -102,3 +102,53 @@ function Get-PreviousReleaseFromNuGet {
     }
     return $settings
 }
+
+function Update-CustomCodeCops {
+    [CmdletBinding()]
+    Param(
+        [hashtable] $settings,
+        [string] $runWith
+    )
+
+    if (!$settings.customCodeCops) {
+        $settings.customCodeCops = @()
+    }
+    $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" }
+
+    if (-not $settings.enableLinterCop) {
+        return $settings
+    }
+
+    Write-Host "Determining LinterCop version"     
+    if ($runWith -eq 'nuget') {
+        $majorVersion = "Current"
+        $linterCopURL = "BusinessCentral.LinterCop.dll"
+    }
+    else {
+        $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
+        $appJsonFile = Join-Path $folder "app.json"
+        if (Test-Path $appJsonFile) {
+            $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
+            $majorVersion = [Version]::Parse($appJson.application).Major
+            # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
+            switch ($majorVersion) {
+                25 { $linterCopURL = "BusinessCentral.LinterCop.AL-14.3.1327807.dll" }
+                24 { $linterCopURL = "BusinessCentral.LinterCop.AL-13.1.1065068.dll" }
+                23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
+                default { $linterCopURL = "BusinessCentral.LinterCop.dll" }
+            }
+        }
+        else {
+            throw  "No app.json file found in $folder"
+        }
+    }
+    
+    Write-Host "Using LinterCop for version $majorVersion, URL: $linterCopURL"
+    $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
+    Write-Host "Configured custom CodeCops:"
+    $settings.customCodeCops | ForEach-Object {
+        Write-Host "- $_"
+    }
+    return $settings
+}
+

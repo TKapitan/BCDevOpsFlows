@@ -89,6 +89,7 @@ function ReadSettings {
         "installPerformanceToolkit"                   = $false
         "enableCodeCop"                               = $false
         "enableUICop"                                 = $false
+        "enableLinterCop"                             = $false
         "enableCodeAnalyzersOnTestApps"               = $false
         "customCodeCops"                              = @()
         "failOn"                                      = "error"
