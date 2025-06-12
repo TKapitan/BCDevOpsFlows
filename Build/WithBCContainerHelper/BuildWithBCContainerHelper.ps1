@@ -224,13 +224,21 @@ try {
                 
                 $appSymbolsFolder = $parameters.appSymbolsFolder
                 $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
+                OutputDebug -Message "Dependencies Package Cache Path: $dependenciesPackageCachePath"
+                Get-ChildItem -Path $dependenciesPackageCachePath -Filter *.app | ForEach-Object {
+                    OutputDebug -Message " - $($_.Name)"
+                }
                 $parameters.missingDependencies | ForEach-Object {
                     $appName = $_.Split(':')[1]
+                    OutputDebug -Message "Installing missing dependency: $appName"
                     $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "*_$appName`_*.app" } | ForEach-Object {
                         if ($appSymbolsFolder) {
                             Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
                         }
                         $_.FullName
+                    }
+                    if (-not $appFiles) {
+                        throw "Could not find app file for dependency $appName in $dependenciesPackageCachePath"
                     }
                     $publishParams = @{
                         "containerName" = $parameters.containerName
