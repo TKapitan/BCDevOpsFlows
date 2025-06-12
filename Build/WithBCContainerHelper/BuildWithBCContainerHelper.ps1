@@ -218,15 +218,28 @@ try {
                 Param(
                     [Hashtable]$parameters
                 )
-
-                if ($parameters.ContainsKey('containerName')) {
-                    $appSymbolsFolder = $parameters.appSymbolsFolder
-                    $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
-                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | ForEach-Object {
+                if (-not $parameters.ContainsKey('containerName')) {
+                    throw "The 'containerName' parameter is required but was not provided. Ensure that 'containerName' is included in the parameters."
+                }
+                
+                $appSymbolsFolder = $parameters.appSymbolsFolder
+                $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
+                OutputDebug -Message "Dependencies Package Cache Path: $dependenciesPackageCachePath"
+                Get-ChildItem -Path $dependenciesPackageCachePath -Filter *.app | ForEach-Object {
+                    OutputDebug -Message " - $($_.Name)"
+                }
+                $parameters.missingDependencies | ForEach-Object {
+                    $appName = $_.Split(':')[1]
+                    $appName = $appName.Substring(0, $appName.LastIndexOf('_'))
+                    OutputDebug -Message "Installing missing dependency: $appName"
+                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "$appName`_*.app" } | ForEach-Object {
                         if ($appSymbolsFolder) {
                             Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
                         }
                         $_.FullName
+                    }
+                    if (-not $appFiles) {
+                        throw "Could not find app file for dependency $appName in $dependenciesPackageCachePath"
                     }
                     $publishParams = @{
                         "containerName" = $parameters.containerName
@@ -239,7 +252,7 @@ try {
                         }
                     }
                     Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
-                }
+                }  
             }
         }
     }
