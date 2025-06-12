@@ -218,11 +218,15 @@ try {
                 Param(
                     [Hashtable]$parameters
                 )
-
-                if ($parameters.ContainsKey('containerName')) {
-                    $appSymbolsFolder = $parameters.appSymbolsFolder
-                    $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
-                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | ForEach-Object {
+                if (-not $parameters.ContainsKey('containerName')) {
+                    return                     
+                }
+                
+                $appSymbolsFolder = $parameters.appSymbolsFolder
+                $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
+                $parameters.missingDependencies | ForEach-Object {
+                    $appName = $_.Split(':')[1]
+                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "*_$appName`_*.app" } | ForEach-Object {
                         if ($appSymbolsFolder) {
                             Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
                         }
@@ -239,7 +243,7 @@ try {
                         }
                     }
                     Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
-                }
+                }  
             }
         }
     }
