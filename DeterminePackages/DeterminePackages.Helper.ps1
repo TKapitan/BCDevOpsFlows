@@ -51,15 +51,15 @@ function Get-DependenciesFromNuGet {
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
 
     if (!$settings.doNotRunBcptTests -and !$settings.bcptTestFolders) {
-        Write-Host "No performance test apps found in bcptTestFolders in $repoSettingsFile"
+        Write-Host "No performance test apps found in bcptTestFolders in settings."
         $settings.doNotRunBcptTests = $true
     }
     if (!$settings.doNotRunTests -and !$settings.testFolders) {
-        OutputWarning -Message "No test apps found in testFolders in $repoSettingsFile" 
+        OutputWarning -Message "No test apps found in testFolders in settings."
         $settings.doNotRunTests = $true
     }
     if (!$settings.appFolders) {
-        OutputWarning -Message "No apps found in appFolders in $repoSettingsFile" 
+        OutputWarning -Message "No apps found in appFolders in settings."
     }
     Write-Host "Analyzing dependencies completed"
 
