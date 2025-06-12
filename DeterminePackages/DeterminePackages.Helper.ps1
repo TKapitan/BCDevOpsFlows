@@ -114,7 +114,10 @@ function Update-CustomCodeCops {
         $settings.customCodeCops = @()
     }
     $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" }
-
+    if ($settings.customCodeCops.Count -eq 0) {
+        $settings.customCodeCops = @()
+    }    
+    
     if (-not $settings.enableLinterCop) {
         return $settings
     }
