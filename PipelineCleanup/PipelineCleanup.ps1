@@ -25,7 +25,7 @@ try {
             Write-Host "Removing Nuget packages from $cleanUpPath"
             Remove-Item $cleanUpPath -Recurse -Include *.*
         }
-        $cleanUpPath = "$baseRepoFolder\.dependencyPackages"
+        $cleanUpPath = "$baseRepoFolder\.buildartifacts\Dependencies"
         if (Test-Path $cleanUpPath) {
             Write-Host "Removing Nuget packages from $cleanUpPath"
             Remove-Item $cleanUpPath -Recurse -Include *.*

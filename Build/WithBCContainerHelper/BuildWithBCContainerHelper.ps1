@@ -8,11 +8,11 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "BuildWithBCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\Build.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\NuGet.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\ApplyAppJsonUpdates.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\AnalyzeRepository.Helper.ps1" -Resolve)
 
 $containerBaseFolder = $null
 try {
@@ -54,17 +54,11 @@ try {
         throw "ENV:AL_SETTINGS not found. The Read-Settings step must be run before this step."
     }
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    if (!$settings.analyzeRepoCompleted -or ($artifact -and ($artifact -ne $settings.artifact))) {
-        if ($artifact) {
-            Write-Host "Changing settings to use artifact = $artifact from $($settings.artifact)"
-            $settings | Add-Member -NotePropertyName artifact -NotePropertyValue $artifact -Force
+    if ($artifact.StartsWith('https://') -eq $false) {
+        if ($artifact -and ($artifact -ne $settings.artifact)) {
+            throw "The Artifact passed as parameter ($artifact) does not match the artifact in the settings file $($settings.artifact). Please check your settings file."
         }
-        $settings = AnalyzeRepo -settings $settings
     }
-    else {
-        Write-Host "Skipping AnalyzeRepo. Using existing settings from ENV:AL_SETTINGS"
-    }
-
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
@@ -139,7 +133,9 @@ try {
     }
 
     $buildArtifactFolder = Join-Path $baseFolder ".buildartifacts"
-    New-Item $buildArtifactFolder -ItemType Directory | Out-Null
+    if (!(Test-Path $buildArtifactFolder)) {
+        New-Item -Path $buildArtifactFolder -ItemType Directory | Out-Null
+    }
 
     $allTestResults = "testresults*.xml"
     $testResultsFile = Join-Path $baseFolder "TestResults.xml"
@@ -216,39 +212,47 @@ try {
         }
     }
 
-    # Initialize trusted NuGet feeds
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds -skipSymbolsFeeds
-    if (($trustedNuGetFeeds.Count -gt 0) -and ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies')) {
+    if ($runAlPipelineParams.Keys -notcontains 'InstallMissingDependencies') {
         $runAlPipelineParams += @{
             "InstallMissingDependencies" = {
-                Param([Hashtable]$parameters)
+                Param(
+                    [Hashtable]$parameters
+                )
+                if (-not $parameters.ContainsKey('containerName')) {
+                    throw "The 'containerName' parameter is required but was not provided. Ensure that 'containerName' is included in the parameters."
+                }
+                
+                $appSymbolsFolder = $parameters.appSymbolsFolder
+                $dependenciesPackageCachePath = "$ENV:PIPELINE_WORKSPACE\App\.buildartifacts\Dependencies"
+                OutputDebug -Message "Dependencies Package Cache Path: $dependenciesPackageCachePath"
+                Get-ChildItem -Path $dependenciesPackageCachePath -Filter *.app | ForEach-Object {
+                    OutputDebug -Message " - $($_.Name)"
+                }
                 $parameters.missingDependencies | ForEach-Object {
-                    $appid = $_.Split(':')[0]
                     $appName = $_.Split(':')[1]
-                    $version = $appName.SubString($appName.LastIndexOf('_') + 1)
-                    $version = [System.Version]$version.SubString(0, $version.Length - 4)
+                    $appName = $appName.Substring(0, $appName.LastIndexOf('_'))
+                    OutputDebug -Message "Installing missing dependency: $appName"
+                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "$appName`_*.app" } | ForEach-Object {
+                        if ($appSymbolsFolder) {
+                            Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
+                        }
+                        $_.FullName
+                    }
+                    if (-not $appFiles) {
+                        throw "Could not find app file for dependency $appName in $dependenciesPackageCachePath"
+                    }
                     $publishParams = @{
-                        "packageName" = $appId
-                        "version"     = $version
+                        "containerName" = $parameters.containerName
+                        "tenant"        = $parameters.tenant
+                        "appFile"       = $appFiles
                     }
                     if ($parameters.ContainsKey('CopyInstalledAppsToFolder')) {
                         $publishParams += @{
                             "CopyInstalledAppsToFolder" = $parameters.CopyInstalledAppsToFolder
                         }
                     }
-                    if ($ENV:AL_ALLOWPRERELEASE) {
-                        $publishParams += @{
-                            "allowPrerelease" = $true
-                        }
-                    }
-                    OutputDebug -Message "GetNuGetPackage with allowPrerelease = $($ENV:AL_ALLOWPRERELEASE)"
-                    if ($parameters.ContainsKey('containerName')) {
-                        Publish-BCDevOpsFlowsNuGetPackageToContainer -trustedNugetFeeds $trustedNuGetFeeds  -containerName $parameters.containerName -tenant $parameters.tenant -skipVerification -appSymbolsFolder $parameters.appSymbolsFolder -ErrorAction SilentlyContinue @publishParams
-                    }
-                    else {
-                        Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNuGetFeeds -folder $parameters.appSymbolsFolder @publishParams | Out-Null
-                    }
-                }
+                    Publish-BcContainerApp @publishParams -sync -install -upgrade -checkAlreadyInstalled -skipVerification
+                }  
             }
         }
     }
@@ -281,14 +285,19 @@ try {
         Write-Host "Adding translationfile feature"
         $runAlPipelineParams["features"] += "translationfile"
     }
+    
+    $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
+    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
+
+    $runAlPipelineParams["preprocessorsymbols"] = @()
+    if ($existingSymbols.Count -gt 0) {
+        Write-Host "Adding existing Preprocessor symbols: $($existingSymbols.Keys -join ',')"
+        $runAlPipelineParams["preprocessorsymbols"] = @($existingSymbols.Keys)
+    }
 
     if ($runAlPipelineParams.Keys -notcontains 'preprocessorsymbols') {
         $runAlPipelineParams["preprocessorsymbols"] = @()
-    }
-
-    if ($settings.ContainsKey('preprocessorSymbols')) {
-        Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
-        $runAlPipelineParams["preprocessorsymbols"] += $settings.preprocessorSymbols
     }
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()

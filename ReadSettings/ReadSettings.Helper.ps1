@@ -62,6 +62,7 @@ function ReadSettings {
         "repoVersion"                                 = "1.0"
         "repoName"                                    = $repoName
         "versioningStrategy"                          = 0
+        "versioningTimeOffset"                        = 0.0
         "buildNumberOffset"                           = 0
         "appBuild"                                    = 0
         "appRevision"                                 = 0
@@ -88,6 +89,7 @@ function ReadSettings {
         "installPerformanceToolkit"                   = $false
         "enableCodeCop"                               = $false
         "enableUICop"                                 = $false
+        "enableLinterCop"                             = $false
         "enableCodeAnalyzersOnTestApps"               = $false
         "customCodeCops"                              = @()
         "failOn"                                      = "error"
@@ -130,6 +132,7 @@ function ReadSettings {
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
         "runWith"                                     = "BcContainerHelper"
         "allowPrerelease"                             = $false
+        "recreatePipelineInSetupPipeline"             = $false
     }
 
     # Read settings from files and merge them into the settings object

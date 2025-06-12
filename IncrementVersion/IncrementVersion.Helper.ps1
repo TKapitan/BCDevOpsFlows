@@ -31,7 +31,7 @@ function Set-VersionInSettingsFile {
         [Parameter(Mandatory = $true)]
         [string] $settingName,
         [Parameter(Mandatory = $true)]
-        [string] $newValue,
+        [string] $newValue, 
         [switch] $Force
     )
 
@@ -184,4 +184,59 @@ function Set-VersionInAppManifests($appFilePath, $settings, $newValue) {
     $newVersion = Set-VersionInSettingsFile -settingsFilePath $appFilePath -settingName 'version' -newValue $newValue
     OutputDebug -Message "New version applied to app.json: $newVersion"
     return $newVersion
+}
+function Update-AppSourceCopJson {
+    Param(
+        [Parameter(Mandatory)]
+        [string] $appJsonFilePath,
+        [Parameter(Mandatory)]
+        [string] $appSourceCopJsonFilePath,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $settings
+    )
+
+    if ($settings.enableAppSourceCop) {
+        $appJsonContent = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
+        if (Test-Path $appSourceCopJsonFilePath) {
+            $appSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
+        }
+        else {
+            $appSourceCopJson = [PSCustomObject]@{}
+        }
+
+        $version = [System.Version]($appJsonContent.version)
+        $versionMajor = $version.Major
+        $versionMinor = $version.Minor
+        $versionBuild = if ($null -eq $settings.appBuild) { $version.Build } else { $settings.appBuild }
+        $versionRevision = if ($null -eq $settings.appRevision) { $version.Revision } else { $settings.appRevision }
+        $newVersion = "$versionMajor.$versionMinor.$versionBuild.$versionRevision"
+
+        Write-Host "Updating AppSourceCop.json file to $($appJsonContent.name) version $newVersion by $($appJsonContent.publisher)"
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'name' -Value $appJsonContent.name -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'publisher' -Value $appJsonContent.publisher -Force
+        $appSourceCopJson | Add-Member -MemberType NoteProperty -Name 'version' -Value $newVersion -Force
+        Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
+    }
+}
+function Restore-AppSourceCopJson {
+    Param(
+        [Parameter(Mandatory)]
+        [string] $appSourceCopJsonFilePath,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $originalAppSourceCopJsonContent,
+        [Parameter(Mandatory)]
+        [PSCustomObject] $settings
+    )
+
+    if ($settings.enableAppSourceCop) {
+        if (Test-Path $appSourceCopJsonFilePath) {
+            Remove-Item -Path $appSourceCopJsonFilePath -Force
+        }
+
+        Write-Host "Restoring original AppSourceCop.json"
+        Write-Host "Removing version from original AppSourceCop.json content"
+        $appSourceCopJson = $originalAppSourceCopJsonContent | Select-Object -Property * -ExcludeProperty version
+
+        Set-JsonContentLF -Path $appSourceCopJsonFilePath -object $appSourceCopJson
+    }
 }
