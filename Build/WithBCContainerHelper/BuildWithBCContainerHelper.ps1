@@ -219,7 +219,7 @@ try {
                     [Hashtable]$parameters
                 )
                 if (-not $parameters.ContainsKey('containerName')) {
-                    return                     
+                    throw "The 'containerName' parameter is required but was not provided. Ensure that 'containerName' is included in the parameters."
                 }
                 
                 $appSymbolsFolder = $parameters.appSymbolsFolder
