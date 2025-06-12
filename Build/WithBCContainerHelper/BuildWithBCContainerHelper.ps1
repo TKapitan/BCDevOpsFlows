@@ -230,8 +230,9 @@ try {
                 }
                 $parameters.missingDependencies | ForEach-Object {
                     $appName = $_.Split(':')[1]
+                    $appName = $appName.Substring(0, $appName.LastIndexOf('_'))
                     OutputDebug -Message "Installing missing dependency: $appName"
-                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "*_$appName`_*.app" } | ForEach-Object {
+                    $appFiles = Get-Item -Path (Join-Path $dependenciesPackageCachePath '*.app') | Where-Object { $_.Name -like "$appName`_*.app" } | ForEach-Object {
                         if ($appSymbolsFolder) {
                             Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
                         }
