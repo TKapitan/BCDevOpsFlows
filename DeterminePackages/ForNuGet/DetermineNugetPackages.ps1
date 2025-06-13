@@ -73,7 +73,7 @@ try {
         "appSymbolsFolder"     = $dependenciesPackageCachePath
         "downloadDependencies" = "allButMicrosoft"
     }
-    if ($ENV:AL_ALLOWPRERELEASE) {
+    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         $parameters += @{
             "allowPrerelease" = $true
         }
