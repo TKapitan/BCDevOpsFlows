@@ -128,7 +128,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | Name | Description |
 | :-- | :-- |
 | <a id="type"></a>type | Specifies the type of repository. Allowed values are **PTE** or **AppSource App**. |
-| <a id="buildModes"></a>buildModes | A list of build modes to use when building the project. Every project will be built using each build mode. The following build modes have special meaning:<br /> **Default**: Apps are compiled as they are in the source code.<br />**Clean**: Should be used for Clean Mode. Use [Conditional Settings](https://aka.ms/algosettings#conditional-settings) with buildMode set the 'Clean' to specify preprocessorSymbols for clean mode.<br />**Translated**: `TranslationFile` compiler feature is enabled when compiling the apps.<br /><br />It is also possible to specify custom build modes by adding a build mode that is different than 'Default', 'Clean' or 'Translated' and use [conditional settings](https://aka.ms/algosettings#conditional-settings) to specify preprocessor symbols and other build settings for the build mode. |
+| <a id="buildModes"></a>buildModes | A list of build modes to use when building the project. Every project will be built using each build mode. The following build modes have special meaning:<br /> **Default**: Apps are compiled as they are in the source code.<br />**Clean**: Should be used for Clean Mode. Use [Conditional Settings](#conditional-settings) with buildMode set the 'Clean' to specify preprocessorSymbols for clean mode.<br />**Translated**: `TranslationFile` compiler feature is enabled when compiling the apps.<br /><br />It is also possible to specify custom build modes by adding a build mode that is different than 'Default', 'Clean' or 'Translated' and use [conditional settings](#conditional-settings) to specify preprocessor symbols and other build settings for the build mode. |
 
 ## Advanced settings
 
@@ -199,11 +199,11 @@ Example, adding this:
 
 to your [repository settings file](#where-are-the-settings-located) will ensure that all branches matching the patterns in branches will use doNotPublishApps=true and doNotSignApps=true during CI/CD. Conditions can be:
 
-- **repositories** settings will be applied to repositories matching the patterns
-- **buildModes** settings will be applied when building with these buildModes
-- **branches** settings will be applied to branches matching the patterns
-- **workflows** settings will be applied to workflows matching the patterns
-- **users** settings will be applied for users matching the patterns
+- **repositories** settings will be applied to repositories matching the patterns.
+- **buildModes** settings will be applied when building with these buildModes.
+- **branches** settings will be applied to branches matching the patterns. For pull request pipelines the target branch is used as the identifier.
+- **workflows** settings will be applied to workflows matching the patterns.
+- **users** settings will be applied for users matching the patterns.
 
 You could imagine that you could have and organizational settings variable containing:
 
