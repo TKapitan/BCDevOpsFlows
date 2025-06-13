@@ -35,10 +35,10 @@ try {
     Write-Host "Getting application package $applicationPackage for artifact $artifact"
     
     # Init application/platform parameters
+    $trustedNuGetFeedsMicrosoft = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     if ($ENV:AL_RUNWITH -eq "NuGet") {
-        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
         $parameters = @{
-            "trustedNugetFeeds"    = $trustedNuGetFeeds
+            "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
             "packageName"          = $applicationPackage
             "appSymbolsFolder"     = $buildCacheFolder
             "downloadDependencies" = "Microsoft"
@@ -67,9 +67,8 @@ try {
     }
 
     # Init dependency parameters
-    $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
+    $trustedNuGetFeedsThirdParties = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
     $parameters = @{
-        "trustedNugetFeeds"    = $trustedNuGetFeeds
         "appSymbolsFolder"     = $dependenciesPackageCachePath
         "downloadDependencies" = "allButMicrosoft"
     }
@@ -79,6 +78,14 @@ try {
         }
     }
     foreach ($dependency in $appJsonContent.dependencies) {
+        $trustedNuGetFeedsDependencies = $trustedNuGetFeedsThirdParties
+        if ($dependency.publisher -eq "Microsoft") {
+            $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
+        }
+        $parameters += @{
+            "trustedNugetFeeds" = $trustedNuGetFeedsDependencies
+        }
+
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
         Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters | Out-Null
