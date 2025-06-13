@@ -68,24 +68,21 @@ try {
 
     # Init dependency parameters
     $trustedNuGetFeedsThirdParties = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
-    $parameters = @{
-        "appSymbolsFolder"     = $dependenciesPackageCachePath
-        "downloadDependencies" = "allButMicrosoft"
-    }
-    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
-        $parameters += @{
-            "allowPrerelease" = $true
-        }
-    }
     foreach ($dependency in $appJsonContent.dependencies) {
         $trustedNuGetFeedsDependencies = $trustedNuGetFeedsThirdParties
         if ($dependency.publisher -eq "Microsoft") {
             $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
         }
-        $parameters += @{
-            "trustedNugetFeeds" = $trustedNuGetFeedsDependencies
+        $parameters = @{
+            "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
+            "appSymbolsFolder"     = $dependenciesPackageCachePath
+            "downloadDependencies" = "allButMicrosoft"
         }
-
+        if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
+            $parameters += @{
+                "allowPrerelease" = $true
+            }
+        }
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
         Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters | Out-Null
