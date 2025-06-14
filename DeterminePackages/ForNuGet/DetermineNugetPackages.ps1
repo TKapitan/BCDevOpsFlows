@@ -57,6 +57,7 @@ try {
             $parameters += @{
                 "version" = $applicationVersionFilter
             }
+            OutputDebug -Message "Using application version filter '$applicationVersionFilter' for application package."
             $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         }
         else {
@@ -88,12 +89,14 @@ try {
         }
         if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
             # If enabled, we allow pre-release versions of dependencies.
+            OutputDebug -Message "Allowing pre-release versions of dependencies."
             $parameters += @{
                 "allowPrerelease" = $true
             }
         }    
         if ($isAppJsonArtifact -and $downloadDependencies -eq "Microsoft") {
             # For Microsoft dependencies with appjson artifact, we use the same version as the application package.
+            OutputDebug -Message "Using application version filter '$applicationVersionFilter' for Microsoft dependency $($dependency.name)."
             $parameters += @{
                 "version" = $applicationVersionFilter
             }
@@ -101,6 +104,7 @@ try {
         else {
             # For all other use cases, we use the version specified in the dependency (or newer).
             $dependencyVersionFilter = "[$($dependency.version),)"
+            OutputDebug -Message "Using dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
             $parameters += @{
                 "version" = $dependencyVersionFilter
             }
@@ -111,7 +115,7 @@ try {
         $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
 
         if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
-            throw "No dependency package found. Parameters: $($parameters | ConvertTo-Json)"
+            throw "No package found for dependency $($dependency.name) with id $($dependency.id)."
         }
     }
     
