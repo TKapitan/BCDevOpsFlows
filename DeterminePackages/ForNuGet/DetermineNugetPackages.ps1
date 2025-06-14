@@ -64,7 +64,7 @@ if ($ENV:AL_RUNWITH -eq "NuGet") {
     }
 
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
-        throw "No application package found. Parameters: $($parameters | ConvertTo-Json)"
+        throw "No application package found for artifact $artifact with version filter $applicationVersionFilter."
     }
 
     $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
@@ -114,7 +114,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
     $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
 
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
-        throw "No package found for dependency $($dependency.name) with id $($dependency.id)."
+        throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
     }
 }
     
