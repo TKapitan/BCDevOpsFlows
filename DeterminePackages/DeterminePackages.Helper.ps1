@@ -11,7 +11,7 @@ function Get-DependenciesFromNuGet {
     $settings = $settings | Copy-HashTable
     Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
     $getDependencyNuGetPackageParams = @{}
-    if ($ENV:AL_ALLOWPRERELEASE) {
+    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         $getDependencyNuGetPackageParams += @{
             "allowPrerelease" = $true
         }

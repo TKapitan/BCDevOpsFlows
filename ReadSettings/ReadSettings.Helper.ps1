@@ -21,9 +21,11 @@ function ReadSettings {
         [string] $externalSettingLink = ""
     )
 
+    Write-Host "Reading settings for $repoName, build mode: $buildMode, pipeline: $pipelineName, setup pipeline: $setupPipelineName, user requested for email: $userReqForEmail, branch name: $branchName"
     # If the build is triggered by a pull request the refname will be the merge branch. To apply conditional settings we need to use the base branch
     if ($ENV:BUILD_REASON -eq "PullRequest") {
-        $branchName = $ENV:SYSTEM_PULLREQUEST_SOURCEBRANCH
+        $branchName = $ENV:SYSTEM_PULLREQUEST_TARGETBRANCHNAME
+        Write-Host "Build is triggered by a pull request, using target branch: $branchName"
     }
 
     function GetSettingsObject {
