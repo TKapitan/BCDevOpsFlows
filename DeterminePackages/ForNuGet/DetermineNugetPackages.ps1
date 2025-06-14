@@ -38,7 +38,7 @@ try {
     $trustedNuGetFeedsMicrosoft = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
     $versionParts = $appJsonContent.application.Split('.')
     $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
-    $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
+    $applicationVersionFilter = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
             "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
@@ -54,7 +54,7 @@ try {
         } 
         elseif ($isAppJsonArtifact) {
             $parameters += @{
-                "version" = $version
+                "version" = $applicationVersionFilter
             }
             Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         }
@@ -87,9 +87,16 @@ try {
             }
         }    
         if ($isAppJsonArtifact -and $downloadDependencies -eq "Microsoft") {
-            # For Microsoft dependencies, we use the same version as the application package.
+            # For Microsoft dependencies with appjson artifact, we use the same version as the application package.
             $parameters += @{
-                "version" = $version
+                "version" = $applicationVersionFilter
+            }
+        }
+        else {
+            # For all other use cases, we use the version specified in the dependency (or newer).
+            $dependencyVersionFilter = "[$($dependency.version),)"
+            $parameters += @{
+                "version" = $dependencyVersionFilter
             }
         }
 
