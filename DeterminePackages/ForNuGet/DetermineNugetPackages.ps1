@@ -48,19 +48,25 @@ try {
             "select"               = "Latest"
         }
 
+        $downloadedPackage = @()
         $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
         if ($artifact.ToLower() -eq "////latest") {
-            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         } 
         elseif ($isAppJsonArtifact) {
             $parameters += @{
                 "version" = $applicationVersionFilter
             }
-            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         }
         else {
             throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
         }
+
+        if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
+            throw "No application package found. Parameters: $($parameters | ConvertTo-Json)"
+        }
+
         $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
         Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
         OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
@@ -102,7 +108,11 @@ try {
 
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
+        $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
+
+        if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
+            throw "No dependency package found. Parameters: $($parameters | ConvertTo-Json)"
+        }
     }
     
     # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
