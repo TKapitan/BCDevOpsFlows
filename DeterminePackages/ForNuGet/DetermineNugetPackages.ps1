@@ -50,13 +50,13 @@ try {
 
         $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
         if ($artifact.ToLower() -eq "////latest") {
-            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
+            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         } 
         elseif ($isAppJsonArtifact) {
             $parameters += @{
                 "version" = $version
             }
-            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
+            Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
         }
         else {
             throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
@@ -95,7 +95,7 @@ try {
 
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters | Out-Null
+        Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
     }
     
     # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
