@@ -36,6 +36,9 @@ try {
     
     # Init application/platform parameters
     $trustedNuGetFeedsMicrosoft = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
+    $versionParts = $appJsonContent.application.Split('.')
+    $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
+    $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
             "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
@@ -50,9 +53,6 @@ try {
             Get-BCDevOpsFlowsNuGetPackageToFolder @parameters | Out-Null
         } 
         elseif ($isAppJsonArtifact) {
-            $versionParts = $appJsonContent.application.Split('.')
-            $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
-            $version = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
             $parameters += @{
                 "version" = $version
             }
@@ -69,20 +69,30 @@ try {
     # Init dependency parameters
     $trustedNuGetFeedsThirdParties = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
     foreach ($dependency in $appJsonContent.dependencies) {
+        $downloadDependencies = 'allButMicrosoft'
         $trustedNuGetFeedsDependencies = $trustedNuGetFeedsThirdParties
         if ($dependency.publisher -eq "Microsoft") {
+            $downloadDependencies = 'Microsoft'
             $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
         }
         $parameters = @{
             "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
             "appSymbolsFolder"     = $dependenciesPackageCachePath
-            "downloadDependencies" = "allButMicrosoft"
+            "downloadDependencies" = $downloadDependencies
         }
         if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
+            # If enabled, we allow pre-release versions of dependencies.
             $parameters += @{
                 "allowPrerelease" = $true
             }
+        }    
+        if ($isAppJsonArtifact -and $downloadDependencies -eq "Microsoft") {
+            # For Microsoft dependencies, we use the same version as the application package.
+            $parameters += @{
+                "version" = $version
+            }
         }
+
         $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
         Write-Host "Getting $($dependency.name) using name $($dependency.id)"
         Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters | Out-Null
