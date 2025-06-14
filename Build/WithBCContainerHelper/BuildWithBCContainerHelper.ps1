@@ -360,15 +360,6 @@ try {
     Write-Host "##vso[task.setvariable variable=TestResults]$allTestResults"
     OutputDebug -Message "Set environment variable TestResults to ($ENV:TestResults)"
 }
-catch {
-    Write-Host "##vso[task.logissue type=error]Error while building the app with BCContainerHelper. Error message: $($_.Exception.Message)"
-    Write-Host $_.ScriptStackTrace
-    if ($_.PSMessageDetails) {
-        Write-Host $_.PSMessageDetails
-    }
-    Write-Host "##vso[task.complete result=Failed]"
-    exit 0
-}
 finally {
     try {
         if (Test-BcContainer -containerName $containerName) {
@@ -384,6 +375,6 @@ finally {
             Write-Host $_.PSMessageDetails
         }
         Write-Host "##vso[task.complete result=Failed]"
-        exit 0
+        throw "Error getting event log from container: $($_.Exception.Message)"
     }
 }
