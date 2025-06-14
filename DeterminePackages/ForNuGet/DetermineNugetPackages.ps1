@@ -34,6 +34,7 @@ $artifact = $settings.artifact
 Write-Host "Getting application package $applicationPackage for artifact $artifact"
     
 # Init application/platform parameters
+$isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
 $trustedNuGetFeedsMicrosoft = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
 $versionParts = $appJsonContent.application.Split('.')
 $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
@@ -48,7 +49,6 @@ if ($ENV:AL_RUNWITH -eq "NuGet") {
     }
 
     $downloadedPackage = @()
-    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
     if ($artifact.ToLower() -eq "////latest") {
         $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
     } 
@@ -93,7 +93,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
             "allowPrerelease" = $true
         }
     }    
-    if ($isAppJsonArtifact -and $downloadDependencies -eq "Microsoft") {
+    if ($isAppJsonArtifact -and $dependency.publisher -eq "Microsoft") {
         # For Microsoft dependencies with appjson artifact, we use the same version as the application package.
         OutputDebug -Message "Using application version filter '$applicationVersionFilter' for Microsoft dependency $($dependency.name)."
         $parameters += @{
