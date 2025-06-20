@@ -98,12 +98,10 @@ try {
 
     $additionalCountries = $settings.additionalCountries
 
-    $imageName = $settings.cacheImageName
-    if ($imageName) {
-        Write-Host "::group::Flush ContainerHelper Cache"
-        Flush-ContainerHelperCache -cache 'all,exitedcontainers' -keepdays $settings.cacheKeepDays
-        Write-Host "::endgroup::"
-    }
+    Write-Host "::group::Flush ContainerHelper Cache"
+    Flush-ContainerHelperCache -cache 'all,exitedcontainers' -keepdays $settings.cacheKeepDays
+    Write-Host "::endgroup::"
+
     $authContext = $null
     $environmentName = ""
     $CreateRuntimePackages = $false
@@ -306,7 +304,7 @@ try {
         -accept_insiderEula `
         -pipelinename $workflowName `
         -containerName $containerName `
-        -imageName $imageName `
+        -imageName $settings.cacheImageName `
         -bcAuthContext $authContext `
         -environment $environmentName `
         -artifact $settings.artifact `
