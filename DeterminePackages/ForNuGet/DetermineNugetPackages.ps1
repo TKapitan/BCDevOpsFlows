@@ -16,10 +16,7 @@ if (!$ENV:AL_NUGETINITIALIZED) {
 
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
-$baseAppFolder = "$baseRepoFolder\$appFolder"
-
 $artifact = $settings.artifact
-$appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
 
 # Init application/platform parameters
 $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
