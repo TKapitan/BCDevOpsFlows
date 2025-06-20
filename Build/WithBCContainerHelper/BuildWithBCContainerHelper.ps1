@@ -103,9 +103,9 @@ try {
     if ($settings.cacheFolderOld) {
         Write-Host "Flushing old cache folder: $($settings.cacheFolderOld)"
         $originalCacheFolder = $bcContainerHelperConfig.bcartifactsCacheFolder
-        $bcContainerHelperConfig.bcartifactsCacheFolder = $settings.cacheFolderOld
+        $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolderOld -Force
         Flush-ContainerHelperCache -cache 'all'
-        $bcContainerHelperConfig.bcartifactsCacheFolder = $originalCacheFolder
+        $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $originalCacheFolder -Force
     }
 
     Flush-ContainerHelperCache -cache 'all,exitedcontainers' -keepdays $settings.cacheKeepDays
