@@ -70,6 +70,7 @@ try {
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $bcContainerHelperConfig.useSslForWinRmSession = $false
     }
+    $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue 'D:\bcartifacts.cache' -Force
 
     $installApps = $settings.installApps
     $installApps += $settings.appDependencies
