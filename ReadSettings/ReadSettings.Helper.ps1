@@ -111,6 +111,8 @@ function ReadSettings {
         "obsoleteTagMinAllowedMajorMinor"             = ""
         "memoryLimit"                                 = ""
         "cacheImageName"                              = ""
+        "cacheFolder"                                 = "bcartifacts.cache"
+        "cacheFolderOld"                              = ""
         "cacheKeepDays"                               = 3
         "buildModes"                                  = @()
         "writableFolderPath"                          = ""

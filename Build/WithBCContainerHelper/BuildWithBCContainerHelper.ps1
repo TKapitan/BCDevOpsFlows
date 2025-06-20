@@ -70,7 +70,7 @@ try {
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $bcContainerHelperConfig.useSslForWinRmSession = $false
     }
-    $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue 'D:\bcartifacts.cache' -Force
+    $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolder -Force
 
     $installApps = $settings.installApps
     $installApps += $settings.appDependencies
@@ -100,6 +100,14 @@ try {
     $additionalCountries = $settings.additionalCountries
 
     Write-Host "::group::Flush ContainerHelper Cache"
+    if ($settings.cacheFolderOld) {
+        Write-Host "Flushing old cache folder: $($settings.cacheFolderOld)"
+        $originalCacheFolder = $bcContainerHelperConfig.bcartifactsCacheFolder
+        $bcContainerHelperConfig.bcartifactsCacheFolder = $settings.cacheFolderOld
+        Flush-ContainerHelperCache -cache 'all'
+        $bcContainerHelperConfig.bcartifactsCacheFolder = $originalCacheFolder
+    }
+
     Flush-ContainerHelperCache -cache 'all,exitedcontainers' -keepdays $settings.cacheKeepDays
     Write-Host "::endgroup::"
 
