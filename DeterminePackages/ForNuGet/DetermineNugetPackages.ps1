@@ -1,6 +1,9 @@
 Param(
+    [Parameter(Mandatory = $true)]
+    [PSCustomObject] $appJsonContent,
     [Parameter(Mandatory = $false)]
-    [string] $appFolder = "App"
+    [string] $mainAppId,
+    [switch] $isTestApp
 )
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
@@ -15,66 +18,76 @@ $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
 $baseRepoFolder = "$ENV:PIPELINE_WORKSPACE\App"
 $baseAppFolder = "$baseRepoFolder\$appFolder"
 
-$applicationPackage = "Microsoft.Application.symbols"
-if ($settings.country) {
-    $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
-}
-$appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
- 
-$buildCacheFolder = "$baseRepoFolder\.buildpackages"
-if (!(Test-Path $buildCacheFolder)) {
-    New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
-}
-$dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
-if (!(Test-Path $dependenciesPackageCachePath)) {
-    New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
-}
-
 $artifact = $settings.artifact
-Write-Host "Getting application package $applicationPackage for artifact $artifact"
-    
+$appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
+
 # Init application/platform parameters
 $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
 $trustedNuGetFeedsMicrosoft = Get-BCCTrustedNuGetFeeds -includeMicrosoftNuGetFeeds -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
 $versionParts = $appJsonContent.application.Split('.')
 $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
 $applicationVersionFilter = "[$($appJsonContent.application),$($versionParts[0]).$($versionParts[1]).$($versionParts[2]).$($versionParts[3]))"
-if ($ENV:AL_RUNWITH -eq "NuGet") {
-    $parameters = @{
-        "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
-        "packageName"          = $applicationPackage
-        "appSymbolsFolder"     = $buildCacheFolder
-        "downloadDependencies" = "Microsoft"
-        "select"               = "Latest"
-    }
 
-    $downloadedPackage = @()
-    if ($artifact.ToLower() -eq "////latest") {
-        $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
-    } 
-    elseif ($isAppJsonArtifact) {
-        $parameters += @{
-            "version" = $applicationVersionFilter
+if ($isTestApp) {
+    Write-Host "Skipping Microsoft package determination for test app."
+}
+else {
+    $applicationPackage = "Microsoft.Application.symbols"
+    if ($settings.country) {
+        $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
+    }
+    Write-Host "Getting application package $applicationPackage for artifact $artifact"
+ 
+    $buildCacheFolder = "$baseRepoFolder\.buildpackages"
+    if (!(Test-Path $buildCacheFolder)) {
+        New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
+    }
+    
+    if ($ENV:AL_RUNWITH -eq "NuGet") {
+        $parameters = @{
+            "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
+            "packageName"          = $applicationPackage
+            "appSymbolsFolder"     = $buildCacheFolder
+            "downloadDependencies" = "Microsoft"
+            "select"               = "Latest"
         }
-        OutputDebug -Message "Using application version filter '$applicationVersionFilter' for application package."
-        $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
-    }
-    else {
-        throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
-    }
 
-    if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
-        throw "No application package found for artifact $artifact with version filter $applicationVersionFilter."
-    }
+        $downloadedPackage = @()
+        if ($artifact.ToLower() -eq "////latest") {
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+        } 
+        elseif ($isAppJsonArtifact) {
+            $parameters += @{
+                "version" = $applicationVersionFilter
+            }
+            OutputDebug -Message "Using application version filter '$applicationVersionFilter' for application package."
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+        }
+        else {
+            throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
+        }
 
-    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
-    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
-    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
+        if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
+            throw "No application package found for artifact $artifact with version filter $applicationVersionFilter."
+        }
+
+        $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
+        Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
+        OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
+    }
 }
 
 # Init dependency parameters
+$dependenciesPackageCachePath = "$baseRepoFolder\.buildartifacts\Dependencies"
+if (!(Test-Path $dependenciesPackageCachePath)) {
+    New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
+}
 $trustedNuGetFeedsThirdParties = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
 foreach ($dependency in $appJsonContent.dependencies) {
+    if ($dependency.id -eq $mainAppId) {
+        Write-Host "Skipping dependency $($dependency.name) with id $($dependency.id) as it is the main app"
+        continue
+    }
     $downloadDependencies = 'allButMicrosoft'
     $trustedNuGetFeedsDependencies = $trustedNuGetFeedsThirdParties
     if ($dependency.publisher -eq "Microsoft") {
