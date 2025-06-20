@@ -23,7 +23,8 @@ try {
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
     # Determine packages
-    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appFolder "App"
+    $appJsonContentApp = Get-Content "$ENV:PIPELINE_WORKSPACE\App\App\app.json" -Encoding UTF8 | ConvertFrom-Json
+    . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentApp
 
     if ($runWith -eq 'nuget') {
         Write-Host "Using NuGet"
@@ -33,7 +34,14 @@ try {
         Write-Host "Using BCContainerHelper"
     
         # Tests are supported only in BCC, find test app dependencies
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appFolder "Test"
+        $testAppFilePath = "$ENV:PIPELINE_WORKSPACE\App\Test\app.json"
+        if (!(Test-Path $testAppFilePath)) {
+            Write-Host "Test app.json not found for Test app at $testAppFilePath. Skipping test app package determination."
+        }
+        else {
+            $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 | ConvertFrom-Json
+            . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentTest -mainAppId $appJsonContentApp.id -isTestApp
+        }
         # Find BCC artifact
         . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
     }
