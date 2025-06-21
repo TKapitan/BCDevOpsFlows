@@ -69,7 +69,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --repository-type "tfsgit" | ConvertFrom-Json
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" | ConvertFrom-Json
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
@@ -97,7 +97,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "tfsgit" `
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
         --skip-first-run $skipPipelineFirstRun
 }
 
