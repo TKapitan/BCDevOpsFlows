@@ -98,7 +98,6 @@ function Add-AzureDevOpsPipelineFromYaml {
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
-        --service-connection "BC-AU" `
         --skip-first-run $skipPipelineFirstRun
 }
 
