@@ -69,7 +69,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --repository-type "tfsgit" | ConvertFrom-Json
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" | ConvertFrom-Json
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
@@ -87,7 +87,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         }
     }
 
-    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder"
+    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
     az pipelines create `
         --name "$pipelineName" `
         --folder-path "$pipelineFolder" `
@@ -97,8 +97,10 @@ function Add-AzureDevOpsPipelineFromYaml {
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "tfsgit" `
-        --skip-first-run $skipPipelineFirstRun
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+        --service-connection "ea610565-0884-439a-8907-ad5b7ce1e3df" `
+        --skip-first-run $skipPipelineFirstRun `
+        --debug
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
