@@ -88,6 +88,9 @@ foreach ($dependency in $appJsonContent.dependencies) {
     $downloadDependencies = 'allButMicrosoft'
     $trustedNuGetFeedsDependencies = $trustedNuGetFeedsThirdParties
     if ($dependency.publisher -eq "Microsoft") {
+        if ($ENV:AL_RUNWITH -ne "NuGet") {
+            continue
+        }
         $downloadDependencies = 'Microsoft'
         $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
     }
