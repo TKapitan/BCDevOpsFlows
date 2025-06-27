@@ -94,18 +94,34 @@ function Add-AzureDevOpsPipelineFromYaml {
     }
    
     Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
-    $result = az pipelines create `
-        --name "$pipelineName" `
-        --folder-path "$pipelineFolder" `
-        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-        --project "$ENV:SYSTEM_TEAMPROJECT" `
-        --description "Pipeline $pipelineName created by SetupPipelines." `
-        --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --branch $pipelineBranch `
-        --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
-        $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCId)`"" }) `
-        --skip-first-run $skipPipelineFirstRun
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --service-connection "$($settings.hybridDeploymentGitHubRepoSCId)" `
+            --skip-first-run $skipPipelineFirstRun
+    }
+    else {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --skip-first-run $skipPipelineFirstRun
+    }
 
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to create pipeline $pipelineName. Error: $result"
