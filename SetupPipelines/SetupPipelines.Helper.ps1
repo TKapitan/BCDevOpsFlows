@@ -63,6 +63,12 @@ function Add-AzureDevOpsPipelineFromYaml {
     if ($skipPipelineFirstRun) {
         OutputDebug "Setting skip first run of pipeline '$pipelineName'"
     }
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        if (-not $settings.hybridDeploymentGitHubRepoSCName) {
+            throw "hybridDeploymentGitHubRepoSCName setting is required for GitHub repositories with Hybrid Deployment"
+        }
+    }
 
     $existingPipelineDetails = az pipelines list `
         --name "$pipelineName" `
@@ -98,7 +104,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
-        --service-connection "" `
+        $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCName)`"" }) `
         --skip-first-run $skipPipelineFirstRun
 }
 
