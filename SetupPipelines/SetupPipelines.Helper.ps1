@@ -92,9 +92,9 @@ function Add-AzureDevOpsPipelineFromYaml {
                 --yes
         }
     }
-
+   
     Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
-    az pipelines create `
+    $result = az pipelines create `
         --name "$pipelineName" `
         --folder-path "$pipelineFolder" `
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
@@ -105,7 +105,12 @@ function Add-AzureDevOpsPipelineFromYaml {
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
         $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCName)`"" }) `
-        --skip-first-run $skipPipelineFirstRun
+        --skip-first-run $skipPipelineFirstRun `
+        --debug
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create pipeline $pipelineName. Error: $result"
+    }
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
