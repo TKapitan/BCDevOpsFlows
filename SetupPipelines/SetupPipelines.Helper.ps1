@@ -105,8 +105,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
         $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCName)`"" }) `
-        --skip-first-run $skipPipelineFirstRun `
-        --debug
+        --skip-first-run $skipPipelineFirstRun
 
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to create pipeline $pipelineName. Error: $result"
