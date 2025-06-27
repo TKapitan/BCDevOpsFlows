@@ -65,8 +65,8 @@ function Add-AzureDevOpsPipelineFromYaml {
     }
     
     if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
-        if (-not $settings.hybridDeploymentGitHubRepoSCName) {
-            throw "hybridDeploymentGitHubRepoSCName setting is required for GitHub repositories with Hybrid Deployment"
+        if (-not $settings.hybridDeploymentGitHubRepoSCId) {
+            throw "hybridDeploymentGitHubRepoSCId setting is required for GitHub repositories with Hybrid Deployment"
         }
     }
 
@@ -104,7 +104,7 @@ function Add-AzureDevOpsPipelineFromYaml {
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
-        $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCName)`"" }) `
+        $(if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") { "--service-connection `"$($settings.hybridDeploymentGitHubRepoSCId)`"" }) `
         --skip-first-run $skipPipelineFirstRun
 
     if ($LASTEXITCODE -ne 0) {
