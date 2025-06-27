@@ -15,7 +15,7 @@ try {
     }
 
     # Clean Nuget
-    if ($ENV:AL_NUGETINITIALIZED) {
+    if ([bool]::Parse($ENV:AL_NUGETINITIALIZED)) {
         Write-Host "Cleaning Nuget packages"
         . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 

@@ -5,13 +5,13 @@ Param(
     [string] $buildMode = 'Default'
 )
 
-if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
-    throw "You must specify runWith in setting file or use default value."
-}
-Write-Host "Identifying what engine to use for build: " $ENV:AL_RUNWITH
-$runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
-
 try {
+    if ([string]::IsNullOrEmpty($ENV:AL_RUNWITH)) {
+        throw "You must specify runWith in setting file or use default value."
+    }
+    Write-Host "Identifying what engine to use for build: " $ENV:AL_RUNWITH
+    $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
+
     $buildParameters = @{
         "artifact"  = $artifact
         "buildMode" = $buildMode

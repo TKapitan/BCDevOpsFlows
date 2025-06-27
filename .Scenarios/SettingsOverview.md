@@ -128,7 +128,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | Name | Description |
 | :-- | :-- |
 | <a id="type"></a>type | Specifies the type of repository. Allowed values are **PTE** or **AppSource App**. |
-| <a id="buildModes"></a>buildModes | A list of build modes to use when building the project. Every project will be built using each build mode. The following build modes have special meaning:<br /> **Default**: Apps are compiled as they are in the source code.<br />**Clean**: Should be used for Clean Mode. Use [Conditional Settings](https://aka.ms/algosettings#conditional-settings) with buildMode set the 'Clean' to specify preprocessorSymbols for clean mode.<br />**Translated**: `TranslationFile` compiler feature is enabled when compiling the apps.<br /><br />It is also possible to specify custom build modes by adding a build mode that is different than 'Default', 'Clean' or 'Translated' and use [conditional settings](https://aka.ms/algosettings#conditional-settings) to specify preprocessor symbols and other build settings for the build mode. |
+| <a id="buildModes"></a>buildModes | A list of build modes to use when building the project. Every project will be built using each build mode. The following build modes have special meaning:<br /> **Default**: Apps are compiled as they are in the source code.<br />**Clean**: Should be used for Clean Mode. Use [Conditional Settings](#conditional-settings) with buildMode set the 'Clean' to specify preprocessorSymbols for clean mode.<br />**Translated**: `TranslationFile` compiler feature is enabled when compiling the apps.<br /><br />It is also possible to specify custom build modes by adding a build mode that is different than 'Default', 'Clean' or 'Translated' and use [conditional settings](#conditional-settings) to specify preprocessor symbols and other build settings for the build mode. |
 
 ## Advanced settings
 
@@ -160,6 +160,8 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | <a id="vsixFile"></a>vsixFile | Determines which version of the AL Language Extension to use for building the apps. This can be:<br />**default** to use the AL Language Extension which ships with the Business Central version you are building for<br />**latest** to always download the latest AL Language Extension from the marketplace<br />**preview** to always download the preview AL Language Extension from the marketplace.<br/>or a **direct download URL** pointing to the AL Language VSIX file to use for building the apps.<br />By default, BCDevOps Flows uses the AL Language extension, which is shipped with the artifacts used for the build. | default |
 | <a id="skipUpgrade"></a>skipUpgrade | This setting is used to signal to the pipeline to NOT run upgrade and ignore previous releases of the app. | false |
 | <a id="cacheImageName"></a>cacheImageName | When using self-hosted runners, cacheImageName specifies the prefix for the docker image created for increased performance |  |
+| <a id="cacheFolder"></a>cacheFolder | When using self-hosted runners, cacheFolder specifies where to store downloaded artifacts. Based on the cacheKeepDays the stored artifacts are reused by all pipelines that have the same artifact. | bcartifacts.cache |
+| <a id="cacheFolderOld"></a>cacheFolderOld | When you change the cacheFolder to a new folder, you can use cacheFolderOld to cleanup the previous folder. When this value is populated, all artifacts in configured folder are automatically deleted during the next pipeline run that uses BCContainerHelper. This will cause all other running builds using the old folder to fail.  |  |
 | <a id="cacheKeepDays"></a>cacheKeepDays | When using self-hosted runners, cacheKeepDays specifies the number of days docker image are cached before cleaned up when running the next pipeline.<br />Note that setting cacheKeepDays to 0 will flush the cache before every build and will cause all other running builds using agents on the same host to fail. | 3 |
 | <a id="assignPremiumPlan"></a>assignPremiumPlan | Setting assignPremiumPlan to true in your project setting file, causes the build container to be created with the AssignPremiumPlan set. This causes the auto-created user to have Premium Plan enabled. This setting is needed if your tests require premium plan enabled. | false |
 | <a id="enableTaskScheduler"></a>enableTaskScheduler | Setting enableTaskScheduler to true in your project setting file, causes the build container to be created with the Task Scheduler running. | false |
@@ -199,11 +201,11 @@ Example, adding this:
 
 to your [repository settings file](#where-are-the-settings-located) will ensure that all branches matching the patterns in branches will use doNotPublishApps=true and doNotSignApps=true during CI/CD. Conditions can be:
 
-- **repositories** settings will be applied to repositories matching the patterns
-- **buildModes** settings will be applied when building with these buildModes
-- **branches** settings will be applied to branches matching the patterns
-- **workflows** settings will be applied to workflows matching the patterns
-- **users** settings will be applied for users matching the patterns
+- **repositories** settings will be applied to repositories matching the patterns.
+- **buildModes** settings will be applied when building with these buildModes.
+- **branches** settings will be applied to branches matching the patterns. For pull request pipelines the target branch is used as the identifier.
+- **workflows** settings will be applied to workflows matching the patterns.
+- **users** settings will be applied for users matching the patterns.
 
 You could imagine that you could have and organizational settings variable containing:
 
