@@ -98,9 +98,8 @@ function Add-AzureDevOpsPipelineFromYaml {
         --branch $pipelineBranch `
         --yml-path "$pipelineYamlFileRelativePath" `
         --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
-        --service-connection "ea610565-0884-439a-8907-ad5b7ce1e3df" `
-        --skip-first-run $skipPipelineFirstRun `
-        --debug
+        --service-connection "" `
+        --skip-first-run $skipPipelineFirstRun
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
