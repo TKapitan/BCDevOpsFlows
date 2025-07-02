@@ -31,7 +31,7 @@ Before you create Azure DevOps pipelines, you must update BCDevOps flows templat
 1. Push your changes to GitHub.
 1. Navigate to the Azure Devops project.
 1. Select **Pipelines** -> **New Pipeline**
-1. Select **GitHub** (GitHub Enterprise Server is nto supported) -> Authorize the access -> Select your repository -> Review the selected repository and click on **Approve & Install** -> **Existing Azure Pipelines YAML file**
+1. Select **GitHub** (GitHub Enterprise Server is not supported) -> Authorize the access -> Select your repository -> Review the selected repository and click on **Approve & Install** -> **Existing Azure Pipelines YAML file**
 1. Select the branch where your files are located and the file **".azure-pipelines/SetupPipelines.yml"** -> **Continue**.
 1. Click on the arrow next to **Run** and select **Save**.
 1. **Run Pipeline**
