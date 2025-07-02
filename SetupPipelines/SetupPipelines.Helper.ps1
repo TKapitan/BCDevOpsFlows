@@ -63,13 +63,19 @@ function Add-AzureDevOpsPipelineFromYaml {
     if ($skipPipelineFirstRun) {
         OutputDebug "Setting skip first run of pipeline '$pipelineName'"
     }
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        if (-not $settings.hybridDeploymentGitHubRepoSCId) {
+            throw "hybridDeploymentGitHubRepoSCId setting is required for GitHub repositories with Hybrid Deployment"
+        }
+    }
 
     $existingPipelineDetails = az pipelines list `
         --name "$pipelineName" `
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --repository-type "tfsgit" | ConvertFrom-Json
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" | ConvertFrom-Json
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
@@ -86,19 +92,40 @@ function Add-AzureDevOpsPipelineFromYaml {
                 --yes
         }
     }
+   
+    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --service-connection "$($settings.hybridDeploymentGitHubRepoSCId)" `
+            --skip-first-run $skipPipelineFirstRun
+    }
+    else {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --skip-first-run $skipPipelineFirstRun
+    }
 
-    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder"
-    az pipelines create `
-        --name "$pipelineName" `
-        --folder-path "$pipelineFolder" `
-        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-        --project "$ENV:SYSTEM_TEAMPROJECT" `
-        --description "Pipeline $pipelineName created by SetupPipelines." `
-        --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --branch $pipelineBranch `
-        --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "tfsgit" `
-        --skip-first-run $skipPipelineFirstRun
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create pipeline $pipelineName. Error: $result"
+    }
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
