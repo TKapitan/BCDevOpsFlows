@@ -31,7 +31,7 @@ Private clone is a bit more complicated to create and maintain, but gives you mo
     cd BCDevOpsFlows.git
     git push --mirror https://github.com/yourname/private-repo.git
     cd ..
-    rm -rf public-repo.git
+    rm -rf BCDevOpsFlows.git
     ```
     
 ### Update cloned private repository
