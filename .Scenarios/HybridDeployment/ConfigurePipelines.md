@@ -1,10 +1,10 @@
-# Configure Pipelines in your repository
+# Configure Pipelines for Hybrid Deployment
 
-_Prerequisities: Existing BCDevOps Flows project (see [Create New project](./CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](./AddBCDevOpsFlowsToExistingProject.md))_
+_Prerequisities: Existing BCDevOps Flows project (see [Create New project](./CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](./AddBCDevOpsFlowsToExistingProject.md)) created as Hybrid Deployment. GitHub and Azure DevOps configured for Hybrid Deployment (see [Setup GitHub](../HybridDeployment/SetupGitHub.md) and [Setup Azure DevOps](../HybridDeployment/SetupAzureDevOps.md))_
 
-**This document describes standard deployment using Azure DevOps. For Hybrid Deployment (Repository in GitHub, everything else in Azure DevOps), see [Configure Pipelines for Hybrid Deployment](./HybridDeployment/ConfigurePipelines.md)**
+**This document describes Hybrid Deployment with Repository in GitHub, everything else in Azure DevOps. For stadard deployment (everything in Azure DevOps), see [Configure Pipelines](../ConfigurePipelines.md)**
 
-Now, when you have BC DevOps Flows project you are ready to configure pipelines.
+Now, when you have BC DevOps Flows project configured for Hybrid Deployment and both GitHub and Azure DevOps configured you are ready to configure pipelines.
 
 ## Update Pipeline Settings
 
@@ -28,10 +28,10 @@ Before you create Azure DevOps pipelines, you must update BCDevOps flows templat
 
 ## Configure Azure DevOps pipelines
 
-1. Push your changes to Azure DevOps.
+1. Push your changes to GitHub.
 1. Navigate to the Azure Devops project.
 1. Select **Pipelines** -> **New Pipeline**
-1. Select **Azure Repos Git** -> Select your repository -> **Existing Azure Pipelines YAML file**
+1. Select **GitHub** (GitHub Enterprise Server is nto supported) -> Authorize the access -> Select your repository -> Review the selected repository and click on **Approve & Install** -> **Existing Azure Pipelines YAML file**
 1. Select the branch where your files are located and the file **".azure-pipelines/SetupPipelines.yml"** -> **Continue**.
 1. Click on the arrow next to **Run** and select **Save**.
 1. **Run Pipeline**
