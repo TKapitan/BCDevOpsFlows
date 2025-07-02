@@ -1,6 +1,6 @@
 # Configure Pipelines for Hybrid Deployment
 
-_Prerequisities: Existing BCDevOps Flows project (see [Create New project](./CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](./AddBCDevOpsFlowsToExistingProject.md)) created as Hybrid Deployment. GitHub and Azure DevOps configured for Hybrid Deployment (see [Setup GitHub](../HybridDeployment/SetupGitHub.md) and [Setup Azure DevOps](../HybridDeployment/SetupAzureDevOps.md))_
+_Prerequisites: Existing BCDevOps Flows project (see [Create New project](./CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](./AddBCDevOpsFlowsToExistingProject.md)) created as Hybrid Deployment. GitHub and Azure DevOps configured for Hybrid Deployment (see [Setup GitHub](../HybridDeployment/SetupGitHub.md) and [Setup Azure DevOps](../HybridDeployment/SetupAzureDevOps.md))_
 
 **This document describes Hybrid Deployment with Repository in GitHub, everything else in Azure DevOps. For standard deployment (everything in Azure DevOps), see [Configure Pipelines](../ConfigurePipelines.md)**
 
