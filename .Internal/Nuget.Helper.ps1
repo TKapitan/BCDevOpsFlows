@@ -47,6 +47,7 @@ function DownloadNugetPackage() {
     }
     finally {
         $buildMutex.ReleaseMutex()
+        $buildMutex.Close()
     }
     return $nugetPackagePath
 }
