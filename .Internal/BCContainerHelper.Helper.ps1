@@ -136,6 +136,7 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
             }
             finally {
                 $buildMutex.ReleaseMutex()
+                $buildMutex.Close()
             }
             $bcContainerHelperPath = Join-Path $cacheFolder "BcContainerHelper/BcContainerHelper.ps1"
         }
