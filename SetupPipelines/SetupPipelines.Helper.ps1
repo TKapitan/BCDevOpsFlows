@@ -14,7 +14,12 @@ function Get-PipelineDevOpsFolderPath {
 
     switch ($settings.pipelineFolderStructure) {
         'Repository' {
-            $pipelineFolderPath = $ENV:BUILD_REPOSITORY_NAME
+            $pipelineFolderPath = if ($ENV:BUILD_REPOSITORY_NAME -like '*/*') {
+                $ENV:BUILD_REPOSITORY_NAME.Split('/')[-1]
+            }
+            else {
+                $ENV:BUILD_REPOSITORY_NAME
+            }
         }
         'Pipeline' {
             $pipelineFolderPath = $ENV:BUILD_DEFINITIONNAME
