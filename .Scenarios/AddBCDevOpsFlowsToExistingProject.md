@@ -8,6 +8,8 @@ Congratulation, you are ready to create your first BCDevOps Flows project!
 1. If you do not have Test app in your local repository, copy the **Test** folder from BCDevOps Flows folder.
 1. Copy **.azure-pipelines** folder.
 1. Copy .gitignore file. You may need to merge the file with your own .gitignore file if you have additional files excluded/included.
-1. Push all changes to your Azure DevOps
+1. Push all changes to your Azure DevOps*
 
 NEXT STEP: [Configure Pipelines](./ConfigurePipelines.md)
+
+*) or GitHub for Hybrid Deployment, see [Setup GitHub for Hybrid Deployment](./HybridDeployment/SetupGitHub.md) and [Setup Azure DevOps for Hybrid Deployment](./HybridDeployment/SetupAzureDevOps.md)

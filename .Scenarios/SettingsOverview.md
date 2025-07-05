@@ -115,6 +115,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | <a id="ignoredPreprocessorSymbols"></a>ignoredPreprocessorSymbols | List of preprocessor symbols that should be ignored when building the apps. This setting affects symbols defined in `preprocessorSymbols` as well as symbols from app.json (when building with artifact ////appjson) | [ ] |
 | <a id="writableFolderPath"></a>writableFolderPath | Specifies a folder used by pipelines to store/cache build configuration, nuget packages or to build local app file library. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
 | <a id="artifactUrlCacheKeepHours"></a>artifactUrlCacheKeepHours | Specifies how long the artifact url cache is valid (in hours). If this value is different from 0, all requests for the same artifact (for example "**/Sandbox//au/latest**" (which is the same as "**////latest**" if you have country in settings set to AU)) will skip calling BcContainerHelper and will use the same artifactUrl. | 6 |
+| <a id="hybridDeploymentGitHubRepoSCId"></a>hybridDeploymentGitHubRepoSCId | Specifies the ID of the Service Connection that links the Azure DevOps with GitHub where the repository is located. This value is mandatory for hybrid deployments and ignored for standard, Azure DevOps only, deployments. |  |
 
 ## AppSource specific basic project settings
 

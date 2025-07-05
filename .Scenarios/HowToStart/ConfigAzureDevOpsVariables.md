@@ -12,10 +12,6 @@ Variable group is an entity that groups variables. To access the variable from a
 
 ## Supported Variables
 
-### AL_BCDEVOPSFLOWS (mandatory)
-
-Specifies the repository with your version of BCDevOps Flows. Must have format (GitHubOwner/RepositoryName).
-
 ### AL_ENVIRONMENTS (mandatory for DeployToCloud step)
 
 JSON structured list of environments available for deployment. **The variable must be compressed JSON!** The example below is structured json only for better readability.
