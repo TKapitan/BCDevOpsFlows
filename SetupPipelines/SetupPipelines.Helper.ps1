@@ -5,6 +5,7 @@
 
 $workflowScheduleKey = "workflowSchedule"
 $workflowTriggerKey = "workflowTrigger"
+$workflowPRTriggerKey = "workflowPRTrigger"
 
 function Get-PipelineDevOpsFolderPath {
     Param(
@@ -241,13 +242,26 @@ function Update-PipelineYMLFile {
             if ($settings."$workflowTriggerKey" -isnot [hashtable]) {
                 throw "The $workflowTriggerKey setting must be a structure"
             }
-            # Add Workflow Schedule to the workflow
             $yamlContent.trigger = $($settings."$workflowTriggerKey")
-            OutputDebug "Adding trigger to workflow: $($settings."$workflowTriggerKey")"
+            OutputDebug "Adding change trigger to workflow: $($settings."$workflowTriggerKey")"
         }
         elseif ($yamlContent.trigger -and $yamlContent.trigger -ne 'none') {
             $yamlContent.trigger = 'none'
-            OutputDebug "Removing schedule from workflow"
+            OutputDebug "Removing change trigger from workflow"
+        }
+    }
+    else {
+        # Add PR Trigger settings to the workflow
+        if ($settings.Keys -contains $workflowPRTriggerKey) {
+            if ($settings."$workflowPRTriggerKey" -isnot [hashtable]) {
+                throw "The $workflowPRTriggerKey setting must be a structure"
+            }
+            $yamlContent.pr = $($settings."$workflowPRTriggerKey")
+            OutputDebug "Adding pr trigger to workflow: $($settings."$workflowPRTriggerKey")"
+        }
+        elseif ($yamlContent.pr -and $yamlContent.pr -ne 'none') {
+            $yamlContent.pr = 'none'
+            OutputDebug "Removing pr trigger from workflow"
         }
     }
     
