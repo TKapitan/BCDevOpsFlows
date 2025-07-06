@@ -257,11 +257,11 @@ function Update-PipelineYMLFile {
                 throw "The $workflowPRTriggerKey setting must be a structure"
             }
             $yamlContent.pr = $($settings."$workflowPRTriggerKey")
-            OutputDebug "Adding pr trigger to workflow: $($settings."$workflowPRTriggerKey")"
+            OutputDebug "Adding PR trigger to workflow: $($settings."$workflowPRTriggerKey")"
         }
         elseif ($yamlContent.pr -and $yamlContent.pr -ne 'none') {
             $yamlContent.pr = 'none'
-            OutputDebug "Removing pr trigger from workflow"
+            OutputDebug "Removing PR trigger from workflow"
         }
     }
     
