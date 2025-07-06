@@ -28,7 +28,7 @@ This section describes all important security/permission settings.
 
 ## Hybrid Deployment
 
-This section describes how to set up BC DevOps Flows, Azure DevOps and Github. Hybrid deployment allows to host your source code in GitHub while maintaining your pipelines and work items in Azure Devops.
+This section describes how to set up BC DevOps Flows, Azure DevOps and Github. Hybrid deployment allows to host your source code in GitHub while maintaining your pipelines and work items in Azure DevOps.
 
 1. [Set up GitHub](.Scenarios/HybridDeployment/SetupGitHub.md)
 1. [Set up Azure DevOps](.Scenarios/HybridDeployment/SetupAzureDevOps.md)
