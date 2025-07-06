@@ -66,7 +66,7 @@ try {
                 $settings.appRevision = $settings.buildNumberOffset + [Int32]($ENV:BUILD_BUILDNUMBER)
             }
             10 {
-                # USE both from app.json (handled later in RunPipeline)
+                # USE both from app.json (handled later in build step)
                 $settings.appBuild = $null
                 $settings.appRevision = $null
             }
