@@ -46,7 +46,7 @@ function Get-AppFileName {
         [string]$version
     )
 
-    $appFileName = $sanitizedPublisher + '_' + $sanitizedName + '_' + $sanitizedVersion + '.app'
+    $appFileName = $publisher + '_' + $name + '_' + $version + '.app'
     $sanitizedAppFileName = $appFileName -replace '[\\/:*?"<>|]', ''
     return $sanitizedAppFileName
 }
