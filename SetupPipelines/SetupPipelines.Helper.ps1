@@ -5,6 +5,7 @@
 
 $workflowScheduleKey = "workflowSchedule"
 $workflowTriggerKey = "workflowTrigger"
+$workflowPRTriggerKey = "workflowPRTrigger"
 
 function Get-PipelineDevOpsFolderPath {
     Param(
@@ -14,7 +15,12 @@ function Get-PipelineDevOpsFolderPath {
 
     switch ($settings.pipelineFolderStructure) {
         'Repository' {
-            $pipelineFolderPath = $ENV:BUILD_REPOSITORY_NAME
+            $pipelineFolderPath = if ($ENV:BUILD_REPOSITORY_NAME -like '*/*') {
+                $ENV:BUILD_REPOSITORY_NAME.Split('/')[-1]
+            }
+            else {
+                $ENV:BUILD_REPOSITORY_NAME
+            }
         }
         'Pipeline' {
             $pipelineFolderPath = $ENV:BUILD_DEFINITIONNAME
@@ -63,13 +69,19 @@ function Add-AzureDevOpsPipelineFromYaml {
     if ($skipPipelineFirstRun) {
         OutputDebug "Setting skip first run of pipeline '$pipelineName'"
     }
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        if (-not $settings.hybridDeploymentGitHubRepoSCId) {
+            throw "hybridDeploymentGitHubRepoSCId setting is required for GitHub repositories with Hybrid Deployment"
+        }
+    }
 
     $existingPipelineDetails = az pipelines list `
         --name "$pipelineName" `
         --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
         --project "$ENV:SYSTEM_TEAMPROJECT" `
         --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --repository-type "tfsgit" | ConvertFrom-Json
+        --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" | ConvertFrom-Json
         
     OutputDebug "Existing pipeline details: $existingPipelineDetails"
     if ($existingPipelineDetails.Count -gt 0) {
@@ -86,19 +98,40 @@ function Add-AzureDevOpsPipelineFromYaml {
                 --yes
         }
     }
+   
+    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
+    
+    if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --service-connection "$($settings.hybridDeploymentGitHubRepoSCId)" `
+            --skip-first-run $skipPipelineFirstRun
+    }
+    else {
+        $result = az pipelines create `
+            --name "$pipelineName" `
+            --folder-path "$pipelineFolder" `
+            --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
+            --project "$ENV:SYSTEM_TEAMPROJECT" `
+            --description "Pipeline $pipelineName created by SetupPipelines." `
+            --repository "$ENV:BUILD_REPOSITORY_NAME" `
+            --branch $pipelineBranch `
+            --yml-path "$pipelineYamlFileRelativePath" `
+            --repository-type "$ENV:BUILD_REPOSITORY_PROVIDER" `
+            --skip-first-run $skipPipelineFirstRun
+    }
 
-    Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder"
-    az pipelines create `
-        --name "$pipelineName" `
-        --folder-path "$pipelineFolder" `
-        --organization "$ENV:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI" `
-        --project "$ENV:SYSTEM_TEAMPROJECT" `
-        --description "Pipeline $pipelineName created by SetupPipelines." `
-        --repository "$ENV:BUILD_REPOSITORY_NAME" `
-        --branch $pipelineBranch `
-        --yml-path "$pipelineYamlFileRelativePath" `
-        --repository-type "tfsgit" `
-        --skip-first-run $skipPipelineFirstRun
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create pipeline $pipelineName. Error: $result"
+    }
 }
 
 function Copy-PipelineTemplateFilesToPipelineFolder {
@@ -209,13 +242,26 @@ function Update-PipelineYMLFile {
             if ($settings."$workflowTriggerKey" -isnot [hashtable]) {
                 throw "The $workflowTriggerKey setting must be a structure"
             }
-            # Add Workflow Schedule to the workflow
             $yamlContent.trigger = $($settings."$workflowTriggerKey")
-            OutputDebug "Adding trigger to workflow: $($settings."$workflowTriggerKey")"
+            OutputDebug "Adding change trigger to workflow: $($settings."$workflowTriggerKey")"
         }
         elseif ($yamlContent.trigger -and $yamlContent.trigger -ne 'none') {
             $yamlContent.trigger = 'none'
-            OutputDebug "Removing schedule from workflow"
+            OutputDebug "Removing change trigger from workflow"
+        }
+    }
+    else {
+        # Add PR Trigger settings to the workflow
+        if ($settings.Keys -contains $workflowPRTriggerKey) {
+            if ($settings."$workflowPRTriggerKey" -isnot [hashtable]) {
+                throw "The $workflowPRTriggerKey setting must be a structure"
+            }
+            $yamlContent.pr = $($settings."$workflowPRTriggerKey")
+            OutputDebug "Adding PR trigger to workflow: $($settings."$workflowPRTriggerKey")"
+        }
+        elseif ($yamlContent.pr -and $yamlContent.pr -ne 'none') {
+            $yamlContent.pr = 'none'
+            OutputDebug "Removing PR trigger from workflow"
         }
     }
     

@@ -9,25 +9,45 @@ function DownloadNugetPackage() {
 
     $nugetPackagePath = GetNugetPackagePath -packageName $packageName -packageVersion $packageVersion
     OutputDebug -Message "Using Nuget package path: $nugetPackagePath"
-    if (-not (Test-Path -Path $nugetPackagePath)) {
-        $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
 
-        Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
-        New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
-        OutputDebug -Message "Downloading Nuget package $nugetUrl to $nugetPackagePath/$packageName.$packageVersion.zip"
-        Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
-
-        # Unzip the package
+    # To avoid two agents on the same machine downloading the same version at the same time, use a mutex
+    $buildMutexName = "Download$($packageName)-version$($packageVersion)"
+    $buildMutex = New-Object System.Threading.Mutex($false, $buildMutexName)
+    try {
         try {
-            Expand-Archive -Path "$nugetPackagePath/$packageName.$packageVersion.zip" -DestinationPath "$nugetPackagePath" -Force
+            if (!$buildMutex.WaitOne(1000)) {
+                Write-Host "Waiting for other process loading $packageName ($packageVersion)"
+                $buildMutex.WaitOne() | Out-Null
+                Write-Host "Other process completed loading $packageName ($packageVersion)"
+            }
         }
-        catch {
-            # Fallback for any compatibility issues
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            [System.IO.Compression.ZipFile]::ExtractToDirectory("$nugetPackagePath/$packageName.$packageVersion.zip", "$nugetPackagePath")
+        catch [System.Threading.AbandonedMutexException] {
+            Write-Host "Other process terminated abnormally"
         }
-        # Remove the zip file
-        Remove-Item -Path "$nugetPackagePath/$packageName.$packageVersion.zip"
+        if (-not (Test-Path -Path $nugetPackagePath)) {
+            $nugetUrl = "https://www.nuget.org/api/v2/package/$packageName/$packageVersion"
+
+            Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
+            New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
+            OutputDebug -Message "Downloading Nuget package $nugetUrl to $nugetPackagePath/$packageName.$packageVersion.zip"
+            Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
+
+            # Unzip the package
+            try {
+                Expand-Archive -Path "$nugetPackagePath/$packageName.$packageVersion.zip" -DestinationPath "$nugetPackagePath" -Force
+            }
+            catch {
+                # Fallback for any compatibility issues
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
+                [System.IO.Compression.ZipFile]::ExtractToDirectory("$nugetPackagePath/$packageName.$packageVersion.zip", "$nugetPackagePath")
+            }
+            # Remove the zip file
+            Remove-Item -Path "$nugetPackagePath/$packageName.$packageVersion.zip"
+        }
+    }
+    finally {
+        $buildMutex.ReleaseMutex()
+        $buildMutex.Close()
     }
     return $nugetPackagePath
 }

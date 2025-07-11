@@ -26,6 +26,14 @@ This section describes all important security/permission settings.
 1. All pipelines must have access to configured Agent Pool
 1. All pipelines must have access to configured Variable Group
 
+## Hybrid Deployment
+
+This section describes how to set up BC DevOps Flows, Azure DevOps and Github. Hybrid deployment allows to host your source code in GitHub while maintaining your pipelines and work items in Azure DevOps.
+
+1. [Set up GitHub](.Scenarios/HybridDeployment/SetupGitHub.md)
+1. [Set up Azure DevOps](.Scenarios/HybridDeployment/SetupAzureDevOps.md)
+1. [Configure Pipelines](.Scenarios/ConfigurePipelines.md)
+
 ## Important/Interesting setting
 
 The list of supported configuration is available in [Settings Overview](.Scenarios/SettingsOverview.md). Below is a list of the most important setting you should know about or that is different from AL-Go.
