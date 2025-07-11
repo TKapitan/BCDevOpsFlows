@@ -30,7 +30,7 @@ if ($isTestApp) {
 }
 else {
     $applicationPackage = "Microsoft.Application.symbols"
-    if ($settings.country -and $settings.country.ToLower() -ne "w1") {
+    if ($settings.country -and $settings.country -ne "w1") {
         $applicationPackage = "Microsoft.Application.$($settings.country.ToUpper()).symbols"
     }
     Write-Host "Getting application package $applicationPackage for artifact $artifact"
