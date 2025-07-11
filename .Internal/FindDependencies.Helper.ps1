@@ -36,7 +36,7 @@ function Get-AppSourceFileLocation {
         $appFile
     )
 
-    return (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output") + '/' + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
+    return (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".output") + '\' + (Get-AppFileName -publisher $appFile.publisher -name $appFile.name -version $appFile.version);
 }
 function Get-AppFileName {
     [CmdletBinding()]
@@ -46,5 +46,7 @@ function Get-AppFileName {
         [string]$version
     )
 
-    return $publisher + '_' + $name + '_' + $version + '.app';
+    $appFileName = $sanitizedPublisher + '_' + $sanitizedName + '_' + $sanitizedVersion + '.app'
+    $sanitizedAppFileName = $appFileName -replace '[\\/:*?"<>|]', ''
+    return $sanitizedAppFileName
 }
