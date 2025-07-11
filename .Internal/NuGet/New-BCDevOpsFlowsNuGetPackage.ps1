@@ -98,9 +98,7 @@ Function New-BCDevOpsFlowsNuGetPackage {
         [string] $runtimeDependencyId = '{publisher}.{name}.runtime-{version}',
         [switch] $isIndirectPackage,
         [Parameter(Mandatory = $false)]
-        [string] $destinationFolder = '',
-        [obsolete('NuGet Dependencies are always included.')]
-        [switch] $includeNuGetDependencies
+        [string] $destinationFolder = ''
     )
 
     function CopyFileToStream([string] $filename, [System.IO.Stream] $stream) {
