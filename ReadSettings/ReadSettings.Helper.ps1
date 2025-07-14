@@ -137,7 +137,9 @@ function ReadSettings {
         "runWith"                                     = "BcContainerHelper"
         "allowPrerelease"                             = $false
         "recreatePipelineInSetupPipeline"             = $false
-        "hybridDeploymentGitHubRepoSCId"            = ""
+        "hybridDeploymentGitHubRepoSCId"              = ""
+        "appDeliverToType"                            = "Apps"
+        "testDeliverToType"                           = "Tests"
     }
 
     # Read settings from files and merge them into the settings object

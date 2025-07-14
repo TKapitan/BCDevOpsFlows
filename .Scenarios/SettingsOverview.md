@@ -117,6 +117,8 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | <a id="writableFolderPath"></a>writableFolderPath | Specifies a folder used by pipelines to store/cache build configuration, nuget packages or to build local app file library. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
 | <a id="artifactUrlCacheKeepHours"></a>artifactUrlCacheKeepHours | Specifies how long the artifact url cache is valid (in hours). If this value is different from 0, all requests for the same artifact (for example "**/Sandbox//au/latest**" (which is the same as "**////latest**" if you have country in settings set to AU)) will skip calling BcContainerHelper and will use the same artifactUrl. | 6 |
 | <a id="hybridDeploymentGitHubRepoSCId"></a>hybridDeploymentGitHubRepoSCId | Specifies the ID of the Service Connection that links the Azure DevOps with GitHub where the repository is located. This value is mandatory for hybrid deployments and ignored for standard, Azure DevOps only, deployments. |  |
+| <a id="appDeliverToType"></a>appDeliverToType | Specifies the name of the delivery target for app files to package repository. | Apps |
+| <a id="testDeliverToType"></a>testDeliverToType | Specifies the name of the delivery target for test files to package repository. | Tests |
 
 ## AppSource specific basic project settings
 
