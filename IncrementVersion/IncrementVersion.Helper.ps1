@@ -195,7 +195,7 @@ function Update-AppSourceCopJson {
         [PSCustomObject] $settings
     )
 
-    if ($settings.enableAppSourceCop) {
+    if ($settings.updateAppSourceCop) {
         $appJsonContent = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
         if (Test-Path $appSourceCopJsonFilePath) {
             $appSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json

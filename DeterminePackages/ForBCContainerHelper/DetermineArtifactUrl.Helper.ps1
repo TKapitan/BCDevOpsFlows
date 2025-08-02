@@ -28,56 +28,84 @@ function DetermineArtifactUrl {
     OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
 
     $artifact = AddArtifactDefaultValues -artifact $artifact
-    if ($artifact -ne "" -and $artifact -notlike "https://*") {
-        # Check if the artifact is in the cache
-        $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -settings $settings -artifact $artifact
-        if ($artifactUrlFromCacheUrl) {
-            # If found, the value is https url
-            $artifact = $artifactUrlFromCacheUrl;
+    try {
+        $artifactCacheMutexName = "ArtifactUrlCache-$artifact"
+        $artifactCacheMutex = New-Object System.Threading.Mutex($false, $artifactCacheMutexName)
+        if ($artifact -ne "" -and $artifact -notlike "https://*") {
+            # Check if the artifact is in the cache
+            try {
+                if (!$artifactCacheMutex.WaitOne(1000)) {
+                    Write-Host "Waiting for other process updating $artifact Artifact URL cache"
+                    $artifactCacheMutex.WaitOne() | Out-Null
+                    Write-Host "Other process completed updating $artifact Artifact URL cache"
+                }
+            }
+            catch [System.Threading.AbandonedMutexException] {
+                Write-Host "Other process terminated abnormally"
+            }
+            $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -settings $settings -artifact $artifact
+            if ($artifactUrlFromCacheUrl) {
+                # If found, the value is https url
+                $artifact = $artifactUrlFromCacheUrl;
+            }
         }
-    }
 
-    if ($artifact -like "https://*") {
-        $artifactUrl = $artifact
-        $storageAccount = ("$artifactUrl////".Split('/')[2])
-        $artifactType = ("$artifactUrl////".Split('/')[3])
-        $version = ("$artifactUrl////".Split('/')[4])
-        $country = ("$artifactUrl////".Split('?')[0].Split('/')[5])
-    }
-    else {
-        $segments = $artifact.Split('/')
-        $storageAccount = $segments[0];
-        $artifactType = $segments[1];
-        $version = $segments[2]
-        $country = $segments[3];
-        $select = $segments[4];
-        if ($version -eq '*') {
-            $version = "$(([Version]$settings.applicationDependency).Major).$(([Version]$settings.applicationDependency).Minor)"
-            $allArtifactUrls = @(Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select all -accept_insiderEula | Where-Object { [Version]$_.Split('/')[4] -ge [Version]$settings.applicationDependency })
-            if ($select -eq 'latest') {
-                $artifactUrl = $allArtifactUrls | Select-Object -Last 1
-            }
-            elseif ($select -eq 'first') {
-                $artifactUrl = $allArtifactUrls | Select-Object -First 1
-            }
-            else {
-                throw "Invalid artifact setting ($artifact) in $repoSettingsFile. Version can only be '*' if select is first or latest."
-            }
-            Write-Host "Found $($allArtifactUrls.Count) artifacts for version $version matching application dependency $($settings.applicationDependency), selecting $select."
-            if (-not $artifactUrl) {
-                throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile, when application dependency is $($settings.applicationDependency)"
-            }
+        if ($artifact -like "https://*") {
+            $artifactUrl = $artifact
+            $storageAccount = ("$artifactUrl////".Split('/')[2])
+            $artifactType = ("$artifactUrl////".Split('/')[3])
+            $version = ("$artifactUrl////".Split('/')[4])
+            $country = ("$artifactUrl////".Split('?')[0].Split('/')[5])
         }
         else {
-            $artifactUrl = Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select $select -accept_insiderEula | Select-Object -First 1
-            if (-not $artifactUrl) {
-                throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
+            $segments = $artifact.Split('/')
+            $storageAccount = $segments[0];
+            $artifactType = $segments[1];
+            $version = $segments[2]
+            $country = $segments[3];
+            $select = $segments[4];
+            if ($version -eq '*') {
+                $version = "$(([Version]$settings.applicationDependency).Major).$(([Version]$settings.applicationDependency).Minor)"
+                $allArtifactUrls = @(Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select all -accept_insiderEula | Where-Object { [Version]$_.Split('/')[4] -ge [Version]$settings.applicationDependency })
+                if ($select -eq 'latest') {
+                    $artifactUrl = $allArtifactUrls | Select-Object -Last 1
+                }
+                elseif ($select -eq 'first') {
+                    $artifactUrl = $allArtifactUrls | Select-Object -First 1
+                }
+                else {
+                    throw "Invalid artifact setting ($artifact) in $repoSettingsFile. Version can only be '*' if select is first or latest."
+                }
+                Write-Host "Found $($allArtifactUrls.Count) artifacts for version $version matching application dependency $($settings.applicationDependency), selecting $select."
+                if (-not $artifactUrl) {
+                    throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile, when application dependency is $($settings.applicationDependency)"
+                }
             }
-        }
+            else {
+                $artifactUrl = Get-BCArtifactUrl -storageAccount $storageAccount -type $artifactType -version $version -country $country -select $select -accept_insiderEula | Select-Object -First 1
+                if (-not $artifactUrl) {
+                    throw "No artifacts found for the artifact setting ($artifact) in $repoSettingsFile"
+                }
+            }
 
-        AddArtifactUrlToCache -settings $settings -artifact $artifact -ArtifactUrl $artifactUrl
-        $version = $artifactUrl.Split('/')[4]
-        $storageAccount = $artifactUrl.Split('/')[2]
+            try {
+                if (!$artifactCacheMutex.WaitOne(1000)) {
+                    Write-Host "Waiting for other process updating $artifact Artifact URL cache"
+                    $artifactCacheMutex.WaitOne() | Out-Null
+                    Write-Host "Other process completed updating $artifact Artifact URL cache"
+                }
+            }
+            catch [System.Threading.AbandonedMutexException] {
+                Write-Host "Other process terminated abnormally"
+            }
+            AddArtifactUrlToCache -settings $settings -artifact $artifact -ArtifactUrl $artifactUrl
+            $version = $artifactUrl.Split('/')[4]
+            $storageAccount = $artifactUrl.Split('/')[2]
+        }
+    }
+    finally {
+        $artifactCacheMutex.ReleaseMutex()
+        $artifactCacheMutex.Close()
     }
 
     if ($settings.additionalCountries -or $country -ne $settings.country) {
