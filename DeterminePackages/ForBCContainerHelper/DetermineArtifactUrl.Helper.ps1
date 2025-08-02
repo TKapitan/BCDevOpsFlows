@@ -29,8 +29,7 @@ function DetermineArtifactUrl {
 
     $artifact = AddArtifactDefaultValues -artifact $artifact
     try {
-        $artifactHash = Get-StringSHA256Hash $artifact
-        $artifactCacheMutexName = "ArtifactUrlCache-$artifactHash"
+        $artifactCacheMutexName = "ArtifactUrlCache-$artifact"
         $artifactCacheMutex = New-Object System.Threading.Mutex($false, $artifactCacheMutexName)
         if ($artifact -ne "" -and $artifact -notlike "https://*") {
             # Check if the artifact is in the cache
