@@ -17,24 +17,39 @@ try {
         
         $versionSuffix = ''
         $deliverToType = ''
+        $deliverPackage = $true
         if ($appFolder) {
             $folders = @($settings.appFolders)
             if ($isPreview -eq $true) {
                 $versionSuffix = 'preview'
             }
-            $deliverToType = 'Apps'
+            if (-not $settings.ContainsKey('appDeliverToType') -or [string]::IsNullOrWhiteSpace($settings.appDeliverToType)) {
+                Write-Host "Delivery target type is not specified, skipping..."
+                $deliverPackage = $false
+            }
+            else {
+                $deliverToType = $settings.appDeliverToType
+            }
         }
         elseif ($testFolder) {
             $folders = @($settings.testFolders)
             $versionSuffix = 'tests'
-            $deliverToType = 'Tests'
+            if (-not $settings.ContainsKey('testDeliverToType') -or [string]::IsNullOrWhiteSpace($settings.testDeliverToType)) {
+                Write-Host "Delivery target type is not specified, skipping..."
+                $deliverPackage = $false
+            }
+            else {
+                $deliverToType = $settings.testDeliverToType
+            }
         }
 
         $deliverTo = $ENV:AL_DELIVERTO | ConvertFrom-Json | ConvertTo-HashTable -recurse
         if (-not $deliverTo.ContainsKey($deliverToType)) {
             Write-Host "Delivery settings for $deliverToType is not specified, skipping..."
+            $deliverPackage = $false
         }
-        else {
+
+        if ($deliverPackage) {
             $deliverToConfig = $deliverTo[$deliverToType]
             if ($deliverToConfig.type -notin @('AzureDevOps', 'NuGet')) {
                 throw "Invalid delivery target type '$($deliverToConfig.type)'. Must be either 'AzureDevOps' or 'NuGet'."
