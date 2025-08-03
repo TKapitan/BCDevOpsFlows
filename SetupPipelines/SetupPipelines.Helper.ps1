@@ -99,6 +99,15 @@ function Add-AzureDevOpsPipelineFromYaml {
         }
     }
    
+    # Remove unsupported characters from pipeline folder and name
+    $pipelineFolder = $pipelineFolder -replace '^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$', ''
+    $pipelineFolder = $pipelineFolder -replace '[^a-zA-Z0-9\\\-_]', ''
+    $pipelineFolder = $pipelineFolder -replace '^[\-_]+|[\-_]+$', ''
+
+    $pipelineName = $pipelineName -replace '^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$', ''
+    $pipelineName = $pipelineName -replace '[^a-zA-Z0-9\-_]', ''
+    $pipelineName = $pipelineName -replace '^[\-_]+|[\-_]+$', ''
+
     Write-Host "Creating pipeline $pipelineName in folder $pipelineFolder for repository $($ENV:BUILD_REPOSITORY_PROVIDER) $($ENV:BUILD_REPOSITORY_NAME)"
     
     if ($ENV:BUILD_REPOSITORY_PROVIDER.ToLower() -eq "github") {
