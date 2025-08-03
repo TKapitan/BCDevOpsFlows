@@ -15,14 +15,19 @@ DownloadAndImportBcContainerHelper
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 if ($settings.artifact -notlike "https://*") {
     $artifactUrl = DetermineArtifactUrl -settings $settings
-    $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
-    if (!($folders)) {
-        throw "Unable to download artifacts from $($artifactUrl.Split('?')[0])."
-    }
-    if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
-        throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
-    }
     $settings.artifact = $artifactUrl
+}
+else {
+    $artifactUrl = $settings.artifact
+}
+
+$bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolder -Force
+$folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
+if (!($folders)) {
+    throw "Unable to download artifacts from $($artifactUrl.Split('?')[0])."
+}
+if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
+    throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
 }
 
 # Set output variables
