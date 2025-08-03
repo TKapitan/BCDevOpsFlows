@@ -17,6 +17,9 @@ if ($settings.artifact -notlike "https://*") {
     $artifactUrl = DetermineArtifactUrl -settings $settings
     $settings.artifact = $artifactUrl
 }
+else {
+    $artifactUrl = $settings.artifact
+}
 
 $bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolder -Force
 $folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
