@@ -26,7 +26,7 @@ function Get-DependenciesFromNuGet {
                     $settings.appDependencies = @()
                 }
                 $settings.appDependencies += $appFile
-                Write-Host "Adding app dependency $packageName"
+                Write-Host "Adding app dependency: $packageName"
             }
         }
     }
@@ -41,6 +41,38 @@ function Get-DependenciesFromNuGet {
                     $settings.testDependencies = @()
                 }
                 $settings.testDependencies += $appFile
+                Write-Host "Adding test dependency: $packageName"
+            }
+        }
+    }
+    
+    Write-Host "Checking installAppsNuGet and installTestAppsNuGet"
+    
+    if ($settings.installAppsNuGet) {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
+        $settings.installAppsNuGet | ForEach-Object {
+            $packageName = $_
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
+            if ($appFile) {
+                if (!$settings.installApps) {
+                    $settings.installApps = @()
+                }
+                $settings.installApps += $appFile
+                Write-Host "Adding app to install: $packageName"
+            }
+        }
+    }
+
+    if ($settings.installTestAppsNuGet) {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
+        $settings.installTestAppsNuGet | ForEach-Object {
+            $packageName = $_
+            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
+            if ($appFile) {
+                if (!$settings.installTestApps) {
+                    $settings.installTestApps = @()
+                }
+                $settings.installTestApps += $appFile
                 Write-Host "Adding test dependency $packageName"
             }
         }
