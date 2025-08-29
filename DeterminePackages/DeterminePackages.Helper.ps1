@@ -73,7 +73,7 @@ function Get-DependenciesFromNuGet {
                     $settings.installTestApps = @()
                 }
                 $settings.installTestApps += $appFile
-                Write-Host "Adding test dependency $packageName"
+                Write-Host "Adding test app to install: $packageName"
             }
         }
     }
