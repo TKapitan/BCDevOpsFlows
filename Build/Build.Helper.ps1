@@ -7,20 +7,60 @@ function Get-PreprocessorSymbols {
     )
 
     $existingSymbols = @{}
-    # Add preprocessor symbols from the settings file and app.json
-    if ($ENV:AL_APPJSONARTIFACT -and $appJsonContent.PSObject.Properties.Name -contains 'preprocessorSymbols') {
+    
+    # Add preprocessor symbols from app.json
+    if ($appJsonContent -and ($appJsonContent.PSObject.Properties.Name -contains 'preprocessorSymbols')) {
         OutputDebug -Message "Adding Preprocessor symbols from app.json: $($appJsonContent.preprocessorSymbols -join ',')"
-        $appJsonContent.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
+        $appJsonContent.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { 
+            $existingSymbols[$_.Trim()] = $true 
+        }
     }
-    if ($settings.ContainsKey('preprocessorSymbols')) {
-        OutputDebug -Message "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
-        $settings.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols[$_] = $true }
+    
+    # Add preprocessor symbols from settings
+    if ($settings.PSObject.Properties.Name -contains 'preprocessorSymbols') {
+        OutputDebug -Message "Adding Preprocessor symbols: $($settings.preprocessorSymbols -join ',')"
+        $settings.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { 
+            $existingSymbols[$_.Trim()] = $true 
+        }
     }
+    
     # Remove ignored preprocessor symbols
-    if ($settings.ContainsKey('ignoredPreprocessorSymbols')) {
+    if ($settings.PSObject.Properties.Name -contains 'ignoredPreprocessorSymbols') {
         OutputDebug -Message "Removing ignored Preprocessor symbols: $($settings.ignoredPreprocessorSymbols -join ',')"
-        $settings.ignoredPreprocessorSymbols | Where-Object { $_ } | ForEach-Object { $existingSymbols.Remove($_) }
+        $settings.ignoredPreprocessorSymbols | Where-Object { $_ } | ForEach-Object { 
+            $existingSymbols.Remove($_.Trim()) | Out-Null
+        }
+    }
+    
+    # Add country preprocessor symbols if enabled
+    if (($settings.PSObject.Properties.Name -contains 'generateCountryPreprocessorSymbols') -and $settings.generateCountryPreprocessorSymbols) {
+        $countryCodes = @()
+        
+        # Add primary country
+        if (($settings.PSObject.Properties.Name -contains 'country') -and $settings.country) {
+            if ($settings.country -is [array]) {
+                $countryCodes += $settings.country
+            } else {
+                $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() })
+            }
+        }
+        
+        # Add additional countries
+        if (($settings.PSObject.Properties.Name -contains 'additionalCountries') -and $settings.additionalCountries) {
+            if ($settings.additionalCountries -is [array]) {
+                $countryCodes += $settings.additionalCountries
+            } else {
+                $countryCodes += ($settings.additionalCountries -split '[,;\s]+' | Where-Object { $_.Trim() })
+            }
+        }
+        
+        # Generate country symbols
+        $countryCodes | Where-Object { $_.Trim() } | ForEach-Object { 
+            $countrySymbol = "COUNTRY_$($_.Trim().ToUpper())"
+            OutputDebug -Message "Adding country preprocessor symbol: $countrySymbol"
+            $existingSymbols[$countrySymbol] = $true
+        }
     }
 
-    return $existingSymbols
+    return $existingSymbols.Keys
 }
