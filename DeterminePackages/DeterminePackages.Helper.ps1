@@ -21,13 +21,14 @@ function Get-DependenciesFromNuGet {
         $settings.appDependenciesNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.appDependencies) {
-                    $settings.appDependencies = @()
-                }
-                $settings.appDependencies += $appFile
-                Write-Host "Adding app dependency: $packageName"
+            if (-not $appFile) {
+                throw "Package $packageName not found in NuGet feeds"
             }
+            if (!$settings.appDependencies) {
+                $settings.appDependencies = @()
+            }
+            $settings.appDependencies += $appFile
+            Write-Host "Adding app dependency: $packageName"
         }
     }
 
@@ -36,13 +37,14 @@ function Get-DependenciesFromNuGet {
         $settings.testDependenciesNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.testDependencies) {
-                    $settings.testDependencies = @()
-                }
-                $settings.testDependencies += $appFile
-                Write-Host "Adding test dependency: $packageName"
+            if (-not $appFile) {
+                throw "Package $packageName not found in NuGet feeds"
             }
+            if (!$settings.testDependencies) {
+                $settings.testDependencies = @()
+            }
+            $settings.testDependencies += $appFile
+            Write-Host "Adding test dependency: $packageName"
         }
     }
     
@@ -53,13 +55,14 @@ function Get-DependenciesFromNuGet {
         $settings.installAppsNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.installApps) {
-                    $settings.installApps = @()
-                }
-                $settings.installApps += $appFile
-                Write-Host "Adding app to install: $packageName"
+            if (-not $appFile) {
+                throw "Package $packageName not found in NuGet feeds"
             }
+            if (!$settings.installApps) {
+                $settings.installApps = @()
+            }
+            $settings.installApps += $appFile
+            Write-Host "Adding app to install: $packageName"
         }
     }
 
@@ -68,13 +71,14 @@ function Get-DependenciesFromNuGet {
         $settings.installTestAppsNuGet | ForEach-Object {
             $packageName = $_
             $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.installTestApps) {
-                    $settings.installTestApps = @()
-                }
-                $settings.installTestApps += $appFile
-                Write-Host "Adding test app to install: $packageName"
+            if (-not $appFile) {
+                throw "Package $packageName not found in NuGet feeds"
             }
+            if (!$settings.installTestApps) {
+                $settings.installTestApps = @()
+            }
+            $settings.installTestApps += $appFile
+            Write-Host "Adding test app to install: $packageName"
         }
     }
     
