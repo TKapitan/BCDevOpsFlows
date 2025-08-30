@@ -41,7 +41,7 @@ function Get-PreprocessorSymbols {
             if ($settings.country -is [array]) {
                 $countryCodes += $settings.country
             } else {
-                $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() })
+                $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() -ne '' })
             }
         }
         
