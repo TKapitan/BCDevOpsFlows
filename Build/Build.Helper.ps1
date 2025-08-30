@@ -41,7 +41,7 @@ function Get-PreprocessorSymbols {
             if ($settings.country -is [array]) {
                 $countryCodes += $settings.country
             } else {
-                $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() })
+                $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() -ne '' })
             }
         }
         
@@ -50,12 +50,12 @@ function Get-PreprocessorSymbols {
             if ($settings.additionalCountries -is [array]) {
                 $countryCodes += $settings.additionalCountries
             } else {
-                $countryCodes += ($settings.additionalCountries -split '[,;\s]+' | Where-Object { $_.Trim() })
+                $countryCodes += ($settings.additionalCountries -split '[,;\s]+' | Where-Object { $_.Trim() -ne '' })
             }
         }
         
         # Generate country symbols
-        $countryCodes | Where-Object { $_.Trim() } | ForEach-Object { 
+        $countryCodes | Where-Object { $_.Trim() -ne '' } | ForEach-Object { 
             $countrySymbol = "COUNTRY_$($_.Trim().ToUpper())"
             OutputDebug -Message "Adding country preprocessor symbol: $countrySymbol"
             $existingSymbols[$countrySymbol] = $true
