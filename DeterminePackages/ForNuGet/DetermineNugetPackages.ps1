@@ -130,6 +130,23 @@ foreach ($dependency in $appJsonContent.dependencies) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
     }
 }
+
+$appDependencies = @()
+Get-ChildItem -Path $dependenciesPackageCachePath -Recurse -File | ForEach-Object {
+    Write-Host "Adding dependency app: $($_.FullName)"
+    $appDependencies += $_.FullName
+}
+if ($isTestApp) {
+    $settings.testDependencies = $($appDependencies -join ',')
+}
+else {
+    $settings.appDependencies = $($appDependencies -join ',')
+}
+
+# Set output variables
+$ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
     
 # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
 $artifact = $settings.artifact
