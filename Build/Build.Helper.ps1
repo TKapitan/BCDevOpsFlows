@@ -61,6 +61,5 @@ function Get-PreprocessorSymbols {
             $existingSymbols[$countrySymbol] = $true
         }
     }
-
-    return $existingSymbols.Keys
+    return $existingSymbols
 }
