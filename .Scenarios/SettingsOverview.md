@@ -176,6 +176,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | <a id="includeSourceInSymbolFile"></a>includeSourceInSymbolFile | Specifies new value for includeSourceInSymbolFile resource exposure policy. If the setting is not configured, the existing value defined in the app.json is used. overrideResourceExposurePolicy must be enabled in order to use configured value. |  |
 | <a id="applyToDevExtension"></a>applyToDevExtension | Specifies new value for applyToDevExtension resource exposure policy. If the setting is not configured, the existing value defined in the app.json is used. overrideResourceExposurePolicy must be enabled in order to use configured value. |  |
 | <a id="trustMicrosoftNuGetFeeds"></a>trustMicrosoftNuGetFeeds | Unless this setting is set to false, BC DevOps Flows will trust the NuGet feeds provided by Microsoft. The feeds provided by Microsoft contains all Microsoft apps, all Microsoft symbols and symbols for all AppSource apps. | true |
+| <a id="generateCountryPreprocessorSymbols"></a>generateCountryPreprocessorSymbols | If enabled, BC DevOps Flows automatically generates preprocessor symbol COUNTRY_XX where XX is the localization country code of the container. | false |
 
 
 ## AppSource specific advanced settings
