@@ -128,19 +128,20 @@ foreach ($dependency in $appJsonContent.dependencies) {
 
     Write-Host "DEBUG $packageName"
     Write-Host "DEBUG $downloadedPackage"
-    $appDependencies = @()
-    Get-ChildItem -Path $dependenciesPackageCachePath -Recurse -File | ForEach-Object {
-        Write-Host "Found dependency file: $($_.FullName)"
-        $appDependencies += $_.FullName
-    }
-    Write-Host "App dependencies: $($appDependencies -join ', ')"
-
-    throw "DEBUG STOP"
 
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
     }
 }
+
+$appDependencies = @()
+Get-ChildItem -Path $dependenciesPackageCachePath -Recurse -File | ForEach-Object {
+    Write-Host "Found dependency file: $($_.FullName)"
+    $appDependencies += $_.FullName
+}
+Write-Host "App dependencies: $($appDependencies -join ', ')"
+
+throw "DEBUG STOP"
     
 # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
 $artifact = $settings.artifact
