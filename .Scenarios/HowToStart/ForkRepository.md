@@ -2,6 +2,8 @@
 
 To start using BCDevOps flow you first need to clone the repository to your GitHub account. You have two ways depending if the cloned repository should be public or private.
 
+While it is possible to use TKapitan/BCDevOpsFlows directly it is not recommended. You should always maintain your own version and be responsible for any updates done to your version.
+
 ## Public Clone
 
 To create a public clone you can fork the the main repository.
@@ -43,6 +45,6 @@ Private clone is a bit more complicated to create and maintain, but gives you mo
     ```shell
     cd private-repo
     git remote add public https://github.com/TKapitan/BCDevOpsFlows
-    git pull public master # Creates a merge commit
-    git push origin master
+    git pull public main # Creates a merge commit
+    git push origin main
     ```
