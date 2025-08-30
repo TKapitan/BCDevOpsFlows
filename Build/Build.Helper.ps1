@@ -17,7 +17,7 @@ function Get-PreprocessorSymbols {
     }
     
     # Add preprocessor symbols from settings
-    if ($settings.PSObject.Properties.Name -contains 'preprocessorSymbols') {
+    if ($settings.ContainsKey('preprocessorSymbols')) {
         OutputDebug -Message "Adding Preprocessor symbols: $($settings.preprocessorSymbols -join ',')"
         $settings.preprocessorSymbols | Where-Object { $_ } | ForEach-Object { 
             $existingSymbols[$_.Trim()] = $true 
@@ -25,7 +25,7 @@ function Get-PreprocessorSymbols {
     }
     
     # Remove ignored preprocessor symbols
-    if ($settings.PSObject.Properties.Name -contains 'ignoredPreprocessorSymbols') {
+    if ($settings.ContainsKey('ignoredPreprocessorSymbols')) {
         OutputDebug -Message "Removing ignored Preprocessor symbols: $($settings.ignoredPreprocessorSymbols -join ',')"
         $settings.ignoredPreprocessorSymbols | Where-Object { $_ } | ForEach-Object { 
             $existingSymbols.Remove($_.Trim()) | Out-Null
@@ -33,11 +33,11 @@ function Get-PreprocessorSymbols {
     }
     
     # Add country preprocessor symbols if enabled
-    if (($settings.PSObject.Properties.Name -contains 'generateCountryPreprocessorSymbols') -and $settings.generateCountryPreprocessorSymbols) {
+    if (($settings.ContainsKey('generateCountryPreprocessorSymbols')) -and $settings.generateCountryPreprocessorSymbols) {
         $countryCodes = @()
         
         # Add primary country
-        if (($settings.PSObject.Properties.Name -contains 'country') -and $settings.country) {
+        if (($settings.ContainsKey('country')) -and $settings.country) {
             if ($settings.country -is [array]) {
                 $countryCodes += $settings.country
             } else {
@@ -46,7 +46,7 @@ function Get-PreprocessorSymbols {
         }
         
         # Add additional countries
-        if (($settings.PSObject.Properties.Name -contains 'additionalCountries') -and $settings.additionalCountries) {
+        if (($settings.ContainsKey('additionalCountries')) -and $settings.additionalCountries) {
             if ($settings.additionalCountries -is [array]) {
                 $countryCodes += $settings.additionalCountries
             } else {
