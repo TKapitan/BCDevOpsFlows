@@ -34,6 +34,13 @@ function Get-PreprocessorSymbols {
     
     # Add country preprocessor symbols if enabled
     if (($settings.ContainsKey('generateCountryPreprocessorSymbols')) -and $settings.generateCountryPreprocessorSymbols) {
+        # Remove any existing COUNTRY_XX symbols from app.json
+        $countrySymbolsToRemove = $existingSymbols.Keys | Where-Object { $_ -match '^COUNTRY_[A-Z0-9]+$' }
+        $countrySymbolsToRemove | ForEach-Object {
+            OutputDebug -Message "Removing existing country preprocessor symbol from app.json: $_"
+            $existingSymbols.Remove($_) | Out-Null
+        }
+        
         $countryCodes = @()
         
         # Add primary country
