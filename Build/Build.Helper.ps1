@@ -55,7 +55,7 @@ function Get-PreprocessorSymbols {
         }
         
         # Generate country symbols
-        $countryCodes | Where-Object { $_.Trim() } | ForEach-Object { 
+        $countryCodes | Where-Object { $_.Trim() -ne '' } | ForEach-Object { 
             $countrySymbol = "COUNTRY_$($_.Trim().ToUpper())"
             OutputDebug -Message "Adding country preprocessor symbol: $countrySymbol"
             $existingSymbols[$countrySymbol] = $true
