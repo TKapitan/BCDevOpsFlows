@@ -79,7 +79,9 @@ function ReadSettings {
         "pageScriptingTests"                          = @()
         "restoreDatabases"                            = @()
         "installApps"                                 = @()
+        "installAppsNuGet"                            = @()
         "installTestApps"                             = @()
+        "installTestAppsNuGet"                        = @()
         "installOnlyReferencedApps"                   = $true
         "generateDependencyArtifact"                  = $false
         "skipUpgrade"                                 = $false
