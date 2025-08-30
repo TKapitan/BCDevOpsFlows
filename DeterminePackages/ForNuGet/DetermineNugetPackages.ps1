@@ -126,9 +126,6 @@ foreach ($dependency in $appJsonContent.dependencies) {
     Write-Host "Getting $($dependency.name) using name $($dependency.id)"
     $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
 
-    Write-Host "DEBUG $packageName"
-    Write-Host "DEBUG $downloadedPackage"
-
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
     }
@@ -136,12 +133,20 @@ foreach ($dependency in $appJsonContent.dependencies) {
 
 $appDependencies = @()
 Get-ChildItem -Path $dependenciesPackageCachePath -Recurse -File | ForEach-Object {
-    Write-Host "Found dependency file: $($_.FullName)"
+    Write-Host "Adding dependency app: $($_.FullName)"
     $appDependencies += $_.FullName
 }
-Write-Host "App dependencies: $($appDependencies -join ', ')"
+if ($isTestApp) {
+    $settings.testDependencies = $($appDependencies -join ',')
+}
+else {
+    $settings.appDependencies = $($appDependencies -join ',')
+}
 
-throw "DEBUG STOP"
+# Set output variables
+$ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
+Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
+OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
     
 # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
 $artifact = $settings.artifact
