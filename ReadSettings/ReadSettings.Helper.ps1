@@ -79,7 +79,9 @@ function ReadSettings {
         "pageScriptingTests"                          = @()
         "restoreDatabases"                            = @()
         "installApps"                                 = @()
+        "installAppsNuGet"                            = @()
         "installTestApps"                             = @()
+        "installTestAppsNuGet"                        = @()
         "installOnlyReferencedApps"                   = $true
         "generateDependencyArtifact"                  = $false
         "skipUpgrade"                                 = $false
@@ -141,6 +143,7 @@ function ReadSettings {
         "appDeliverToType"                            = "Apps"
         "testDeliverToType"                           = "Tests"
         "updateAppSourceCop"                          = $false
+        "generateCountryPreprocessorSymbols"          = $false
     }
 
     # Read settings from files and merge them into the settings object

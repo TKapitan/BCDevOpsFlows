@@ -2,50 +2,55 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 
+function Get-NuGetPackagesAndAddToSettings {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $appJsonContent,
+        [Parameter(Mandatory = $true)]
+        [string] $sourceProperty,
+        [Parameter(Mandatory = $true)]
+        [string] $targetProperty,
+        [Parameter(Mandatory = $false)]
+        [hashtable] $packageParams
+    )
+    
+    if ($settings[$sourceProperty]) {
+        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
+        $settings[$sourceProperty] | ForEach-Object {
+            $packageName = $_
+            $packageParts = $packageName -split '\.'
+            $packageId = $packageParts[-1]
+            if ($packageId -eq $appJsonContent.id) {
+                Write-Host " - skipping package $packageName (matches current app ID)"
+            }
+            else {
+                $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @packageParams
+                if (-not $appFile) {
+                    throw "Package $packageName not found in NuGet feeds"
+                }
+                if (!$settings[$targetProperty]) {
+                    $settings[$targetProperty] = @()
+                }
+                $settings[$targetProperty] += $appFile
+                Write-Host " - adding app: $packageName"
+            }
+        }
+    }
+}
+
 function Get-DependenciesFromNuGet {
     [CmdletBinding()]
     Param(
-        [hashtable] $settings
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $appJsonContent
     )
 
     $settings = $settings | Copy-HashTable
-    Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
-    $getDependencyNuGetPackageParams = @{}
-    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
-        $getDependencyNuGetPackageParams += @{
-            "allowPrerelease" = $true
-        }
-    }
-    if ($settings.appDependenciesNuGet) {
-        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
-        $settings.appDependenciesNuGet | ForEach-Object {
-            $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.appDependencies) {
-                    $settings.appDependencies = @()
-                }
-                $settings.appDependencies += $appFile
-                Write-Host "Adding app dependency $packageName"
-            }
-        }
-    }
-
-    if ($settings.testDependenciesNuGet) {
-        $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
-        $settings.testDependenciesNuGet | ForEach-Object {
-            $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @getDependencyNuGetPackageParams
-            if ($appFile) {
-                if (!$settings.testDependencies) {
-                    $settings.testDependencies = @()
-                }
-                $settings.testDependencies += $appFile
-                Write-Host "Adding test dependency $packageName"
-            }
-        }
-    }
-    
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
@@ -54,14 +59,57 @@ function Get-DependenciesFromNuGet {
         Write-Host "No performance test apps found in bcptTestFolders in settings."
         $settings.doNotRunBcptTests = $true
     }
-    if (!$settings.doNotRunTests -and !$settings.testFolders) {
-        OutputWarning -Message "No test apps found in testFolders in settings."
-        $settings.doNotRunTests = $true
+    if (!$settings.doNotBuildTests -and !$settings.testFolders) {
+        OutputWarning -Message "No test apps found in testFolders in settings, skipping tests."
+        $settings.doNotBuildTests = $true
+    }
+    if (!$settings.doNotBuildTests) {
+        $folderFound = $false
+        foreach ($folderName in $settings.testFolders) {
+            $testFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $folderName
+            if (Test-Path $testFolder) {
+                $folderFound = $true
+            }
+        }
+        if (-not $folderFound) {
+            OutputWarning -Message "Test folder specified in settings but the folder does not exist, skipping tests."
+            $settings.doNotBuildTests = $true
+        }
     }
     if (!$settings.appFolders) {
         OutputWarning -Message "No apps found in appFolders in settings."
     }
     Write-Host "Analyzing dependencies completed"
+    
+    Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
+    $getDependencyNuGetPackageParams = @{}
+    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
+        $getDependencyNuGetPackageParams += @{
+            "allowPrerelease" = $true
+        }
+    }
+
+    # Process app dependencies from NuGet
+    Write-Host "Adding app dependencies:"
+    Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "appDependenciesNuGet" -targetProperty "appDependencies" -packageParams $getDependencyNuGetPackageParams
+
+    if (-not $settings.doNotBuildTests) {
+        # Process test dependencies from NuGet
+        Write-Host "Adding test dependencies:"
+        Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "testDependenciesNuGet" -targetProperty "testDependencies" -packageParams $getDependencyNuGetPackageParams
+    }
+
+    Write-Host "Checking installAppsNuGet and installTestAppsNuGet"
+    
+    # Process install apps from NuGet
+    Write-Host "Adding additional apps to install:"
+    Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "installAppsNuGet" -targetProperty "installApps" -packageParams $getDependencyNuGetPackageParams
+
+    if (-not $settings.doNotBuildTests) {
+        # Process install test apps from NuGet
+        Write-Host "Adding additional test apps to install:"
+        Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "installTestAppsNuGet" -targetProperty "installTestApps" -packageParams $getDependencyNuGetPackageParams
+    }
 
     return $settings
 }
