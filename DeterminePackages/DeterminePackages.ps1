@@ -13,8 +13,9 @@ try {
 
     # Update settings from app configuration
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
+    $appJsonContentApp = Get-Content "$ENV:PIPELINE_WORKSPACE\App\App\app.json" -Encoding UTF8 | ConvertFrom-Json
     $settings = Update-CustomCodeCops -settings $settings -runWith $runWith
-    $settings = Get-DependenciesFromNuGet -settings $settings
+    $settings = Get-DependenciesFromNuGet -settings $settings -appJsonContent $appJsonContentApp
     $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
     # Set output variables
@@ -23,7 +24,6 @@ try {
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
 
     # Determine packages
-    $appJsonContentApp = Get-Content "$ENV:PIPELINE_WORKSPACE\App\App\app.json" -Encoding UTF8 | ConvertFrom-Json
     . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentApp
 
     if ($runWith -eq 'nuget') {
