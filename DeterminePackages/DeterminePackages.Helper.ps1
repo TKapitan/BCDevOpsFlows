@@ -91,24 +91,24 @@ function Get-DependenciesFromNuGet {
 
     # Process app dependencies from NuGet
     Write-Host "Adding app dependencies:"
-    Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "appDependenciesNuGet" -targetProperty "appDependencies" -packageParams $getDependencyNuGetPackageParams
+    Get-NuGetPackagesAndAddToSettings -settings $settings -appJsonContent $appJsonContent -sourceProperty "appDependenciesNuGet" -targetProperty "appDependencies" -packageParams $getDependencyNuGetPackageParams
 
     if (-not $settings.doNotBuildTests) {
         # Process test dependencies from NuGet
         Write-Host "Adding test dependencies:"
-        Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "testDependenciesNuGet" -targetProperty "testDependencies" -packageParams $getDependencyNuGetPackageParams
+        Get-NuGetPackagesAndAddToSettings -settings $settings -appJsonContent $appJsonContent -sourceProperty "testDependenciesNuGet" -targetProperty "testDependencies" -packageParams $getDependencyNuGetPackageParams
     }
 
     Write-Host "Checking installAppsNuGet and installTestAppsNuGet"
     
     # Process install apps from NuGet
     Write-Host "Adding additional apps to install:"
-    Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "installAppsNuGet" -targetProperty "installApps" -packageParams $getDependencyNuGetPackageParams
+    Get-NuGetPackagesAndAddToSettings -settings $settings -appJsonContent $appJsonContent -sourceProperty "installAppsNuGet" -targetProperty "installApps" -packageParams $getDependencyNuGetPackageParams
 
     if (-not $settings.doNotBuildTests) {
         # Process install test apps from NuGet
         Write-Host "Adding additional test apps to install:"
-        Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "installTestAppsNuGet" -targetProperty "installTestApps" -packageParams $getDependencyNuGetPackageParams
+        Get-NuGetPackagesAndAddToSettings -settings $settings -appJsonContent $appJsonContent -sourceProperty "installTestAppsNuGet" -targetProperty "installTestApps" -packageParams $getDependencyNuGetPackageParams
     }
 
     return $settings
