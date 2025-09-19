@@ -5,9 +5,15 @@
 function Get-NuGetPackagesAndAddToSettings {
     [CmdletBinding()]
     Param(
+        [Parameter(Mandatory = $true)]
         [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $appJsonContent,
+        [Parameter(Mandatory = $true)]
         [string] $sourceProperty,
+        [Parameter(Mandatory = $true)]
         [string] $targetProperty,
+        [Parameter(Mandatory = $false)]
         [hashtable] $packageParams
     )
     
@@ -15,15 +21,22 @@ function Get-NuGetPackagesAndAddToSettings {
         $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
         $settings[$sourceProperty] | ForEach-Object {
             $packageName = $_
-            $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @packageParams
-            if (-not $appFile) {
-                throw "Package $packageName not found in NuGet feeds"
+            $packageParts = $packageName -split '\.'
+            $packageId = $packageParts[-1]
+            if ($packageId -eq $appJsonContent.id) {
+                Write-Host " - skipping package $packageName (matches current app ID)"
             }
-            if (!$settings[$targetProperty]) {
-                $settings[$targetProperty] = @()
+            else {
+                $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @packageParams
+                if (-not $appFile) {
+                    throw "Package $packageName not found in NuGet feeds"
+                }
+                if (!$settings[$targetProperty]) {
+                    $settings[$targetProperty] = @()
+                }
+                $settings[$targetProperty] += $appFile
+                Write-Host " - adding app: $packageName"
             }
-            $settings[$targetProperty] += $appFile
-            Write-Host " - adding app: $packageName"
         }
     }
 }
@@ -31,18 +44,13 @@ function Get-NuGetPackagesAndAddToSettings {
 function Get-DependenciesFromNuGet {
     [CmdletBinding()]
     Param(
-        [hashtable] $settings
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $appJsonContent
     )
 
     $settings = $settings | Copy-HashTable
-    Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
-    $getDependencyNuGetPackageParams = @{}
-    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
-        $getDependencyNuGetPackageParams += @{
-            "allowPrerelease" = $true
-        }
-    }
-
     Write-Host "Analyzing Test App Dependencies"
     if ($settings.testFolders) { $settings.installTestRunner = $true }
     if ($settings.bcptTestFolders) { $settings.installPerformanceToolkit = $true }
@@ -73,6 +81,14 @@ function Get-DependenciesFromNuGet {
     }
     Write-Host "Analyzing dependencies completed"
     
+    Write-Host "Checking appDependenciesNuGet and testDependenciesNuGet"
+    $getDependencyNuGetPackageParams = @{}
+    if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
+        $getDependencyNuGetPackageParams += @{
+            "allowPrerelease" = $true
+        }
+    }
+
     # Process app dependencies from NuGet
     Write-Host "Adding app dependencies:"
     Get-NuGetPackagesAndAddToSettings -settings $settings -sourceProperty "appDependenciesNuGet" -targetProperty "appDependencies" -packageParams $getDependencyNuGetPackageParams
