@@ -5,8 +5,11 @@ function GetDependencyVersionFilter {
         [Parameter(Mandatory = $true)]
         [PSCustomObject] $dependency
     )
+    if ($dependency.publisher -eq 'Microsoft') {
+        return ""
+    }
     if ($appJson.publisher -ne $dependency.publisher) {
-        return "" # Use standard logic
+        return "[$($dependency.version)]"
     }
     $versionParts = $appJson.application.Split('.')
     $versionParts[1] = ([int]$versionParts[1] + 1).ToString().PadLeft(2, '0')
