@@ -47,19 +47,18 @@ else {
             "appSymbolsFolder"       = $buildCacheFolder
             "downloadDependencies"   = "Microsoft"
             "select"                 = "Latest"
-            "originalAppJsonContent" = $appJsonContent
         }
 
         $downloadedPackage = @()
         if ($artifact.ToLower() -eq "////latest") {
-            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -originalAppJsonContent $appJsonContent @parameters
         } 
         elseif ($isAppJsonArtifact) {
             $parameters += @{
                 "version" = $applicationVersionFilter
             }
             OutputDebug -Message "Using application version filter '$applicationVersionFilter' for application package."
-            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -originalAppJsonContent $appJsonContent @parameters
         }
         else {
             throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
@@ -99,7 +98,6 @@ foreach ($dependency in $appJsonContent.dependencies) {
         "trustedNugetFeeds"      = $trustedNuGetFeedsDependencies
         "appSymbolsFolder"       = $dependenciesPackageCachePath
         "downloadDependencies"   = $downloadDependencies
-        "originalAppJsonContent" = $appJsonContent
     }
     if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         # If enabled, we allow pre-release versions of dependencies.
@@ -133,7 +131,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
 
     $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
     Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-    $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
+    $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName -originalAppJsonContent $appJsonContent @parameters
 
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."

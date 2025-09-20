@@ -72,7 +72,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         [string] $downloadDependencies = 'allButApplication',
         [switch] $allowPrerelease,
         [switch] $checkLocalVersion,
-        [string] $originalAppJsonContent
+        [PSCustomObject] $originalAppJsonContent
     )
 
     try {
