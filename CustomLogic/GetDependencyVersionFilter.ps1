@@ -1,6 +1,8 @@
 function GetDependencyVersionFilter {
     Param(
+        [Parameter(Mandatory = $true)]
         [PSCustomObject] $appJson,
+        [Parameter(Mandatory = $true)]
         [PSCustomObject] $dependency
     )
     if ($appJson.publisher -ne $dependency.publisher) {
