@@ -5,11 +5,11 @@ function GetDependencyVersionFilter {
         [Parameter(Mandatory = $true)]
         [PSCustomObject] $dependency
     )
-    if ($dependency.publisher -eq 'Microsoft') {
+    if ($dependency.publisher.Replace(' ', '') -eq 'Microsoft') {
         Write-Host "Dependency $($dependency.name) is from Microsoft, no version filter applied."
         return ""
     }
-    if ($appJson.publisher -ne $dependency.publisher) {
+    if ($appJson.publisher.Replace(' ', '') -ne $dependency.publisher.Replace(' ', '')) {
         Write-Host "Dependency $($dependency.name) is from different publisher ($($dependency.publisher)) than the main app ($($appJson.publisher)), using exact version match."
         return "[$($dependency.version)]"
     }
