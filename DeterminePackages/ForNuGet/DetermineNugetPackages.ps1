@@ -47,6 +47,7 @@ else {
             "appSymbolsFolder"     = $buildCacheFolder
             "downloadDependencies" = "Microsoft"
             "select"               = "Latest"
+            "originalAppPublisher" = $appJsonContent.publisher
         }
 
         $downloadedPackage = @()
@@ -98,6 +99,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
         "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
         "appSymbolsFolder"     = $dependenciesPackageCachePath
         "downloadDependencies" = $downloadDependencies
+        "originalAppPublisher" = $appJsonContent.publisher
     }
     if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         # If enabled, we allow pre-release versions of dependencies.

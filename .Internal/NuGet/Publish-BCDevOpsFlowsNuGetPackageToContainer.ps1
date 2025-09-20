@@ -55,7 +55,8 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
         [string] $appSymbolsFolder = "",
         [string] $copyInstalledAppsToFolder = "",
         [switch] $allowPrerelease,
-        [switch] $skipVerification
+        [switch] $skipVerification,
+        [string] $originalAppPublisher
     )
 
     if ($containerName -eq "" -and (!($bcAuthContext -and $environment))) {
@@ -83,7 +84,7 @@ Function Publish-BCDevOpsFlowsNuGetPackageToContainer {
         else {
             Write-Host "Prereleased packages are not allowed"
         }
-        if (Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
+        if (Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -originalAppPublisher $originalAppPublisher -appSymbolsFolder $tmpFolder -installedApps $installedApps -installedPlatform $installedPlatform -installedCountry $installedCountry -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease ) {
             $appFiles = Get-Item -Path (Join-Path $tmpFolder '*.app') | ForEach-Object {
                 if ($appSymbolsFolder) {
                     Copy-Item -Path $_.FullName -Destination $appSymbolsFolder -Force
