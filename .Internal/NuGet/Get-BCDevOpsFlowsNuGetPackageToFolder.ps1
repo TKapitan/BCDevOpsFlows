@@ -270,14 +270,19 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                     }
                     if ($downloadIt) {
                         . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
-                        $dependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependency
-                        if ($dependencyVersion -ne '') {
-                            OutputDebug -Message "Using custom dependency version filter '$dependencyVersion' for dependency $($dependency.name)."
+                        $dependencyJsonContent = [PSCustomObject]@{
+                            "publisher" = $dependencyPublisher
+                            "name"      = $matches[2]
+                            "version"   = $dependencyVersion
                         }
-                        elseif ($dependency.publisher -ne "Microsoft") {
+                        $dependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependencyJsonContent
+                        if ($dependencyVersion -ne '') {
+                            OutputDebug -Message "Using custom dependency version filter '$dependencyVersion' for dependency $($dependencyJsonContent.name)."
+                        }
+                        elseif ($dependencyJsonContent.publisher -ne "Microsoft") {
                             # For all other use cases, we use the version specified in the dependency (or newer).
-                            $dependencyVersion = "[$($dependency.version),)"
-                            OutputDebug -Message "Using dependency version filter '$dependencyVersion' for dependency $($dependency.name)."
+                            $dependencyVersion = "[$($dependencyJsonContent.version),)"
+                            OutputDebug -Message "Using dependencyJsonContent version filter '$dependencyVersion' for dependency $($dependencyJsonContent.name)."
                         }
                         $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $dependencyId -version $dependencyVersion -originalAppJsonContent $originalAppJsonContent -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
                     }
