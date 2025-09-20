@@ -38,7 +38,7 @@ else {
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
     if (!(Test-Path $buildCacheFolder)) {
         New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
-    }
+    }appJsonContent
     
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
@@ -47,7 +47,7 @@ else {
             "appSymbolsFolder"     = $buildCacheFolder
             "downloadDependencies" = "Microsoft"
             "select"               = "Latest"
-            "originalAppPublisher" = $appJsonContent.publisher
+            "originalAppPublisher" = $appJsonContent
         }
 
         $downloadedPackage = @()
@@ -99,7 +99,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
         "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
         "appSymbolsFolder"     = $dependenciesPackageCachePath
         "downloadDependencies" = $downloadDependencies
-        "originalAppPublisher" = $appJsonContent.publisher
+        "originalAppPublisher" = $appJsonContent
     }
     if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         # If enabled, we allow pre-release versions of dependencies.
