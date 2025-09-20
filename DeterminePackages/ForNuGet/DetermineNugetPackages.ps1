@@ -42,12 +42,12 @@ else {
     
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
-            "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
-            "packageName"          = $applicationPackage
-            "appSymbolsFolder"     = $buildCacheFolder
-            "downloadDependencies" = "Microsoft"
-            "select"               = "Latest"
-            "originalAppPublisher" = $appJsonContent
+            "trustedNugetFeeds"      = $trustedNuGetFeedsMicrosoft
+            "packageName"            = $applicationPackage
+            "appSymbolsFolder"       = $buildCacheFolder
+            "downloadDependencies"   = "Microsoft"
+            "select"                 = "Latest"
+            "originalAppJsonContent" = $appJsonContent
         }
 
         $downloadedPackage = @()
@@ -96,10 +96,10 @@ foreach ($dependency in $appJsonContent.dependencies) {
         $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
     }
     $parameters = @{
-        "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
-        "appSymbolsFolder"     = $dependenciesPackageCachePath
-        "downloadDependencies" = $downloadDependencies
-        "originalAppPublisher" = $appJsonContent
+        "trustedNugetFeeds"      = $trustedNuGetFeedsDependencies
+        "appSymbolsFolder"       = $dependenciesPackageCachePath
+        "downloadDependencies"   = $downloadDependencies
+        "originalAppJsonContent" = $appJsonContent
     }
     if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         # If enabled, we allow pre-release versions of dependencies.
