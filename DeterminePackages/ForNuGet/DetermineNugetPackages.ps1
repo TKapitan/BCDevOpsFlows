@@ -116,13 +116,16 @@ foreach ($dependency in $appJsonContent.dependencies) {
     else {
         . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
         $dependencyVersionFilter = GetDependencyVersionFilter -appJson $dependency -installedApp $null -installMode $null
-        if ($dependencyVersionFilter -eq '') {
+        if ($dependencyVersionFilter -ne '') {
+            OutputDebug -Message "Using custom dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
+        }
+        else {
             # For all other use cases, we use the version specified in the dependency (or newer).
             $dependencyVersionFilter = "[$($dependency.version),)"
             OutputDebug -Message "Using dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
-            $parameters += @{
-                "version" = $dependencyVersionFilter
-            }
+        }
+        $parameters += @{
+            "version" = $dependencyVersionFilter
         }
     }
 
