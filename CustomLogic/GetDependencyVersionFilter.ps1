@@ -10,5 +10,5 @@ function GetDependencyVersionFilter {
     }
     $versionParts = $appJson.application.Split('.')
     $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
-    return "[$($dependency.version),$($versionParts[0]).$($versionParts[1]).0.0)"
+    return "[$($dependency.version),$($versionParts[0])$($versionParts[1]).0.0.0)"
 }
