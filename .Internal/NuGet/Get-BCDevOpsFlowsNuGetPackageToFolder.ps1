@@ -275,9 +275,10 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                             "name"      = $matches[2]
                             "version"   = $dependencyVersion
                         }
-                        $dependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependencyJsonContent
-                        if ($dependencyVersion -ne '') {
-                            OutputDebug -Message "Using custom dependency version filter '$dependencyVersion' for dependency $($dependencyJsonContent.name)."
+                        $customDependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependencyJsonContent
+                        if ($customDependencyVersion -ne '') {
+                            OutputDebug -Message "Using custom dependency version filter '$customDependencyVersion' for dependency $($dependencyJsonContent.name)."
+                            $dependencyVersion = $customDependencyVersion
                         }
                         elseif ($dependencyJsonContent.publisher -ne "Microsoft") {
                             # For all other use cases, we use the version specified in the dependency (or newer).
