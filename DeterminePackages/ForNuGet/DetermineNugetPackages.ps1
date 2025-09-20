@@ -38,7 +38,7 @@ else {
     $buildCacheFolder = "$baseRepoFolder\.buildpackages"
     if (!(Test-Path $buildCacheFolder)) {
         New-Item -Path $buildCacheFolder -ItemType Directory | Out-Null
-    }appJsonContent
+    }
     
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
