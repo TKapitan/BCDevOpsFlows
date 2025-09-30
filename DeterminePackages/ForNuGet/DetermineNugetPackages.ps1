@@ -42,23 +42,23 @@ else {
     
     if ($ENV:AL_RUNWITH -eq "NuGet") {
         $parameters = @{
-            "trustedNugetFeeds"    = $trustedNuGetFeedsMicrosoft
-            "packageName"          = $applicationPackage
-            "appSymbolsFolder"     = $buildCacheFolder
-            "downloadDependencies" = "Microsoft"
-            "select"               = "Latest"
+            "trustedNugetFeeds"      = $trustedNuGetFeedsMicrosoft
+            "packageName"            = $applicationPackage
+            "appSymbolsFolder"       = $buildCacheFolder
+            "downloadDependencies"   = "Microsoft"
+            "select"                 = "Latest"
         }
 
         $downloadedPackage = @()
         if ($artifact.ToLower() -eq "////latest") {
-            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -originalAppJsonContent $appJsonContent @parameters
         } 
         elseif ($isAppJsonArtifact) {
             $parameters += @{
                 "version" = $applicationVersionFilter
             }
             OutputDebug -Message "Using application version filter '$applicationVersionFilter' for application package."
-            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder @parameters
+            $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -originalAppJsonContent $appJsonContent @parameters
         }
         else {
             throw "Invalid artifact setting ($artifact) in app.json. The artifact can only be '////latest' or '////appJson'."
@@ -95,9 +95,9 @@ foreach ($dependency in $appJsonContent.dependencies) {
         $trustedNuGetFeedsDependencies = $trustedNuGetFeedsMicrosoft
     }
     $parameters = @{
-        "trustedNugetFeeds"    = $trustedNuGetFeedsDependencies
-        "appSymbolsFolder"     = $dependenciesPackageCachePath
-        "downloadDependencies" = $downloadDependencies
+        "trustedNugetFeeds"      = $trustedNuGetFeedsDependencies
+        "appSymbolsFolder"       = $dependenciesPackageCachePath
+        "downloadDependencies"   = $downloadDependencies
     }
     if ($ENV:AL_ALLOWPRERELEASE -eq "true") {
         # If enabled, we allow pre-release versions of dependencies.
@@ -114,9 +114,16 @@ foreach ($dependency in $appJsonContent.dependencies) {
         }
     }
     else {
-        # For all other use cases, we use the version specified in the dependency (or newer).
-        $dependencyVersionFilter = "[$($dependency.version),)"
-        OutputDebug -Message "Using dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
+        . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
+        $dependencyVersionFilter = GetDependencyVersionFilter -appJson $appJsonContent -dependency $dependency
+        if ($dependencyVersionFilter -ne '') {
+            OutputDebug -Message "Using custom dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
+        }
+        else {
+            # For all other use cases, we use the version specified in the dependency (or newer).
+            $dependencyVersionFilter = "[$($dependency.version),)"
+            OutputDebug -Message "Using dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
+        }
         $parameters += @{
             "version" = $dependencyVersionFilter
         }
@@ -124,7 +131,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
 
     $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
     Write-Host "Getting $($dependency.name) using name $($dependency.id)"
-    $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName @parameters
+    $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName -originalAppJsonContent $appJsonContent @parameters
 
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
