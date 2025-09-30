@@ -95,8 +95,8 @@ function UpdateVersion {
     $appFileJson = Get-AppJsonFile -sourceAppJsonFilePath $appJsonFilePath
 
     $existingVersionAsArray = [Version]$appFileJson.version
-    $appBuild = if ($settings.appBuild -eq -1) { $existingVersionAsArray.Build } else { $settings.appBuild }
-    $appRevision = if ($settings.appRevision -eq -1) { $existingVersionAsArray.Revision } else { $settings.appRevision }
+    $appBuild = if ($settings.appBuild -eq -1 -or $null -eq $settings.appBuild) { $existingVersionAsArray.Build } else { $settings.appBuild }
+    $appRevision = if ($settings.appRevision -eq -1 -or $null -eq $settings.appRevision) { $existingVersionAsArray.Revision } else { $settings.appRevision }
 
     $appFileJson.version = "$($existingVersionAsArray.Major).$($existingVersionAsArray.Minor).$appBuild.$appRevision"       
     Write-Host "Updating app.json version to $($appFileJson.version)"
