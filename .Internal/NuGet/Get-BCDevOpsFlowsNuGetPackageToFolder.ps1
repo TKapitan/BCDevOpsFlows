@@ -71,7 +71,8 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
         [ValidateSet('all', 'own', 'Microsoft', 'allButMicrosoft', 'allButApplication', 'allButPlatform', 'none')]
         [string] $downloadDependencies = 'allButApplication',
         [switch] $allowPrerelease,
-        [switch] $checkLocalVersion
+        [switch] $checkLocalVersion,
+        [PSCustomObject] $originalAppJsonContent
     )
 
     try {
@@ -97,12 +98,12 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                     $checkPackageName = "$publisher.$name$countryPart$symbolsPart$appIdPart"
                 }
                 if ($checkPackageName -and $checkPackageName -ne $packageName) {
-                    $downloadedPackages = Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $checkPackageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                    $downloadedPackages = Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $checkPackageName -version $version -originalAppJsonContent $originalAppJsonContent -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
                     if ($downloadedPackages) {
                         return $downloadedPackages
                     }
                 }
-                return Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
+                return Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $packageName -version $version -originalAppJsonContent $originalAppJsonContent -folder $folder -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps $installedApps -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease
             }
         }
         Write-Host "Looking for NuGet package $packageName version $version ($select match)"
@@ -268,11 +269,23 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                         }
                     }
                     if ($downloadIt) {
-                        if ($dependencyVersion.StartsWith('[') -and $select -eq 'Exact') {
-                            # Downloading Microsoft packages for a specific version
-                            $dependencyVersion = $version
+                        . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
+                        $dependencyJsonContent = [PSCustomObject]@{
+                            "publisher" = $dependencyPublisher
+                            "name"      = $matches[2]
+                            "version"   = $dependencyVersion
                         }
-                        $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $dependencyId -version $dependencyVersion -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
+                        $customDependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependencyJsonContent
+                        if ($customDependencyVersion -ne '') {
+                            OutputDebug -Message "Using custom dependency version filter '$customDependencyVersion' for dependency $($dependencyJsonContent.name)."
+                            $dependencyVersion = $customDependencyVersion
+                        }
+                        elseif ($dependencyJsonContent.publisher -ne "Microsoft") {
+                            # For all other use cases, we use the version specified in the dependency (or newer).
+                            $dependencyVersion = "[$($dependencyJsonContent.version),)"
+                            OutputDebug -Message "Using dependency version filter '$dependencyVersion' for dependency $($dependencyJsonContent.name)."
+                        }
+                        $returnValue += Get-BCDevOpsFlowsNuGetPackageToFolder -trustedNugetFeeds $trustedNugetFeeds -packageName $dependencyId -version $dependencyVersion -originalAppJsonContent $originalAppJsonContent -folder $package -copyInstalledAppsToFolder $copyInstalledAppsToFolder -installedPlatform $installedPlatform -installedCountry $installedCountry -installedApps @($installedApps + $returnValue) -downloadDependencies $downloadDependencies -verbose:($VerbosePreference -eq 'Continue') -select $select -allowPrerelease:$allowPrerelease -checkLocalVersion
                     }
                 }
                 if ($dependenciesErr) {
