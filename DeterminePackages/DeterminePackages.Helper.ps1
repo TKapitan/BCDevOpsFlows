@@ -183,6 +183,9 @@ function Update-CustomCodeCops {
             $majorVersion = [Version]::Parse($appJson.application).Major
             # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
             switch ($majorVersion) {
+                28 { $linterCopURL = "BusinessCentral.LinterCop.AL-17.0.1825603.dll" }
+                # 27 as default
+                26 { $linterCopURL = "BusinessCentral.LinterCop.AL-15.2.1630495.dll" }
                 25 { $linterCopURL = "BusinessCentral.LinterCop.AL-14.3.1327807.dll" }
                 24 { $linterCopURL = "BusinessCentral.LinterCop.AL-13.1.1065068.dll" }
                 23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
