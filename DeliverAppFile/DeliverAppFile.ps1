@@ -62,7 +62,10 @@ try {
             }
 
             foreach ($folderName in $folders) {
-                Push-AppToNuGetFeed -folderName $folderName -url $deliverToContext.Url -token $deliverToContext.Token -versionSuffix $versionSuffix
+                $testFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $folderName
+                if (Test-Path $testFolder) {
+                    Push-AppToNuGetFeed -folderName $folderName -url $deliverToContext.Url -token $deliverToContext.Token -versionSuffix $versionSuffix
+                }
             }
         }
     }
