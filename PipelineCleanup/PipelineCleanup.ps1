@@ -31,6 +31,9 @@ try {
             Remove-Item $cleanUpPath -Recurse -Include *.*
         }
     }
+    
+    . (Join-Path -Path $PSScriptRoot -ChildPath "..\CustomLogic\RunCustomCleanup.ps1" -Resolve)
+    RunCustomCleanup
 }
 catch {
     Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
