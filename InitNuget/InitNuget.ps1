@@ -16,6 +16,7 @@ try {
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
+    throw "DEBUG"
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 
