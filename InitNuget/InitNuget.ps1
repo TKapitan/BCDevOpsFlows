@@ -29,9 +29,6 @@ try {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
     Write-Host "Using $bcDevToolsPackageName version $bcDevToolsPackageVersion"
-
-    throw "DEBUG"
-
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 
     $bcDevToolsFolder = Join-Path -Path (GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion) -ChildPath "Tools\net8.0\any"
