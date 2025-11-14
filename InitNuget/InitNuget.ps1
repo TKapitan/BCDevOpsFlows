@@ -14,14 +14,14 @@ try {
     $params = @{ 
         "Source" = "https://api.nuget.org/v3/index.json"
     }
-    $searchResults = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions -Source @params | Sort-Object Version -Descending | Select-Object -First 1
+    $searchResults = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params | Sort-Object Version -Descending | Select-Object -First 1
     $bcDevToolsPackageVersion = $searchResults.Version
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
 
     Write-Host "Find-Package results:"
-    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions -Source @params
+    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
     $searchResultsAll | ForEach-Object {
         Write-Host "Name: $($_.Name), Version: $($_.Version)"
     }
