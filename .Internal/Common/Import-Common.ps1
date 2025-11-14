@@ -14,7 +14,7 @@ function Get-AppJson {
     $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
     $appJsonFile = Join-Path $folder "app.json"
     if (Test-Path $appJsonFile) {
-        $appJson = Get-Content $appJsonFilePath -Encoding UTF8 -Raw | ConvertFrom-Json 
+        $appJson = Get-Content $appJsonFile -Encoding UTF8 -Raw | ConvertFrom-Json 
         return $appJson
     }
     else {
