@@ -38,6 +38,7 @@ try {
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
+    Write-Host "Using $bcDevToolsPackageName version $bcDevToolsPackageVersion"
 
     throw "DEBUG"
 
