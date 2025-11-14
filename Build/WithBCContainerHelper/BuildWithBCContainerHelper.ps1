@@ -293,11 +293,8 @@ try {
         $runAlPipelineParams["features"] += "translationfile"
     }
     
-    $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
-    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
-
     $runAlPipelineParams["preprocessorsymbols"] = @()
+    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $(Get-AppJson -settings $settings)
     if ($existingSymbols.Count -gt 0) {
         Write-Host "Adding existing Preprocessor symbols: $($existingSymbols.Keys -join ',')"
         $runAlPipelineParams["preprocessorsymbols"] = @($existingSymbols.Keys)

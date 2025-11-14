@@ -13,7 +13,7 @@ try {
 
     # Update settings from app configuration
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    $appJsonContentApp = Get-Content "$ENV:PIPELINE_WORKSPACE\App\App\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $appJsonContentApp = Get-AppJson -settings $settings
     $settings = Update-CustomCodeCops -settings $settings -runWith $runWith
     $settings = Get-DependenciesFromNuGet -settings $settings -appJsonContent $appJsonContentApp
     $settings = Get-PreviousReleaseFromNuGet -settings $settings
