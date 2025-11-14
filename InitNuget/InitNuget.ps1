@@ -29,17 +29,16 @@ try {
         throw  "No app.json file found in $folder"
     }
 
-    $searchResults = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params | Sort-Object Version -Descending | Select-Object -First 1
-    $bcDevToolsPackageVersion = $searchResults.Version
+    OutputDebug -Message "Find-Package results:"
+    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
+    $searchResultsAll | ForEach-Object {
+        OutputDebug -Message "Name: $($_.Name), Version: $($_.Version)"
+    }
+    $bcDevToolsPackageVersion = $($searchResultsAll | Sort-Object Version -Descending | Select-Object -First 1).Version
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
 
-    Write-Host "Find-Package results:"
-    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
-    $searchResultsAll | ForEach-Object {
-        Write-Host "Name: $($_.Name), Version: $($_.Version)"
-    }
     throw "DEBUG"
 
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
