@@ -14,6 +14,21 @@ try {
     $params = @{ 
         "Source" = "https://api.nuget.org/v3/index.json"
     }
+
+    $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
+    $appJsonFile = Join-Path $folder "app.json"
+    if (Test-Path $appJsonFile) {
+        $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
+        $majorVersion = [Version]::Parse($appJson.application).Major
+        $params += @{ 
+            "MinimumVersion" = "$($majorVersion -10).0.0.0"
+            "MaximumVersion" = "$($majorVersion -10 + 1).0.0.0"
+        }
+    }
+    else {
+        throw  "No app.json file found in $folder"
+    }
+
     $searchResults = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params | Sort-Object Version -Descending | Select-Object -First 1
     $bcDevToolsPackageVersion = $searchResults.Version
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
