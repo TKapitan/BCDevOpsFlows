@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 function DetermineArtifactUrl {
     Param(
         [hashtable] $settings
