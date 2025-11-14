@@ -16,8 +16,8 @@ try {
     }
     $majorVersion = [Version]::Parse($(Get-AppJson -settings $settings).application).Major
     $params += @{ 
-        "MinimumVersion" = "$($majorVersion -10).0.0.0"
-        "MaximumVersion" = "$($majorVersion -10 + 1).0.0.0"
+        "MinimumVersion" = "$($majorVersion - 9).0.0.0"
+        "MaximumVersion" = "$($majorVersion - 9 + 1).0.0.0"
     }
     OutputDebug -Message "Find-Package results:"
     $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
