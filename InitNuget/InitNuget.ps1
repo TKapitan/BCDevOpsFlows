@@ -30,7 +30,7 @@ try {
     }
 
     OutputDebug -Message "Find-Package results:"
-    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
+    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllVersions @params
     $searchResultsAll | ForEach-Object {
         OutputDebug -Message "Name: $($_.Name), Version: $($_.Version)"
     }
