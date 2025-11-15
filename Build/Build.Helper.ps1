@@ -76,7 +76,7 @@ function Get-PreprocessorSymbols {
 function Get-BuildInfoParameters {
     param()
 
-    $buildUrl = "$ENV:SYSTEM_COLLECTIONURI$ENV:SYSTEM_TEAMPROJECT)/_build/results?buildId=$ENV:BUILD_BUILDID"
+    $buildUrl = "$ENV:SYSTEM_COLLECTIONURI$ENV:SYSTEM_TEAMPROJECT/_build/results?buildId=$ENV:BUILD_BUILDID"
     return @{
         "sourceRepositoryUrl" = "$ENV:BUILD_REPOSITORY_URI"
         "sourceCommit"        = "$ENV:BUILD_SOURCEVERSION"
