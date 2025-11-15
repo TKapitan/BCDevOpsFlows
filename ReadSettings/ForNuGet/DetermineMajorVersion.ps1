@@ -8,8 +8,8 @@ Param()
 $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
 
 # Validate and parse artifact format
-if ($settings.artifact -notmatch '^///([^/]*)/([^/]*)$') {
-    throw "Invalid artifact format. Expected format: ///ZZZ/XXX where only one of ZZZ or XXX should be populated."
+if ($settings.artifact -notmatch '^//([^/]*)//([^/]*)$') {
+    throw "Invalid artifact format. Expected format: //ZZZ//YYY where only one of ZZZ or YYY should be populated."
 }
 $versionPart = $matches[1]
 $keywordPart = $matches[2]
@@ -50,7 +50,7 @@ else {
 
 # Set output variables
 OutputDebug -Message "Setting AL_ARTIFACT to $($settings.artifact) for NuGet build step."
-OutputDebug -Message "Setting AL_BCMAJORVERSION to 26 for NuGet build step."
+OutputDebug -Message "Setting AL_BCMAJORVERSION to $majorVersion for NuGet build step."
 $ENV:AL_ARTIFACT = $settings.artifact
 Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$($settings.artifact)"
 OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
