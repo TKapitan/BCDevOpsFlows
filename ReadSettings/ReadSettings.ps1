@@ -103,6 +103,7 @@ try {
                 Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$settingValue"
                 OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($settingValue)"
                 if ($setting -eq "runWith") {
+                    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'existModuleName', Justification = 'variable is used in another scope')]
                     $runWith = $settingValue
                 }
             }
@@ -113,17 +114,17 @@ try {
     if ($ENV:AL_PIPELINENAME -ne "SetupPipelines") {
         $outSettings = AnalyzeRepo -settings $outSettings
     }
-
-    # Identify BCC artifact
-    if ($runWith -eq 'bccontainerhelper') {
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
-    }
-    throw $runWith
         
     # Set output variables
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
     Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
+    
+    # Identify BCC artifact
+    if ($runWith -eq 'bccontainerhelper') {
+        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
+    }
+    throw $runWith
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error reading settings. Error message: $($_.Exception.Message)"
