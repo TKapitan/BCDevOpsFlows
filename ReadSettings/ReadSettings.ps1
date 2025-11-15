@@ -119,7 +119,7 @@ try {
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
     Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
-    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
+    $isAppJsonArtifact = $outSettings.artifact.ToLower() -eq "////appjson"
     $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
     Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
     OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
