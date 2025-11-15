@@ -47,7 +47,8 @@ function Get-PreprocessorSymbols {
         if (($settings.ContainsKey('country')) -and $settings.country) {
             if ($settings.country -is [array]) {
                 $countryCodes += $settings.country
-            } else {
+            }
+            else {
                 $countryCodes += ($settings.country -split '[,;\s]+' | Where-Object { $_.Trim() -ne '' })
             }
         }
@@ -56,7 +57,8 @@ function Get-PreprocessorSymbols {
         if (($settings.ContainsKey('additionalCountries')) -and $settings.additionalCountries) {
             if ($settings.additionalCountries -is [array]) {
                 $countryCodes += $settings.additionalCountries
-            } else {
+            }
+            else {
                 $countryCodes += ($settings.additionalCountries -split '[,;\s]+' | Where-Object { $_.Trim() -ne '' })
             }
         }
@@ -69,4 +71,16 @@ function Get-PreprocessorSymbols {
         }
     }
     return $existingSymbols
+}
+
+function Get-BuildInfoParameters {
+    param()
+
+    $buildUrl = "$ENV:SYSTEM_COLLECTIONURI$ENV:SYSTEM_TEAMPROJECT)/_build/results?buildId=$ENV:BUILD_BUILDID"
+    return @{
+        "sourceRepositoryUrl" = "$ENV:BUILD_REPOSITORY_URI"
+        "sourceCommit"        = "$ENV:BUILD_SOURCEVERSION"
+        "buildBy"             = "BCDevOpsFlows"
+        "buildUrl"            = "$buildUrl"
+    }
 }

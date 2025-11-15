@@ -80,17 +80,11 @@ function Get-BuildParameters {
         $alcParameters += @("/enableexternalrulesets")
     }
     if ($alcVersion -ge [System.Version]"12.0.12.41479") {
-        $alcParameters += @(
-            "/sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
-            "/sourceCommit:""$ENV:BUILD_SOURCEVERSION""",
-            "/buildBy:""BCDevOpsFlows""",
-            "/buildUrl:""$ENV:BUILD_BUILDURI"""
-        )
         OutputDebug -Message "Adding source code parameters:"
-        OutputDebug -Message "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
-        OutputDebug -Message "  sourceCommit: $ENV:BUILD_SOURCEVERSION"
-        OutputDebug -Message "  buildBy: BCDevOpsFlows"
-        OutputDebug -Message "  buildUrl: $ENV:BUILD_BUILDURI"
+        foreach ($param in $(Get-BuildInfoParameters).GetEnumerator()) {
+            $alcParameters += @("/$($param.Key):$($param.Value)")
+            OutputDebug -Message "  $($param.Key): $($param.Value)"
+        }
     }
     $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
     $existingSymbols.Keys | ForEach-Object { $alcParameters += @("/D:$_") }
