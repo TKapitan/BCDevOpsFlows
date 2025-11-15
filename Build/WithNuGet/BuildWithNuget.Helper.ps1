@@ -47,7 +47,7 @@ function Get-BuildParameters {
         if (Test-Path $copPath) {
             $alcParameters += @("/analyzer:$copPath")
         }
-        elseif ($alcVersion -ge [System.Version]"15.0.0.0") {
+        elseif ($alcVersion -ge [System.Version]"16.0.0.0") {
             throw "The specified Common analyzer does not exist: $copPath"
         }
     }
