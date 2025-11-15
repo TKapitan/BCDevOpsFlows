@@ -21,10 +21,17 @@ else {
     $artifactUrl = $settings.artifact
 }
 
+# Extract major version from artifact URL
+$versionSegment = $artifactUrl.Split('/')[4]
+$majorVersion = $versionSegment.Split('.')[0]
+
 # Set output variables
 $ENV:AL_ARTIFACT = $artifactUrl
 Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$artifactUrl"
 OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
+$ENV:AL_BCMAJORVERSION = $artifactUrl
+Write-Host "##vso[task.setvariable variable=AL_BCMAJORVERSION;]$majorVersion"
+OutputDebug -Message "Set environment variable AL_BCMAJORVERSION to ($ENV:AL_BCMAJORVERSION)"
 $ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

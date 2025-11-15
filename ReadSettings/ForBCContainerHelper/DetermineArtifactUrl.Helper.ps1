@@ -168,22 +168,3 @@ function AddArtifactDefaultValues {
     Write-Host "Calculated artifact: $calculatedArtifact"
     return $calculatedArtifact
 }
-
-# Copy a HashTable to ensure non case sensitivity (Issue #385)
-function Copy-HashTable() {
-    [CmdletBinding()]
-    [OutputType([System.Collections.HashTable])]
-    Param(
-        [parameter(ValueFromPipeline)]
-        [hashtable] $object
-    )
-    Process {
-        $ht = @{}
-        if ($object) {
-            $object.Keys | ForEach-Object {
-                $ht[$_] = $object[$_]
-            }
-        }
-        $ht
-    }
-}
