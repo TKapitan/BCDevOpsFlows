@@ -21,15 +21,6 @@ else {
     $artifactUrl = $settings.artifact
 }
 
-$bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolder -Force
-$folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
-if (!($folders)) {
-    throw "Unable to download artifacts from $($artifactUrl.Split('?')[0])."
-}
-if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
-    throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
-}
-
 # Set output variables
 $ENV:AL_ARTIFACT = $artifactUrl
 Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$artifactUrl"
