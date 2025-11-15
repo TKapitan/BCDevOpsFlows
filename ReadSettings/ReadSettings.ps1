@@ -109,6 +109,13 @@ try {
     if ($ENV:AL_PIPELINENAME -ne "SetupPipelines") {
         $outSettings = AnalyzeRepo -settings $outSettings
     }
+
+    # Identify BCC artifact
+    $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
+    if ($runWith -eq 'bccontainerhelper') {
+        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
+    }
+    throw $runWith
         
     # Set output variables
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
