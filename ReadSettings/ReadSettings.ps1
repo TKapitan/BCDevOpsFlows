@@ -125,15 +125,7 @@ try {
         . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
     }
     elseif ($runWith -eq 'nuget') {
-        # XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
-        OutputDebug -Message "Setting AL_ARTIFACT to $($settings.artifact) for NuGet build step."
-        OutputDebug -Message "Setting AL_BCMAJORVERSION to 26 for NuGet build step."
-        $ENV:AL_ARTIFACT = $settings.artifact
-        Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$($settings.artifact)"
-        OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
-        $ENV:AL_BCMAJORVERSION = 26
-        Write-Host "##vso[task.setvariable variable=AL_BCMAJORVERSION;]26"
-        OutputDebug -Message "Set environment variable AL_BCMAJORVERSION to ($ENV:AL_BCMAJORVERSION)"
+        . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineMajorVersion.ps1" -Resolve)
     }
     else {
         throw "Unknown AL_RUNWITH value: $runWith. Supported values are 'NuGet' and 'BCContainerHelper'."
