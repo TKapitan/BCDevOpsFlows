@@ -41,7 +41,7 @@ if (![string]::IsNullOrEmpty($keywordPart)) {
             $currentMajorVersion + 1 
         }
         'appjson' {
-            $appVersionParts = $($(Get-AppJson).application).Split('.')
+            $appVersionParts = $($(Get-AppJson -settings $settings).application).Split('.')
             if ($appVersionParts.Count -eq 0 -or [string]::IsNullOrEmpty($appVersionParts[0])) {
                 throw "Invalid application version format in app.json. Expected X.Y.Z.U format."
             }
