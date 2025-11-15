@@ -124,7 +124,6 @@ try {
     if ($runWith -eq 'bccontainerhelper') {
         . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
     }
-    throw $runWith
 }
 catch {
     Write-Host "##vso[task.logissue type=error]Error reading settings. Error message: $($_.Exception.Message)"
