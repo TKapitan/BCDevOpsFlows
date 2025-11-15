@@ -44,8 +44,6 @@ try {
             $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 | ConvertFrom-Json
             . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentTest -mainAppId $appJsonContentApp.id -isTestApp
         }
-        # Find BCC artifact
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
     }
     else {
         throw "Unknown AL_RUNWITH value: $ENV:AL_RUNWITH. Supported values are 'NuGet' and 'BCContainerHelper'."
