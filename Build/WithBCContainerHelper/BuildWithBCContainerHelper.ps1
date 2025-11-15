@@ -32,11 +32,7 @@ try {
 
     $containerName = GetContainerName
 
-    $runAlPipelineParams = @{
-        "sourceRepositoryUrl" = "$ENV:BUILD_REPOSITORY_URI"
-        "sourceCommit"        = $ENV:BUILD_SOURCEVERSION
-        "buildBy"             = "BCDevOpsFlows"
-    }
+    $runAlPipelineParams = @{}
     $baseFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
     if ($bcContainerHelperConfig.useVolumes -and $bcContainerHelperConfig.hostHelperFolder -eq "HostHelperFolder") {
         $allVolumes = "{$(((docker volume ls --format "'{{.Name}}': '{{.Mountpoint}}'") -join ",").Replace('\','\\').Replace("'",'"'))}" | ConvertFrom-Json | ConvertTo-HashTable
@@ -351,7 +347,7 @@ try {
         -appBuild $appBuild  `
         -appRevision $appRevision `
         -uninstallRemovedApps `
-        @(Get-BuildInfoParameters)
+    @(Get-BuildInfoParameters)
 
     $testResultsDestinationFolder = $ENV:COMMON_TESTRESULTSDIRECTORY
     Write-Host "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
