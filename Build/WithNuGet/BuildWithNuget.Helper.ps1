@@ -43,10 +43,12 @@ function Get-BuildParameters {
     if ($anyAnalyzerEnabled) {
         $analyzersCommonDLLPath = 'Microsoft.Dynamics.Nav.Analyzers.Common.dll'
         $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
-        if (-not (Test-Path $copPath)) {
+        if (Test-Path $copPath) {
+            $alcParameters += @("/analyzer:$copPath")
+        }
+        elseif ($alcVersion -ge [System.Version]"15.0.0.0") {
             throw "The specified Common analyzer does not exist: $copPath"
         }
-        $alcParameters += @("/analyzer:$copPath")
     }
     foreach ($analyzer in $analyzers) {
         if ($settings.$($analyzer.Setting)) {
