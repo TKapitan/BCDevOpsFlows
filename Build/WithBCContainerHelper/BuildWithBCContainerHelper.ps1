@@ -346,8 +346,7 @@ try {
         -CreateRuntimePackages:$CreateRuntimePackages `
         -appBuild $appBuild  `
         -appRevision $appRevision `
-        -uninstallRemovedApps `
-    @(Get-BuildInfoParameters)
+        -uninstallRemovedApps
 
     $testResultsDestinationFolder = $ENV:COMMON_TESTRESULTSDIRECTORY
     Write-Host "Copy artifacts and build output back from build container to $testResultsDestinationFolder"
