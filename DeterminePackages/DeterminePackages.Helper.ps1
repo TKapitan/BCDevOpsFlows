@@ -182,9 +182,11 @@ function Update-CustomCodeCops {
             }
         }
     
-        if ($linterCopURL -eq "") {
+        if ($linterCopURL -ne "") {
             Write-Host "Using LinterCop for version $majorVersion, URL: $linterCopURL"
             $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
+        } else {
+            Write-Warning "LinterCop URL could not be determined for BC version $($ENV:AL_BCMAJORVERSION). Skipping LinterCop configuration."
         }
     }
     Write-Host "Configured custom CodeCops:"
