@@ -24,11 +24,6 @@ function DetermineArtifactUrl {
         }
     }
 
-    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
-    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
-    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
-    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
-
     $artifact = AddArtifactDefaultValues -settings $settings -artifact $artifact
     try {
         $artifactCacheMutexName = "ArtifactUrlCache-$artifact"

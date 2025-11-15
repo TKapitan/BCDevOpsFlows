@@ -25,16 +25,28 @@ if ([string]::IsNullOrEmpty($versionPart) -and [string]::IsNullOrEmpty($keywordP
 
 if (![string]::IsNullOrEmpty($keywordPart)) {
     # Validate keyword
-    $validKeywords = @('latest', 'nextmajor')
+    $validKeywords = @('latest', 'nextmajor', 'appjson')
     if ($keywordPart.ToLowerInvariant() -notin $validKeywords) {
-        throw "Invalid keyword '$keywordPart'. Valid keywords are: latest, nextMajor."
+        throw "Invalid keyword '$keywordPart'. Valid keywords are: latest, nextMajor, appjson."
     }
     
     # Determine major version based on keyword
-    $currentMajorVersion = Get-CurrentMajorVersion
     $majorVersion = switch ($keywordPart.ToLowerInvariant()) {
-        'latest' { $currentMajorVersion }
-        'nextmajor' { $currentMajorVersion + 1 }
+        'latest' { 
+            $currentMajorVersion = Get-CurrentMajorVersion
+            $currentMajorVersion 
+        }
+        'nextmajor' { 
+            $currentMajorVersion = Get-CurrentMajorVersion
+            $currentMajorVersion + 1 
+        }
+        'appjson' {
+            $appVersionParts = $($(Get-AppJson).application).Split('.')
+            if ($appVersionParts.Count -eq 0 -or [string]::IsNullOrEmpty($appVersionParts[0])) {
+                throw "Invalid application version format in app.json. Expected X.Y.Z.U format."
+            }
+            [int]$appVersionParts[0]
+        }
     }
     OutputDebug -Message "Determined major version $majorVersion using keyword '$keywordPart'."
 }
