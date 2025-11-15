@@ -85,6 +85,7 @@ try {
 
     # Set output variables
     
+    $runWith = ""
     $outSettings = @{}
     $settings.Keys | ForEach-Object {
         $setting = $_
@@ -95,10 +96,12 @@ try {
         $outSettings += @{ "$setting" = $settingValue }
         if ($getSettings -contains $setting) {
             if ($settingValue -is [System.Collections.Specialized.OrderedDictionary] -or $settingValue -is [hashtable]) {
+                New-Variable -Name "ENV:AL_$($setting.ToUpper())" -Value $(ConvertTo-Json $settingValue -Depth 99 -Compress) -Force
                 Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$(ConvertTo-Json $settingValue -Depth 99 -Compress)"
                 OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($(ConvertTo-Json $settingValue -Depth 99 -Compress))"
             }
             else {
+                New-Variable -Name "ENV:AL_$($setting.ToUpper())" -Value $settingValue -Force
                 Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$settingValue"
                 OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($settingValue)"
             }
@@ -111,7 +114,6 @@ try {
     }
 
     # Identify BCC artifact
-    $runWith = ($ENV:AL_RUNWITH).ToLowerInvariant()
     if ($runWith -eq 'bccontainerhelper') {
         . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
     }
