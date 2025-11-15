@@ -15,8 +15,7 @@ try {
     $params = @{ 
         "Source" = "https://api.nuget.org/v3/index.json"
     }
-    $majorVersion = [Version]::Parse($(Get-AppJson -settings $settings).application).Major
-    $compilerVersion = $majorVersion - 11
+    $compilerVersion = $ENV:AL_BCMAJORVERSION - 11
     if ($compilerVersion -le 16) {
         $compilerVersion = 16 # v15 and earlier NuGets are not available or not correct
     }
@@ -24,8 +23,9 @@ try {
         "MinimumVersion" = "$compilerVersion.0.0.0"
         "MaximumVersion" = "$($compilerVersion + 1).0.0.0"
     }
-    OutputDebug -Message "Find-Package results:"
+    OutputDebug -Message "Searching for $bcDevToolsPackageName versions between $($params.MinimumVersion) and $($params.MaximumVersion) for BC major version $ENV:AL_BCMAJORVERSION"
     $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
+    OutputDebug -Message "Find-Package results:"
     $searchResultsAll | ForEach-Object {
         OutputDebug -Message "Name: $($_.Name), Version: $($_.Version)"
     }
