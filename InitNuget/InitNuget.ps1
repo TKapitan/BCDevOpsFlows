@@ -17,6 +17,7 @@ try {
     }
     $compilerVersion = $ENV:AL_BCMAJORVERSION - 11
     if ($compilerVersion -le 16) {
+        OutputDebug -Message "BC major version $ENV:AL_BCMAJORVERSION maps to compiler version $compilerVersion, adjusting to 16"
         $compilerVersion = 16 # v15 and earlier NuGets are not available or not correct
     }
     $params += @{ 
