@@ -16,6 +16,7 @@ function Get-BuildParameters {
 
     $alcItem = Get-Item -Path (Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'alc.exe')
     [System.Version]$alcVersion = $alcItem.VersionInfo.FileVersion
+    OutputDebug -Message "AL Compiler version: $alcVersion"
     $alcParameters = @(
         "/project:""$baseAppFolder""", 
         "/packagecachepath:""$packageCachePath""", 
