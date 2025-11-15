@@ -16,9 +16,13 @@ try {
         "Source" = "https://api.nuget.org/v3/index.json"
     }
     $majorVersion = [Version]::Parse($(Get-AppJson -settings $settings).application).Major
+    $compilerVersion = $majorVersion - 11
+    if ($compilerVersion -le 16) {
+        $compilerVersion = 16 # v15 and earlier NuGets are not available or not correct
+    }
     $params += @{ 
-        "MinimumVersion" = "$($majorVersion - 11).0.0.0"
-        "MaximumVersion" = "$($majorVersion - 11 + 1).0.0.0"
+        "MinimumVersion" = "$compilerVersion.0.0.0"
+        "MaximumVersion" = "$($compilerVersion + 1).0.0.0"
     }
     OutputDebug -Message "Find-Package results:"
     $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
