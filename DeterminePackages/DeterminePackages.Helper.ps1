@@ -164,7 +164,7 @@ function Update-CustomCodeCops {
         Write-Host "Determining LinterCop version"     
         $linterCopURL = ""
         if ($runWith -eq 'nuget') {
-            $majorVersion = "Current"
+            $ENV:AL_BCMAJORVERSION = "NuGet" # XXX temporary workaround
             $linterCopURL = "BusinessCentral.LinterCop.dll"
         }
         else {
@@ -183,7 +183,7 @@ function Update-CustomCodeCops {
         }
     
         if ($linterCopURL -ne "") {
-            Write-Host "Using LinterCop for version $majorVersion, URL: $linterCopURL"
+            Write-Host "Using LinterCop for version $ENV:AL_BCMAJORVERSION, URL: $linterCopURL"
             $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
         } else {
             Write-Warning "LinterCop URL could not be determined for BC version $($ENV:AL_BCMAJORVERSION). Skipping LinterCop configuration."
