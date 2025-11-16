@@ -21,19 +21,17 @@ else {
     $artifactUrl = $settings.artifact
 }
 
-$bcContainerHelperConfig | Add-Member -NotePropertyName 'bcartifactsCacheFolder' -NotePropertyValue $settings.cacheFolder -Force
-$folders = Download-Artifacts -artifactUrl $artifactUrl -includePlatform -ErrorAction SilentlyContinue
-if (!($folders)) {
-    throw "Unable to download artifacts from $($artifactUrl.Split('?')[0])."
-}
-if ([Version]$settings.applicationDependency -gt [Version]$artifactUrl.Split('/')[4]) {
-    throw "Application dependency is set to $($settings.applicationDependency), which isn't compatible with the artifact version $version"
-}
+# Extract major version from artifact URL
+$versionSegment = $artifactUrl.Split('/')[4]
+$majorVersion = $versionSegment.Split('.')[0]
 
 # Set output variables
 $ENV:AL_ARTIFACT = $artifactUrl
 Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$artifactUrl"
 OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
+$ENV:AL_BCMAJORVERSION = $majorVersion
+Write-Host "##vso[task.setvariable variable=AL_BCMAJORVERSION;]$majorVersion"
+OutputDebug -Message "Set environment variable AL_BCMAJORVERSION to ($ENV:AL_BCMAJORVERSION)"
 $ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"

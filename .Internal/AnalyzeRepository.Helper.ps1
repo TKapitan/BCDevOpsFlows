@@ -1,5 +1,5 @@
 
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\DeterminePackages\ForBCContainerHelper\DetermineArtifactUrl.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ForBCContainerHelper\DetermineArtifactUrl.Helper.ps1" -Resolve)
 
 function AnalyzeRepo {
     [CmdletBinding()]
