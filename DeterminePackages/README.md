@@ -59,5 +59,4 @@ No input parameters.
 | Name | Description |
 | :--                   | :-- |
 | AL_SETTINGS       | Compressed json file with BCDevOpsFlows settings.     |
-| AL_ARTIFACT | The ArtifactUrl to use for the build |
 | AL_BCCONTAINERHELPERPATH  | Path to used BC Container Helper module.  |

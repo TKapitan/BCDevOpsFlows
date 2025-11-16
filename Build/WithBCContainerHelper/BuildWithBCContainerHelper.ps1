@@ -32,11 +32,7 @@ try {
 
     $containerName = GetContainerName
 
-    $runAlPipelineParams = @{
-        "sourceRepositoryUrl" = "$ENV:BUILD_REPOSITORY_URI"
-        "sourceCommit"        = $ENV:BUILD_SOURCEVERSION
-        "buildBy"             = "BCDevOpsFlows"
-    }
+    $runAlPipelineParams = @{}
     $baseFolder = $ENV:BUILD_REPOSITORY_LOCALPATH
     if ($bcContainerHelperConfig.useVolumes -and $bcContainerHelperConfig.hostHelperFolder -eq "HostHelperFolder") {
         $allVolumes = "{$(((docker volume ls --format "'{{.Name}}': '{{.Mountpoint}}'") -join ",").Replace('\','\\').Replace("'",'"'))}" | ConvertFrom-Json | ConvertTo-HashTable
@@ -293,11 +289,8 @@ try {
         $runAlPipelineParams["features"] += "translationfile"
     }
     
-    $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
-    $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
-
     $runAlPipelineParams["preprocessorsymbols"] = @()
+    $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $(Get-AppJson -settings $settings)
     if ($existingSymbols.Count -gt 0) {
         Write-Host "Adding existing Preprocessor symbols: $($existingSymbols.Keys -join ',')"
         $runAlPipelineParams["preprocessorsymbols"] = @($existingSymbols.Keys)
@@ -306,6 +299,7 @@ try {
     if ($runAlPipelineParams.Keys -notcontains 'preprocessorsymbols') {
         $runAlPipelineParams["preprocessorsymbols"] = @()
     }
+    $runAlPipelineParams += Get-BuildInfoParameters
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
