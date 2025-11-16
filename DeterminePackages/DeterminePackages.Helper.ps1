@@ -163,7 +163,7 @@ function Update-CustomCodeCops {
     if ($settings.enableLinterCop) {
         $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
         if ($runWith.ToLowerInvariant() -eq 'nuget' -and $bcMajorVersion -le 27) {
-            $bcMajorVersion += 27
+            $bcMajorVersion = 27
         }
         Write-Host "Determining LinterCop version"     
         $linterCopURL = "" # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
@@ -175,7 +175,7 @@ function Update-CustomCodeCops {
             24 { $linterCopURL = "BusinessCentral.LinterCop.AL-13.1.1065068.dll" }
             23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
             default { 
-                Write-Warning "LinterCop is not available for BC version $($ENV:AL_BCMAJORVERSION). Skipping LinterCop configuration."
+                Write-Warning "LinterCop is not available for BC version $($ENV:AL_BCMAJORVERSION) (adjusted to $bcMajorVersion). Skipping LinterCop configuration."
             }
         }
         if ($linterCopURL -ne "") {
