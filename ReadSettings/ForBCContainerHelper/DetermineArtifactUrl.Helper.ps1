@@ -1,3 +1,5 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 function DetermineArtifactUrl {
     Param(
         [hashtable] $settings
@@ -22,12 +24,7 @@ function DetermineArtifactUrl {
         }
     }
 
-    $isAppJsonArtifact = $artifact.ToLower() -eq "////appjson"
-    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
-    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
-    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
-
-    $artifact = AddArtifactDefaultValues -artifact $artifact
+    $artifact = AddArtifactDefaultValues -settings $settings -artifact $artifact
     try {
         $artifactCacheMutexName = "ArtifactUrlCache-$artifact"
         $artifactCacheMutex = New-Object System.Threading.Mutex($false, $artifactCacheMutexName)
@@ -140,6 +137,8 @@ function DetermineArtifactUrl {
 
 function AddArtifactDefaultValues {
     Param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings,
         [string] $artifact
     )
 
@@ -156,33 +155,11 @@ function AddArtifactDefaultValues {
 
     if ($select -eq "appjson") {
         Write-Host "Using app.json artifact"
-        $baseAppFolder = "$ENV:PIPELINE_WORKSPACE\App\App"
-        $appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-
-        $appJsonVersionSegments = $appJsonContent.application.Split('.')
+        $appJsonVersionSegments = $(Get-AppJson -settings $settings).application.Split('.')
         $version = "$($appJsonVersionSegments[0]).$($appJsonVersionSegments[1])"
         $select = "latest"
     }
     $calculatedArtifact = "$storageAccount/$artifactType/$version/$country/$select"
     Write-Host "Calculated artifact: $calculatedArtifact"
     return $calculatedArtifact
-}
-
-# Copy a HashTable to ensure non case sensitivity (Issue #385)
-function Copy-HashTable() {
-    [CmdletBinding()]
-    [OutputType([System.Collections.HashTable])]
-    Param(
-        [parameter(ValueFromPipeline)]
-        [hashtable] $object
-    )
-    Process {
-        $ht = @{}
-        if ($object) {
-            $object.Keys | ForEach-Object {
-                $ht[$_] = $object[$_]
-            }
-        }
-        $ht
-    }
 }

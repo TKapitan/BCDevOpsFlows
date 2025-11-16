@@ -16,6 +16,7 @@ function Get-BuildParameters {
 
     $alcItem = Get-Item -Path (Join-Path $ENV:AL_BCDEVTOOLSFOLDER 'alc.exe')
     [System.Version]$alcVersion = $alcItem.VersionInfo.FileVersion
+    OutputDebug -Message "AL Compiler version: $alcVersion"
     $alcParameters = @(
         "/project:""$baseAppFolder""", 
         "/packagecachepath:""$packageCachePath""", 
@@ -43,10 +44,12 @@ function Get-BuildParameters {
     if ($anyAnalyzerEnabled) {
         $analyzersCommonDLLPath = 'Microsoft.Dynamics.Nav.Analyzers.Common.dll'
         $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $analyzersCommonDLLPath
-        if (-not (Test-Path $copPath)) {
+        if (Test-Path $copPath) {
+            $alcParameters += @("/analyzer:$copPath")
+        }
+        elseif ($alcVersion -ge [System.Version]"16.0.0.0") {
             throw "The specified Common analyzer does not exist: $copPath"
         }
-        $alcParameters += @("/analyzer:$copPath")
     }
     foreach ($analyzer in $analyzers) {
         if ($settings.$($analyzer.Setting)) {
@@ -77,17 +80,11 @@ function Get-BuildParameters {
         $alcParameters += @("/enableexternalrulesets")
     }
     if ($alcVersion -ge [System.Version]"12.0.12.41479") {
-        $alcParameters += @(
-            "/sourceRepositoryUrl:""$ENV:BUILD_REPOSITORY_URI""",
-            "/sourceCommit:""$ENV:BUILD_SOURCEVERSION""",
-            "/buildBy:""BCDevOpsFlows""",
-            "/buildUrl:""$ENV:BUILD_BUILDURI"""
-        )
         OutputDebug -Message "Adding source code parameters:"
-        OutputDebug -Message "  sourceRepositoryUrl: $ENV:BUILD_REPOSITORY_URI"
-        OutputDebug -Message "  sourceCommit: $ENV:BUILD_SOURCEVERSION"
-        OutputDebug -Message "  buildBy: BCDevOpsFlows"
-        OutputDebug -Message "  buildUrl: $ENV:BUILD_BUILDURI"
+        foreach ($param in $(Get-BuildInfoParameters).GetEnumerator()) {
+            $alcParameters += @("/$($param.Key):$($param.Value)")
+            OutputDebug -Message "  $($param.Key): $($param.Value)"
+        }
     }
     $existingSymbols = Get-PreprocessorSymbols -settings $settings -appJsonContent $appJsonContent
     $existingSymbols.Keys | ForEach-Object { $alcParameters += @("/D:$_") }

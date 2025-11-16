@@ -1,4 +1,5 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\NuGet.Helper.ps1" -Resolve)
 
@@ -126,27 +127,20 @@ function Get-PreviousReleaseFromNuGet {
         return $settings
     }
 
-    Write-Host "Locating previous release"     
-    $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
-    $appJsonFile = Join-Path $folder "app.json"
+    Write-Host "Locating previous release" 
+    $appJsonContent = Get-AppJson -settings $settings
     $trustedNuGetFeeds = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL -trustMicrosoftNuGetFeeds $settings.trustMicrosoftNuGetFeeds
-    if (Test-Path $appJsonFile) {
-        $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-        $packageId = Get-BCDevOpsFlowsNuGetPackageId -id $appJson.id -name $appJson.name -publisher $appJson.publisher
-        $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageId
-        if ($appFile) {
-            if (!$settings.previousRelease) {
-                $settings.previousRelease = @()
-            }
-            $settings.previousRelease += $appFile
-            Write-Host "Adding previous release from NuGet: $packageId"
+    $packageId = Get-BCDevOpsFlowsNuGetPackageId -id $appJsonContent.id -name $appJsonContent.name -publisher $appJsonContent.publisher
+    $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageId
+    if ($appFile) {
+        if (!$settings.previousRelease) {
+            $settings.previousRelease = @()
         }
-        else {
-            OutputWarning -Message "No previous release found in NuGet for $packageId"
-        }
+        $settings.previousRelease += $appFile
+        Write-Host "Adding previous release from NuGet: $packageId"
     }
     else {
-        throw  "No app.json file found in $folder"
+        OutputWarning -Message "No previous release found in NuGet for $packageId"
     }
     return $settings
 }
@@ -166,39 +160,29 @@ function Update-CustomCodeCops {
         $settings.customCodeCops = @()
     }    
     
-    if (-not $settings.enableLinterCop) {
-        return $settings
-    }
-
-    Write-Host "Determining LinterCop version"     
-    if ($runWith -eq 'nuget') {
-        $majorVersion = "Current"
-        $linterCopURL = "BusinessCentral.LinterCop.dll"
-    }
-    else {
-        $folder = Join-Path "$ENV:PIPELINE_WORKSPACE/App" $settings.appFolders[0]
-        $appJsonFile = Join-Path $folder "app.json"
-        if (Test-Path $appJsonFile) {
-            $appJson = Get-Content $appJsonFile -Encoding UTF8 | ConvertFrom-Json
-            $majorVersion = [Version]::Parse($appJson.application).Major
-            # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
-            switch ($majorVersion) {
-                28 { $linterCopURL = "BusinessCentral.LinterCop.AL-17.0.1825603.dll" }
-                # 27 as default
-                26 { $linterCopURL = "BusinessCentral.LinterCop.AL-15.2.1630495.dll" }
-                25 { $linterCopURL = "BusinessCentral.LinterCop.AL-14.3.1327807.dll" }
-                24 { $linterCopURL = "BusinessCentral.LinterCop.AL-13.1.1065068.dll" }
-                23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
-                default { $linterCopURL = "BusinessCentral.LinterCop.dll" }
+    if ($settings.enableLinterCop) {
+        $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
+        if ($runWith.ToLowerInvariant() -eq 'nuget' -and $bcMajorVersion -le 27) {
+            $bcMajorVersion = 27
+        }
+        Write-Host "Determining LinterCop version"     
+        $linterCopURL = "" # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
+        switch ($bcMajorVersion) {
+            28 { $linterCopURL = "BusinessCentral.LinterCop.AL-17.0.1869541.dll" }
+            27 { $linterCopURL = "BusinessCentral.LinterCop.dll" }
+            26 { $linterCopURL = "BusinessCentral.LinterCop.AL-15.2.1630495.dll" }
+            25 { $linterCopURL = "BusinessCentral.LinterCop.AL-14.3.1327807.dll" }
+            24 { $linterCopURL = "BusinessCentral.LinterCop.AL-13.1.1065068.dll" }
+            23 { $linterCopURL = "BusinessCentral.LinterCop.AL-12.7.964847.dll" }
+            default { 
+                Write-Warning "LinterCop is not available for BC version $($ENV:AL_BCMAJORVERSION) (adjusted to $bcMajorVersion). Skipping LinterCop configuration."
             }
         }
-        else {
-            throw  "No app.json file found in $folder"
+        if ($linterCopURL -ne "") {
+            Write-Host "Using LinterCop for version $ENV:AL_BCMAJORVERSION (adjusted to $bcMajorVersion), URL: $linterCopURL"
+            $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
         }
     }
-    
-    Write-Host "Using LinterCop for version $majorVersion, URL: $linterCopURL"
-    $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
     Write-Host "Configured custom CodeCops:"
     $settings.customCodeCops | ForEach-Object {
         Write-Host "- $_"

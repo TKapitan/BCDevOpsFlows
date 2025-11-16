@@ -25,3 +25,6 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 | AL_FAILPUBLISHTESTSONFAILURETOPUBLISHRESULTS | Specifies if the run should fail when Test app is configured and no test results are generated. This may indicate issue in the pipeline or that the configured Test app does not have any tests implemented.     |
 | AL_RUNWITH           | Specifies whether to use NuGet or BCContainerHelper to build the app. |
 | AL_ALLOWPRERELEASE   | If set to true, pipeline will use public releases as well as preview/prerelease builds. |
+| AL_BCMAJORVERSION    | Specifies the major version of the used platform. |
+| AL_ARTIFACT | The ArtifactUrl to use for the build |
+
