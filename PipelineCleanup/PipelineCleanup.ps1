@@ -13,9 +13,8 @@ try {
         Write-Host "Removing container $ENV:AL_CONTAINERNAME"
         Remove-Bccontainer GetContainerName
     }
-
-    # Clean Nuget
-    if ([bool]::Parse($ENV:AL_NUGETINITIALIZED)) {
+    # Clean Nuget only if AL_NUGETINITIALIZED is set and true
+    if ($ENV:AL_NUGETINITIALIZED -and [bool]::Parse($ENV:AL_NUGETINITIALIZED)) {
         Write-Host "Cleaning Nuget packages"
         . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 

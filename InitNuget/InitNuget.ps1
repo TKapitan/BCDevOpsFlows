@@ -1,22 +1,40 @@
 Param()
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 try {
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     if (!$settings) {
         throw "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
     }
 
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
-    $searchResults = Find-Package Microsoft.Dynamics.BusinessCentral.Development.Tools -AllowPrereleaseVersions -AllVersions -Source "https://api.nuget.org/v3/index.json" | Sort-Object Version -Descending | Select-Object -First 1
-    $bcDevToolsPackageVersion = $searchResults.Version
+    $params = @{ 
+        "Source" = "https://api.nuget.org/v3/index.json"
+    }
+    $compilerVersion = $ENV:AL_BCMAJORVERSION - 11
+    if ($compilerVersion -le 16) {
+        OutputDebug -Message "BC major version $ENV:AL_BCMAJORVERSION maps to compiler version $compilerVersion, adjusting to 16"
+        $compilerVersion = 16 # v15 and earlier NuGets are not available or not correct
+    }
+    $params += @{ 
+        "MinimumVersion" = "$compilerVersion.0.0.0"
+        "MaximumVersion" = "$($compilerVersion + 1).0.0.0"
+    }
+    OutputDebug -Message "Searching for $bcDevToolsPackageName versions between $($params.MinimumVersion) and $($params.MaximumVersion) for BC major version $ENV:AL_BCMAJORVERSION"
+    $searchResultsAll = Find-Package $bcDevToolsPackageName -AllowPrereleaseVersions -AllVersions @params
+    OutputDebug -Message "Find-Package results:"
+    $searchResultsAll | ForEach-Object {
+        OutputDebug -Message "Name: $($_.Name), Version: $($_.Version)"
+    }
+    $bcDevToolsPackageVersion = $($searchResultsAll | Sort-Object Version -Descending | Select-Object -First 1).Version
     if ([string]::IsNullOrEmpty($bcDevToolsPackageVersion)) {
         throw "Could not determine BC Dev Tools version from NuGet search results"
     }
-
+    Write-Host "Using $bcDevToolsPackageName version $bcDevToolsPackageVersion"
     DownloadNugetPackage -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion
 
     $bcDevToolsFolder = Join-Path -Path (GetNugetPackagePath -packageName $bcDevToolsPackageName -packageVersion $bcDevToolsPackageVersion) -ChildPath "Tools\net8.0\any"

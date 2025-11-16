@@ -154,9 +154,3 @@ else {
 $ENV:AL_SETTINGS = $($settings | ConvertTo-Json -Depth 99 -Compress)
 Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($settings | ConvertTo-Json -Depth 99 -Compress)"
 OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
-    
-# XXX this is temporary workaround to merge BCContainerHelper and NuGet build steps.
-$artifact = $settings.artifact
-$ENV:AL_ARTIFACT = $artifact
-Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$artifact"
-OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
