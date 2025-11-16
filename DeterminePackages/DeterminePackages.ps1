@@ -16,7 +16,7 @@ try {
     # Update settings from app configuration
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
     $appJsonContentApp = Get-AppJson -settings $settings
-    $settings = Update-CustomCodeCops -settings $settings -runWith $runWith
+    $settings = Update-CustomCodeCops -settings $settings
     $settings = Get-DependenciesFromNuGet -settings $settings -appJsonContent $appJsonContentApp
     $settings = Get-PreviousReleaseFromNuGet -settings $settings
 
