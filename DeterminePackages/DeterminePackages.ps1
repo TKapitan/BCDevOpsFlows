@@ -41,7 +41,7 @@ try {
             Write-Host "Test app.json not found for Test app at $testAppFilePath. Skipping test app package determination."
         }
         else {
-            $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 | ConvertFrom-Json
+            $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 -Raw | ConvertFrom-Json
             . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentTest -mainAppId $appJsonContentApp.id -isTestApp
         }
         . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DownloadBCCArtifact.Helper.ps1" -Resolve)
