@@ -5,8 +5,8 @@ function Get-CurrentMajorVersion {
     $year = $currentDate.Year
     $month = $currentDate.Month
 
-    # Calculate major version starting from Wave 1 2025 (April) as version 25
-    $baseMajor = 26 + (($year - 2025) * 2)
+    # Calculate major version starting from Wave 1 2023 (April) as version 22
+    $baseMajor = 22 + (($year - 2023) * 2)
     if ($month -ge 10) {
         return $baseMajor + 1   # October to March - Wave 2 (second release of the year)
     }
