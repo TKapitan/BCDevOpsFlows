@@ -1,5 +1,7 @@
 Param()
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
+
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeterminePackages.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
@@ -13,7 +15,7 @@ try {
 
     # Update settings from app configuration
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json | ConvertTo-HashTable
-    $appJsonContentApp = Get-Content "$ENV:PIPELINE_WORKSPACE\App\App\app.json" -Encoding UTF8 | ConvertFrom-Json
+    $appJsonContentApp = Get-AppJson -settings $settings
     $settings = Update-CustomCodeCops -settings $settings -runWith $runWith
     $settings = Get-DependenciesFromNuGet -settings $settings -appJsonContent $appJsonContentApp
     $settings = Get-PreviousReleaseFromNuGet -settings $settings
@@ -39,11 +41,10 @@ try {
             Write-Host "Test app.json not found for Test app at $testAppFilePath. Skipping test app package determination."
         }
         else {
-            $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 | ConvertFrom-Json
+            $appJsonContentTest = Get-Content $testAppFilePath -Encoding UTF8 -Raw | ConvertFrom-Json
             . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineNugetPackages.ps1" -Resolve) -appJsonContent $appJsonContentTest -mainAppId $appJsonContentApp.id -isTestApp
         }
-        # Find BCC artifact
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
+        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DownloadBCCArtifact.Helper.ps1" -Resolve)
     }
     else {
         throw "Unknown AL_RUNWITH value: $ENV:AL_RUNWITH. Supported values are 'NuGet' and 'BCContainerHelper'."

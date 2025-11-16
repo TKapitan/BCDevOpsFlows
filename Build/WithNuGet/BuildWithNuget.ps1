@@ -36,7 +36,6 @@ if (Test-Path $dependenciesPackageCachePath) {
     }
 }
 
-$appJsonContent = Get-Content "$baseAppFolder\app.json" -Encoding UTF8 | ConvertFrom-Json
-$buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appJsonContent $appJsonContent
+$buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appJsonContent $(Get-AppJson -settings $settings)
 $alcOutput = Invoke-AlCompiler -Parameters $buildParameters
 Write-ALCOutput -alcOutput $alcOutput -failOn $settings.failOn
