@@ -148,7 +148,8 @@ function Get-PreviousReleaseFromNuGet {
 function Update-CustomCodeCops {
     [CmdletBinding()]
     Param(
-        [hashtable] $settings
+        [hashtable] $settings,
+        [string] $runWith
     )
 
     if (!$settings.customCodeCops) {
@@ -160,9 +161,13 @@ function Update-CustomCodeCops {
     }    
     
     if ($settings.enableLinterCop) {
+        $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
+        if ($runWith.ToLowerInvariant() -eq 'nuget' -and $bcMajorVersion -le 27) {
+            $bcMajorVersion += 27
+        }
         Write-Host "Determining LinterCop version"     
         $linterCopURL = "" # https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/BusinessCentral.LinterCop.dll
-        switch ($ENV:AL_BCMAJORVERSION) {
+        switch ($bcMajorVersion) {
             28 { $linterCopURL = "BusinessCentral.LinterCop.AL-17.0.1869541.dll" }
             27 { $linterCopURL = "BusinessCentral.LinterCop.dll" }
             26 { $linterCopURL = "BusinessCentral.LinterCop.AL-15.2.1630495.dll" }
@@ -174,7 +179,7 @@ function Update-CustomCodeCops {
             }
         }
         if ($linterCopURL -ne "") {
-            Write-Host "Using LinterCop for version $ENV:AL_BCMAJORVERSION, URL: $linterCopURL"
+            Write-Host "Using LinterCop for version $ENV:AL_BCMAJORVERSION (adjusted to $bcMajorVersion), URL: $linterCopURL"
             $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
         }
     }
