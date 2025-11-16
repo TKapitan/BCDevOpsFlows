@@ -103,7 +103,7 @@ try {
                 Write-Host "##vso[task.setvariable variable=AL_$($setting.ToUpper());]$settingValue"
                 OutputDebug -Message "Set environment variable AL_$($setting.ToUpper()) to ($settingValue)"
                 if ($setting -eq "runWith") {
-                    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'existModuleName', Justification = 'variable is used in another scope')]
+                    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'runWith', Justification = 'variable is used in another scope')]
                     $runWith = $settingValue.ToLowerInvariant()
                 }
             }
@@ -119,7 +119,7 @@ try {
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
     Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
-    $isAppJsonArtifact = $outSettings.artifact.ToLower() -eq "////appjson"
+    $isAppJsonArtifact = $outSettings.artifact.ToLowerInvariant() -eq "////appjson"
     $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
     Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
     OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
