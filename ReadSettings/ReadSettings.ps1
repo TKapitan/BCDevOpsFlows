@@ -119,20 +119,24 @@ try {
     $ENV:AL_SETTINGS = $($outSettings | ConvertTo-Json -Depth 99 -Compress)
     Write-Host "##vso[task.setvariable variable=AL_SETTINGS;]$($outSettings | ConvertTo-Json -Depth 99 -Compress)"
     OutputDebug -Message "Set environment variable AL_SETTINGS to ($ENV:AL_SETTINGS)"
-    $isAppJsonArtifact = $outSettings.artifact.ToLowerInvariant() -eq "////appjson"
-    $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
-    Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
-    OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
 
     # Identify artifact
-    if ($runWith -eq 'bccontainerhelper') {
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
-    }
-    elseif ($runWith -eq 'nuget') {
-        . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineMajorVersion.ps1" -Resolve)
-    }
-    else {
-        throw "Unknown AL_RUNWITH value: $runWith. Supported values are 'NuGet' and 'BCContainerHelper'."
+    if ($ENV:AL_PIPELINENAME -ne "SetupPipelines") {
+        $isAppJsonArtifact = $outSettings.artifact.ToLowerInvariant() -eq "////appjson"
+        $ENV:AL_APPJSONARTIFACT = $isAppJsonArtifact
+        Write-Host "##vso[task.setvariable variable=AL_APPJSONARTIFACT;]$isAppJsonArtifact"
+        OutputDebug -Message "Set environment variable AL_APPJSONARTIFACT to ($ENV:AL_APPJSONARTIFACT)"
+
+        # Identify artifact
+        if ($runWith -eq 'bccontainerhelper') {
+            . (Join-Path -Path $PSScriptRoot -ChildPath "ForBCContainerHelper\DetermineArtifactUrl.ps1" -Resolve)
+        }
+        elseif ($runWith -eq 'nuget') {
+            . (Join-Path -Path $PSScriptRoot -ChildPath "ForNuGet\DetermineMajorVersion.ps1" -Resolve)
+        }
+        else {
+            throw "Unknown AL_RUNWITH value: $runWith. Supported values are 'NuGet' and 'BCContainerHelper'."
+        }
     }
 }
 catch {
