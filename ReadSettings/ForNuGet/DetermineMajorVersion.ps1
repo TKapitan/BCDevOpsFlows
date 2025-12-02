@@ -25,27 +25,32 @@ if ([string]::IsNullOrEmpty($versionPart) -and [string]::IsNullOrEmpty($keywordP
 
 if (![string]::IsNullOrEmpty($keywordPart)) {
     # Validate keyword
-    $validKeywords = @('latest', 'nextmajor', 'appjson')
+    $validKeywords = @('latest', 'nextminor', 'nextmajor', 'appjson')
     if ($keywordPart.ToLowerInvariant() -notin $validKeywords) {
-        throw "Invalid keyword '$keywordPart'. Valid keywords are: latest, nextMajor, appjson."
+        throw "Invalid keyword '$keywordPart'. Valid keywords are: latest, nextMinor, nextMajor, appjson."
     }
     
     # Determine major version based on keyword
-    $majorVersion = switch ($keywordPart.ToLowerInvariant()) {
+    switch ($keywordPart.ToLowerInvariant()) {
         'latest' { 
-            $currentMajorVersion = Get-CurrentMajorVersion
-            $currentMajorVersion 
+            $majorVersion = Get-CurrentMajorVersion
+            $minorVersion = Get-CurrentMinorVersion
+        }
+        'nextminor' { 
+            $majorVersion = Get-CurrentMajorVersion
+            $minorVersion = (Get-CurrentMinorVersion) + 1
         }
         'nextmajor' { 
-            $currentMajorVersion = Get-CurrentMajorVersion
-            $currentMajorVersion + 1 
+            $majorVersion = (Get-CurrentMajorVersion) + 1
+            $minorVersion = 0
         }
         'appjson' {
             $appVersionParts = $($(Get-AppJson -settings $settings).application).Split('.')
             if ($appVersionParts.Count -eq 0 -or [string]::IsNullOrEmpty($appVersionParts[0])) {
                 throw "Invalid application version format in app.json. Expected X.Y.Z.U format."
             }
-            [int]$appVersionParts[0]
+            $majorVersion = [int]$appVersionParts[0]
+            $minorVersion = [int]$appVersionParts[1]
         }
     }
     OutputDebug -Message "Determined major version $majorVersion using keyword '$keywordPart'."
@@ -58,14 +63,20 @@ else {
     }
     $majorVersion = [int]$versionParts[0]
     OutputDebug -Message "Extracted major version $majorVersion from version part '$versionPart'."
+    $minorVersion = [int]$versionParts[1]
+    OutputDebug -Message "Extracted minor version $minorVersion from version part '$versionPart'."
 }
 
 # Set output variables
 OutputDebug -Message "Setting AL_ARTIFACT to $($settings.artifact) for NuGet build step."
 OutputDebug -Message "Setting AL_BCMAJORVERSION to $majorVersion for NuGet build step."
+OutputDebug -Message "Setting AL_BCMINORVERSION to $minorVersion for NuGet build step."
 $ENV:AL_ARTIFACT = $settings.artifact
 Write-Host "##vso[task.setvariable variable=AL_ARTIFACT;]$($settings.artifact)"
 OutputDebug -Message "Set environment variable AL_ARTIFACT to ($ENV:AL_ARTIFACT)"
 $ENV:AL_BCMAJORVERSION = $majorVersion
 Write-Host "##vso[task.setvariable variable=AL_BCMAJORVERSION;]$majorVersion"
 OutputDebug -Message "Set environment variable AL_BCMAJORVERSION to ($ENV:AL_BCMAJORVERSION)"
+$ENV:AL_BCMINORVERSION = $minorVersion
+Write-Host "##vso[task.setvariable variable=AL_BCMINORVERSION;]$minorVersion"
+OutputDebug -Message "Set environment variable AL_BCMINORVERSION to ($ENV:AL_BCMINORVERSION)"

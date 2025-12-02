@@ -16,12 +16,18 @@ function GetDependencyVersionFilter {
     $versionParts = $appJson.application.Split('.')
     if ($ENV:AL_PIPELINENAME -eq "TestNextMajor") {
         Write-Host "Calculating next major version for dependency $($dependency.name)."
-        $versionParts[0] = [int]$versionParts[0] + 1
+        $versionParts[0] = $ENV:AL_BCMAJORVERSION + 1
         $versionParts[1] = '01'
     }
     elseif ($ENV:AL_PIPELINENAME -eq "TestNextMinor") {
         Write-Host "Calculating next minor version for dependency $($dependency.name)."
-        $versionParts[1] = ([int]$versionParts[1] + 2).ToString().PadLeft(2, '0')
+        $versionParts[0] = $ENV:AL_BCMAJORVERSION
+        $versionParts[1] = ([int]$ENV:AL_BCMINORVERSION + 2).ToString().PadLeft(2, '0')
+    }
+    elseif ($ENV:AL_PIPELINENAME -eq "TestCurrent") {
+        Write-Host "Calculating current version for dependency $($dependency.name)."
+        $versionParts[0] = $ENV:AL_BCMAJORVERSION
+        $versionParts[1] = ([int]$ENV:AL_BCMINORVERSION + 1).ToString().PadLeft(2, '0')
     }
     else {
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString().PadLeft(2, '0')
