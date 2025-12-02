@@ -26,5 +26,6 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 | AL_RUNWITH           | Specifies whether to use NuGet or BCContainerHelper to build the app. |
 | AL_ALLOWPRERELEASE   | If set to true, pipeline will use public releases as well as preview/prerelease builds. |
 | AL_BCMAJORVERSION    | Specifies the major version of the used platform. |
+| AL_BCMINORVERSION    | Specifies the minor version of the used platform. |
 | AL_ARTIFACT | The ArtifactUrl to use for the build |
 
