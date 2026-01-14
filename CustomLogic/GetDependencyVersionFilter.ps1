@@ -10,6 +10,10 @@ function GetDependencyVersionFilter {
         return ""
     }
     if ($appJson.publisher.Replace(' ', '') -ne $dependency.publisher.Replace(' ', '')) {
+        if($null -eq $($dependency.version) -or $($dependency.version) -eq '') {
+            Write-Host "Dependency $($dependency.name) does not have a version specified, cannot apply version filter."
+            return ""
+        }
         Write-Host "Dependency $($dependency.name) is from different publisher ($($dependency.publisher)) than the main app ($($appJson.publisher)), using exact version match."
         return "[$($dependency.version)]"
     }
@@ -31,6 +35,10 @@ function GetDependencyVersionFilter {
     }
     else {
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString().PadLeft(2, '0')
+    }
+    if($null -eq $($dependency.version) -or $($dependency.version) -eq '') {
+        Write-Host "Dependency $($dependency.name) does not have a version specified, using version range (,$($versionParts[0])$($versionParts[1]).0.0.0)."
+        return "(,$($versionParts[0])$($versionParts[1]).0.0.0)"
     }
     Write-Host "Dependency $($dependency.name) is from the same publisher ($($dependency.publisher)) as the main app ($($appJson.publisher)), using version range [$($dependency.version),$($versionParts[0])$($versionParts[1]).0.0.0)."
     return "[$($dependency.version),$($versionParts[0])$($versionParts[1]).0.0.0)"

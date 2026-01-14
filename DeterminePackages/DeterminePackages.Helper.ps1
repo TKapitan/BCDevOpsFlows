@@ -23,11 +23,25 @@ function Get-NuGetPackagesAndAddToSettings {
         $settings[$sourceProperty] | ForEach-Object {
             $packageName = $_
             $packageParts = $packageName -split '\.'
-            $packageId = $packageParts[-1]
+            $packageId = $packageParts[2]
             if ($packageId -eq $appJsonContent.id) {
                 Write-Host " - skipping package $packageName (matches current app ID)"
             }
             else {
+                $dependency = @{
+                    "id"        = $packageId  
+                    "name"      = $packageParts[1]
+                    "publisher" = $packageParts[0]
+                }
+                . (Join-Path -Path $PSScriptRoot -ChildPath "..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
+                $dependencyVersionFilter = GetDependencyVersionFilter -appJson $appJsonContent -dependency $dependency
+                if ($dependencyVersionFilter -ne '') {
+                    OutputDebug -Message "Using custom dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
+                    $packageParams += @{
+                        "version" = $dependencyVersionFilter
+                    }
+                }
+
                 $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @packageParams
                 if (-not $appFile) {
                     throw "Package $packageName not found in NuGet feeds"
