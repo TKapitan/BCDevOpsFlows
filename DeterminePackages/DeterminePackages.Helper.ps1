@@ -29,7 +29,7 @@ function Get-NuGetPackagesAndAddToSettings {
             }
             else {
                 $dependency = @{
-                    "id"        = $packageId  
+                    "id"        = $packageId
                     "name"      = $packageParts[1]
                     "publisher" = $packageParts[0]
                 }
