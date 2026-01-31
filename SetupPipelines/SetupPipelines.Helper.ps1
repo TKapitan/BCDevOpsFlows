@@ -343,6 +343,8 @@ function ModifyRunnersAndVariablesInWorkflows {
         if ($variableGroups -notcontains $settings.BCDevOpsFlowsVariableGroup) {
             $variableGroups += $settings.BCDevOpsFlowsVariableGroup
             Write-Warning "The BCDevOpsFlowsVariableGroup setting is deprecated and will be removed in July 2026. Please use BCDevOpsFlowsVariableGroups instead."
+        } else {
+            OutputDebug "BCDevOpsFlowsVariableGroup is defined but already included in BCDevOpsFlowsVariableGroups, skipping..."
         }
     }
     # LEGACY, WILL BE REMOVED 2026/07 <-
