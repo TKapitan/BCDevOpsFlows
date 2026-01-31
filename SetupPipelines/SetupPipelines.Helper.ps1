@@ -379,8 +379,8 @@ function ReplaceVariableNamesInWorkflow {
     if ($settings.Keys -notcontains 'BCDevOpsFlowsAuthContextVarName' -or $settings.BCDevOpsFlowsAuthContextVarName -eq '') {
         throw "The BCDevOpsFlowsAuthContextVarName setting is required but was not provided."
     }
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsTrustedNuGetVarName' -or $settings.BCDevOpsFlowsTrustedNuGetVarName -eq '') {
-        throw "The BCDevOpsFlowsTrustedNuGetVarName setting is required but was not provided."
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsTrustedNuGetFeedVarName' -or $settings.BCDevOpsFlowsTrustedNuGetFeedVarName -eq '') {
+        throw "The BCDevOpsFlowsTrustedNuGetFeedVarName setting is required but was not provided."
     }
 
     $needsUpdate = $false
