@@ -134,6 +134,8 @@ function ReadSettings {
         "BCDevOpsFlowsResourceRepositoryBranch"       = "main"
         "BCDevOpsFlowsServiceConnectionName"          = "BCDevOpsFlows"
         "BCDevOpsFlowsVariableGroups"                 = @("BCDevOpsFlows")
+        "BCDevOpsFlowsAuthContextVarName"             = "AL_AUTHCONTEXT"
+        "BCDevOpsFlowsTrustedNuGetFeedVarName"        = "AL_TRUSTEDNUGETFEEDS"
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
         "runWith"                                     = "BcContainerHelper"
