@@ -332,10 +332,30 @@ function ModifyRunnersAndVariablesInWorkflows {
         $newPoolName = $settings.BCDevOpsFlowsPoolName
     }
     $yamlContent.pool.name = $newPoolName
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
-        throw "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
+
+    $variableGroups = @()
+    if ($settings.Keys -contains 'BCDevOpsFlowsVariableGroups' -and $settings.BCDevOpsFlowsVariableGroups) {
+        $variableGroups = @($settings.BCDevOpsFlowsVariableGroups)
     }
-    $yamlContent.variables[0].group = $settings.BCDevOpsFlowsVariableGroup
+
+    # LEGACY, WILL BE REMOVED 2026/07 ->
+    if ($settings.Keys -contains 'BCDevOpsFlowsVariableGroup' -and $settings.BCDevOpsFlowsVariableGroup -ne '') {
+        if ($variableGroups -notcontains $settings.BCDevOpsFlowsVariableGroup) {
+            $variableGroups += $settings.BCDevOpsFlowsVariableGroup
+            Write-Warning "The BCDevOpsFlowsVariableGroup setting is deprecated and will be removed in July 2026. Please use BCDevOpsFlowsVariableGroups instead."
+        }
+    }
+    # LEGACY, WILL BE REMOVED 2026/07 <-
+
+    if ($variableGroups.Count -eq 0) {
+        throw "The BCDevOpsFlowsVariableGroups setting is required but was not provided."
+    }
+
+    $yamlContent.variables = @()
+    foreach ($group in $variableGroups) {
+        $yamlContent.variables += @{ group = $group }
+    }
+
     return $yamlContent
 }
     
