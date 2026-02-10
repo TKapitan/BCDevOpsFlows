@@ -9,6 +9,7 @@ Param(
 
 try {
     $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
     $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
     if ($matchingEnvironments.Count -eq 0) {
