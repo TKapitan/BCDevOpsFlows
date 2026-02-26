@@ -9,7 +9,12 @@ function GetDependencyVersionFilter {
         Write-Host "Dependency $($dependency.name) is from Microsoft, no version filter applied."
         return ""
     }
-    if ($appJson.publisher.Replace(' ', '') -ne $dependency.publisher.Replace(' ', '')) {
+    
+    # Check if publishers are different using partial match (one must start with the other)
+    $publisherApp = $appJson.publisher.Replace(' ', '')
+    $publisherDep = $dependency.publisher.Replace(' ', '')
+    $isDifferentPublisher = -not ($publisherApp.StartsWith($publisherDep) -or $publisherDep.StartsWith($publisherApp))
+    if ($isDifferentPublisher) {
         if($null -eq $($dependency.version) -or $($dependency.version) -eq '') {
             Write-Host "Dependency $($dependency.name) does not have a version specified, cannot apply version filter."
             return ""
