@@ -24,6 +24,6 @@ If you want to use the SetupPipeline to create and manage pipelines (recommended
      - Create build pipeline
      - Delete build pipeline
 
-Both permissions are needed when running the SetupPipelines as pipelines are recreated automatically in SetupPipelines pipeline.
+Both permissions are needed when running the SetupPipelines with the `recreatePipelineInSetupPipeline` setting enabled (pipelines are deleted and recreated). Without this setting, existing pipelines are skipped and only new pipelines are created — the **Delete build pipeline** permission is only required when `recreatePipelineInSetupPipeline` is true.
 
 **SECURITY WARNING: We recommend to assign the permission only for limited time when running the SetupPipelines pipeline and remove it after the pipelines are configured.**

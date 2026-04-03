@@ -1,6 +1,6 @@
 # Configure Pipelines for Hybrid Deployment
 
-_Prerequisites: Existing BCDevOps Flows project (see [Create New project](./CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](./AddBCDevOpsFlowsToExistingProject.md)) created as Hybrid Deployment. GitHub and Azure DevOps configured for Hybrid Deployment (see [Setup GitHub](../HybridDeployment/SetupGitHub.md) and [Setup Azure DevOps](../HybridDeployment/SetupAzureDevOps.md))_
+_Prerequisites: Existing BCDevOps Flows project (see [Create New project](../CreateNewProject.md) or [Add BCDevOps Flows to Existing Project](../AddBCDevOpsFlowsToExistingProject.md)) created as Hybrid Deployment. GitHub and Azure DevOps configured for Hybrid Deployment (see [Setup GitHub](./SetupGitHub.md) and [Setup Azure DevOps](./SetupAzureDevOps.md))_
 
 **This document describes Hybrid Deployment with Repository in GitHub, everything else in Azure DevOps. For standard deployment (everything in Azure DevOps), see [Configure Pipelines](../ConfigurePipelines.md)**
 
@@ -17,8 +17,8 @@ Configure BCDevOps Flows json setting files
 ## Update BC DevOps Files
 
 Before you create Azure DevOps pipelines, you must update BCDevOps flows template.
-1. Create Azure DevOps Service Connection, see [Connect Azure DevOps with GitHub](./HowToStart/ConnectAzureDevOpsWithGitHub.md) for more details.
-1. Create a pool of self-hosted agents, see [Configure Agent Pool](./HowToStart/ConfigureAgentPool.md) for more details.
+1. Create Azure DevOps Service Connection, see [Connect Azure DevOps with GitHub](../HowToStart/ConnectAzureDevOpsWithGitHub.md) for more details.
+1. Create a pool of self-hosted agents, see [Configure Agent Pool](../HowToStart/ConfigureAgentPool.md) for more details.
 1. Open your local repository that contains BCDevOpsFlows yaml files.
 1. Navigate to **".azure-pipelines"** folder and open **"SetupPipelines.yml"**
 1. Replace 

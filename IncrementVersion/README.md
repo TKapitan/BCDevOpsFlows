@@ -1,12 +1,12 @@
-# Determine Artifact URL
+# Increment Version
 
-Increment app version in app.json, BCDevOps Flows setting and also in DevOps repository. Supports absolute and relative changes. All changes are stagged and commited and must be pushed back to the original repository using [PushBackToRepo step](../PushBackToRepo/README.md)
+Increment app version in app.json, BCDevOps Flows settings and also in the DevOps repository. Supports absolute and relative changes. All changes are staged and committed and must be pushed back to the original repository using [PushBackToRepo step](../PushBackToRepo/README.md)
 
 ## INPUT Parameters
 
-| Name                  | Description |
-| :--                   | :-- |
-| versionNumber | Specifies new version to be used. This can be absolute version Major.Minor[.Build][.Revision] or +1, +0.1, +0.0.1 or +0.0.0.1 for relative change. Not all versioning strategies supports all changes. All versioning strategies supports Major.Minor and +1 and +0.1 |
+| Name                  | Required  | Description |
+| :--                   | :-:       | :-- |
+| versionNumber | No | Specifies new version to be used. This can be absolute version Major.Minor[.Build][.Revision] or +1, +0.1, +0.0.1 or +0.0.0.1 for relative change. Not all versioning strategies support all changes. All versioning strategies support Major.Minor and +1 and +0.1. If not specified, the `updateVersionNumber` setting value is used. If neither is specified, the step is skipped. |
 
 ## ENV INPUT variables
 
