@@ -1,6 +1,6 @@
-# Store App Locally
+# Deliver App File
 
-Allows to store the generated app file in local (or shared) folder for usage in other pipelines as dependencies or as steps of other pipelines.
+Delivers the generated app file (and test app file if configured) to a NuGet feed. Supports delivery to Azure DevOps Artifacts or NuGet.org feeds. The delivery target for the main app and the test app can be configured separately using the `AL_DELIVERTO` environment variable.
 
 ## INPUT Parameters
 
