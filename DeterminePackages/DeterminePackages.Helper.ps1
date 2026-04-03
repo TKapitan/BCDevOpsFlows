@@ -159,6 +159,99 @@ function Get-PreviousReleaseFromNuGet {
     return $settings
 }
 
+function Get-LatestNuGetPackageVersion {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [string] $packageName,
+        [switch] $allowPrerelease
+    )
+
+    $url = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLowerInvariant())/index.json"
+    $response = Invoke-RestMethod -Uri $url
+    $versions = $response.versions
+    if (-not $allowPrerelease) {
+        $versions = $versions | Where-Object { $_ -notmatch '-' }
+    }
+    if (-not $versions -or $versions.Count -eq 0) {
+        throw "No versions found for NuGet package $packageName"
+    }
+    return $versions[-1]
+}
+
+function Update-ALCopsAnalyzers {
+    [CmdletBinding()]
+    Param(
+        [hashtable] $settings
+    )
+
+    $alcopsAnalyzers = @(
+        @{ Setting = "enableALCopsLinterCop"; FileName = "ALCops.LinterCop.dll" },
+        @{ Setting = "enableALCopsApplicationCop"; FileName = "ALCops.ApplicationCop.dll" },
+        @{ Setting = "enableALCopsDocumentationCop"; FileName = "ALCops.DocumentationCop.dll" },
+        @{ Setting = "enableALCopsFormattingCop"; FileName = "ALCops.FormattingCop.dll" },
+        @{ Setting = "enableALCopsPlatformCop"; FileName = "ALCops.PlatformCop.dll" },
+        @{ Setting = "enableALCopsTestAutomationCop"; FileName = "ALCops.TestAutomationCop.dll" }
+    )
+
+    $enabledAnalyzers = $alcopsAnalyzers | Where-Object { $settings[$_.Setting] }
+    if (-not $enabledAnalyzers) {
+        return $settings
+    }
+
+    Write-Host "Determining ALCops analyzers"
+    $packageName = "ALCops.Analyzers"
+    $alcopsVersion = $settings.alcopsVersion
+    if (-not $alcopsVersion -or $alcopsVersion -eq "latest") {
+        $allowPrerelease = ($ENV:AL_ALLOWPRERELEASE -eq "true")
+        Write-Host "Resolving latest ALCops.Analyzers version (allowPrerelease: $allowPrerelease)"
+        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName -allowPrerelease:$allowPrerelease
+    }
+    Write-Host "Using ALCops.Analyzers version: $alcopsVersion"
+
+    $packagePath = DownloadNugetPackage -packageName $packageName -packageVersion $alcopsVersion
+
+    # Determine target framework based on BC major version
+    # AL Language extension v16.0+ uses net8.0, below uses netstandard2.1
+    # BC 28+ ships with AL Language extension v16+
+    $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
+    $targetFramework = "net8.0"
+    if ($bcMajorVersion -lt 28) {
+        $targetFramework = "netstandard2.1"
+    }
+    Write-Host "Using ALCops target framework: $targetFramework (BC version: $bcMajorVersion)"
+
+    $libPath = Join-Path $packagePath "lib/$targetFramework"
+    if (-not (Test-Path $libPath)) {
+        $availableFrameworks = Get-ChildItem (Join-Path $packagePath 'lib') -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name
+        throw "ALCops target framework path not found: $libPath. Available frameworks: $($availableFrameworks -join ', ')"
+    }
+
+    # Always add ALCops.Common.dll (required by all ALCops analyzers)
+    $commonDll = Join-Path $libPath "ALCops.Common.dll"
+    if (Test-Path $commonDll) {
+        $settings.customCodeCops += $commonDll
+        Write-Host "Added ALCops.Common.dll"
+    }
+    else {
+        Write-Warning "ALCops.Common.dll not found at $commonDll"
+    }
+
+    # Add enabled analyzer DLLs
+    foreach ($analyzer in $enabledAnalyzers) {
+        $dllPath = Join-Path $libPath $analyzer.FileName
+        if (Test-Path $dllPath) {
+            $settings.customCodeCops += $dllPath
+            Write-Host "Added $($analyzer.FileName)"
+        }
+        else {
+            Write-Warning "$($analyzer.FileName) not found at $dllPath"
+        }
+    }
+
+    return $settings
+}
+
 function Update-CustomCodeCops {
     [CmdletBinding()]
     Param(
@@ -169,12 +262,14 @@ function Update-CustomCodeCops {
     if (!$settings.customCodeCops) {
         $settings.customCodeCops = @()
     }
-    $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" }
+    # Strip previously added LinterCop and ALCops entries to avoid duplicates on re-runs
+    $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" -and $_ -notlike "*ALCops.*" }
     if ($settings.customCodeCops.Count -eq 0) {
         $settings.customCodeCops = @()
     }    
     
     if ($settings.enableLinterCop) {
+        Write-Warning "enableLinterCop is deprecated and will be removed in a future release. Please migrate to ALCops analyzers (e.g. enableALCopsLinterCop). See https://alcops.dev/docs/lintercop-migration/ for migration guide."
         $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
         if ($runWith.ToLowerInvariant() -eq 'nuget') {
             if ($bcMajorVersion -le 27) {
@@ -207,6 +302,10 @@ function Update-CustomCodeCops {
             $settings.customCodeCops += "https://github.com/StefanMaron/BusinessCentral.LinterCop/releases/latest/download/$linterCopURL"
         }
     }
+
+    # Process ALCops analyzers
+    $settings = Update-ALCopsAnalyzers -settings $settings
+
     Write-Host "Configured custom CodeCops:"
     $settings.customCodeCops | ForEach-Object {
         Write-Host "- $_"
