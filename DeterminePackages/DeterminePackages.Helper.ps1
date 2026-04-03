@@ -269,7 +269,7 @@ function Update-CustomCodeCops {
     }    
     
     if ($settings.enableLinterCop) {
-        OutputWarning -Message "enableLinterCop is deprecated and will be removed in a future release. Please migrate to ALCops analyzers (e.g. enableALCopsLinterCop). See https://alcops.dev/docs/lintercop-migration/ for migration guide."
+        Write-Warning "enableLinterCop is deprecated and will be removed in a future release. Please migrate to ALCops analyzers (e.g. enableALCopsLinterCop). See https://alcops.dev/docs/lintercop-migration/ for migration guide."
         $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
         if ($runWith.ToLowerInvariant() -eq 'nuget') {
             if ($bcMajorVersion -le 27) {
