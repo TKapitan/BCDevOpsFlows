@@ -57,6 +57,7 @@ try {
     }
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
+    $settings = Move-CustomCodeCopsToBaseFolder -settings $settings -baseFolder $baseFolder
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         throw "Repository is empty (no app or test folders found)"
         exit
