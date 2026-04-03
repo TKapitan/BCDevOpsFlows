@@ -21,10 +21,17 @@ else {
     $artifactUrl = $settings.artifact
 }
 
-# Extract major version from artifact URL
-$versionSegment = $artifactUrl.Split('/')[4]
-$majorVersion = $versionSegment.Split('.')[0]
-$minorVersion = $versionSegment.Split('.')[1]
+# Extract major/minor version from artifact URL
+$artifactUrlSegments = $artifactUrl.Split('/')
+if ($artifactUrlSegments.Length -le 4) {
+    throw "Unable to extract major/minor version from artifact URL: $artifactUrl"
+}
+$versionSegment = $artifactUrlSegments[4]
+if ($versionSegment -notmatch '^(\d+)\.(\d+)') {
+    throw "Unable to extract major/minor version from artifact URL segment '$versionSegment': $artifactUrl"
+}
+$majorVersion = $Matches[1]
+$minorVersion = $Matches[2]
 
 # Set output variables
 $ENV:AL_ARTIFACT = $artifactUrl
