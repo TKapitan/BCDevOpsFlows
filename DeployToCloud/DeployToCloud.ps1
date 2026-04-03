@@ -16,6 +16,15 @@ Param(
 try {
     DownloadAndImportBcContainerHelper
 
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_AUTHCONTEXTS_INTERNAL)) {
+        throw "AL_AUTHCONTEXTS_INTERNAL is required and must contain valid JSON."
+    }
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_SETTINGS)) {
+        throw "AL_SETTINGS is required; run ReadSettings first."
+    }
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_ENVIRONMENTS)) {
+        throw "AL_ENVIRONMENTS is required and must contain valid JSON."
+    }
     $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse

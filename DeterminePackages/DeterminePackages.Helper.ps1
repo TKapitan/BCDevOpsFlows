@@ -33,16 +33,18 @@ function Get-NuGetPackagesAndAddToSettings {
                     "name"      = $packageParts[1]
                     "publisher" = $packageParts[0]
                 }
+                $currentPackageParams = @{}
+                if ($packageParams) {
+                    $currentPackageParams = $packageParams.Clone()
+                }
                 . (Join-Path -Path $PSScriptRoot -ChildPath "..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
                 $dependencyVersionFilter = GetDependencyVersionFilter -appJson $appJsonContent -dependency $dependency
                 if ($dependencyVersionFilter -ne '') {
                     OutputDebug -Message "Using custom dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
-                    $packageParams += @{
-                        "version" = $dependencyVersionFilter
-                    }
+                    $currentPackageParams["version"] = $dependencyVersionFilter
                 }
 
-                $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @packageParams
+                $appFile = Get-BCDevOpsFlowsNuGetPackage -trustedNugetFeeds $trustedNuGetFeeds -packageName $packageName @currentPackageParams
                 if (-not $appFile) {
                     throw "Package $packageName not found in NuGet feeds"
                 }
@@ -263,7 +265,7 @@ function Update-CustomCodeCops {
         $settings.customCodeCops = @()
     }
     # Strip previously added LinterCop and ALCops entries to avoid duplicates on re-runs
-    $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" -and $_ -notlike "*ALCops.*" }
+    $settings.customCodeCops = $settings.customCodeCops | Where-Object { $_ -notlike "https://github.com/StefanMaron/BusinessCentral.LinterCop*" -and $_ -notmatch 'ALCops\.(Common|LinterCop|ApplicationCop|DocumentationCop|FormattingCop|PlatformCop|TestAutomationCop)\.dll$' }
     if ($settings.customCodeCops.Count -eq 0) {
         $settings.customCodeCops = @()
     }    
@@ -312,4 +314,3 @@ function Update-CustomCodeCops {
     }
     return $settings
 }
-

@@ -46,7 +46,7 @@ if (![string]::IsNullOrEmpty($keywordPart)) {
         }
         'appjson' {
             $appVersionParts = $($(Get-AppJson -settings $settings).application).Split('.')
-            if ($appVersionParts.Count -eq 0 -or [string]::IsNullOrEmpty($appVersionParts[0])) {
+            if ($appVersionParts.Count -lt 2 -or [string]::IsNullOrEmpty($appVersionParts[0]) -or [string]::IsNullOrEmpty($appVersionParts[1])) {
                 throw "Invalid application version format in app.json. Expected X.Y.Z.U format."
             }
             $majorVersion = [int]$appVersionParts[0]
@@ -63,6 +63,9 @@ else {
     }
     $majorVersion = [int]$versionParts[0]
     OutputDebug -Message "Extracted major version $majorVersion from version part '$versionPart'."
+    if ($versionParts.Count -lt 2 -or [string]::IsNullOrEmpty($versionParts[1])) {
+        throw "Invalid version format '$versionPart'. Expected at least X.Y format."
+    }
     $minorVersion = [int]$versionParts[1]
     OutputDebug -Message "Extracted minor version $minorVersion from version part '$versionPart'."
 }
