@@ -45,7 +45,7 @@ try {
             }
             $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
             if ($null -eq $bcAuthContext) {
-                throw "Authentication failed"
+                throw "Authentication failed for environment '$environmentName' in tenant '$tenantID' using client ID '$($authContext.clientID)'."
             }
         }
         catch {
