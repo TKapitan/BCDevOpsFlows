@@ -179,7 +179,6 @@ try {
                 }
             }
         }
-        throw "Deployment to environment ($environmentName) failed. See previous lines for details."
     }
 
     if ($noOfValidEnvironments -eq 0) {
