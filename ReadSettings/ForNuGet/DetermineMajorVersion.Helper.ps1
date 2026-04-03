@@ -17,3 +17,21 @@ function Get-CurrentMajorVersion {
         return $baseMajor - 1   # January to March - still using Wave 2 from previous year
     }
 }
+
+function Get-CurrentMinorVersion {
+    Param()
+
+    $currentDate = Get-Date
+    $month = $currentDate.Month
+
+    # Calculate minor version within the major version
+    if ($month -ge 10) {
+        return $month - 10  # October = 0, November = 1, December = 2
+    }
+    elseif ($month -ge 4) {
+        return $month - 4   # April = 0, May = 1, June = 2, July = 3, August = 4, September = 5
+    }
+    else {
+        return $month + 2   # January = 3, February = 4, March = 5 (continuing from previous wave)
+    }
+}
