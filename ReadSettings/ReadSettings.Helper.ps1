@@ -94,6 +94,13 @@ function ReadSettings {
         "enableCodeCop"                               = $false
         "enableUICop"                                 = $false
         "enableLinterCop"                             = $false
+        "enableALCopsLinterCop"                       = $false
+        "enableALCopsApplicationCop"                  = $false
+        "enableALCopsDocumentationCop"                = $false
+        "enableALCopsFormattingCop"                   = $false
+        "enableALCopsPlatformCop"                     = $false
+        "enableALCopsTestAutomationCop"               = $false
+        "alcopsVersion"                               = "latest"
         "enableCodeAnalyzersOnTestApps"               = $false
         "customCodeCops"                              = @()
         "failOn"                                      = "error"
@@ -133,7 +140,9 @@ function ReadSettings {
         "BCDevOpsFlowsResourceRepositoryName"         = ""
         "BCDevOpsFlowsResourceRepositoryBranch"       = "main"
         "BCDevOpsFlowsServiceConnectionName"          = "BCDevOpsFlows"
-        "BCDevOpsFlowsVariableGroup"                  = "BCDevOpsFlows"
+        "BCDevOpsFlowsVariableGroups"                 = @("BCDevOpsFlows")
+        "BCDevOpsFlowsAuthContextVarName"             = "AL_AUTHCONTEXT"
+        "BCDevOpsFlowsTrustedNuGetFeedVarName"        = "AL_TRUSTEDNUGETFEEDS"
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
         "runWith"                                     = "BcContainerHelper"

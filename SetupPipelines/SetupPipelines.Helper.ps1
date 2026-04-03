@@ -282,6 +282,8 @@ function Update-PipelineYMLFile {
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
+
+    ReplaceVariableNamesInWorkflow -filePath $filePath -workflowName $workflowName -settings $settings
 }
 
 function ModifyBCDevOpsFlowsInWorkflows {
@@ -332,10 +334,83 @@ function ModifyRunnersAndVariablesInWorkflows {
         $newPoolName = $settings.BCDevOpsFlowsPoolName
     }
     $yamlContent.pool.name = $newPoolName
-    if ($settings.Keys -notcontains 'BCDevOpsFlowsVariableGroup' -or $settings.BCDevOpsFlowsVariableGroup -eq '') {
-        throw "The BCDevOpsFlowsVariableGroup setting is required but was not provided."
+
+    $variableGroups = @()
+    if ($settings.Keys -contains 'BCDevOpsFlowsVariableGroups' -and $settings.BCDevOpsFlowsVariableGroups) {
+        $variableGroups = @($settings.BCDevOpsFlowsVariableGroups)
     }
-    $yamlContent.variables[0].group = $settings.BCDevOpsFlowsVariableGroup
+
+    # LEGACY, WILL BE REMOVED 2026/07 ->
+    if ($settings.Keys -contains 'BCDevOpsFlowsVariableGroup' -and $settings.BCDevOpsFlowsVariableGroup -ne '') {
+        if ($variableGroups -notcontains $settings.BCDevOpsFlowsVariableGroup) {
+            $variableGroups += $settings.BCDevOpsFlowsVariableGroup
+            Write-Warning "The BCDevOpsFlowsVariableGroup setting is deprecated and will be removed in July 2026. Please use BCDevOpsFlowsVariableGroups instead."
+        }
+        else {
+            OutputDebug "BCDevOpsFlowsVariableGroup is defined but already included in BCDevOpsFlowsVariableGroups, skipping..."
+        }
+    }
+    # LEGACY, WILL BE REMOVED 2026/07 <-
+
+    if ($variableGroups.Count -eq 0) {
+        throw "The BCDevOpsFlowsVariableGroups setting is required but was not provided."
+    }
+
+    $yamlContent.variables = @()
+    foreach ($group in $variableGroups) {
+        $yamlContent.variables += @{ group = $group }
+    }
+
     return $yamlContent
 }
     
+function ReplaceVariableNamesInWorkflow {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$filePath,
+        [Parameter(Mandatory = $true)]
+        [string]$workflowName,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings
+    )
+
+    $defaultAuthContextVar = 'AL_AUTHCONTEXT'
+    $defaultTrustedNuGetVar = 'AL_TRUSTEDNUGETFEEDS'
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsAuthContextVarName' -or $settings.BCDevOpsFlowsAuthContextVarName -eq '') {
+        throw "The BCDevOpsFlowsAuthContextVarName setting is required but was not provided."
+    }
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsTrustedNuGetFeedVarName' -or $settings.BCDevOpsFlowsTrustedNuGetFeedVarName -eq '') {
+        throw "The BCDevOpsFlowsTrustedNuGetFeedVarName setting is required but was not provided."
+    }
+
+    $needsUpdate = $false
+    $yamlText = Get-Content -Path $filePath -Raw
+    $configuredVariableName = $settings.BCDevOpsFlowsAuthContextVarName
+    if ($configuredVariableName -ne $defaultAuthContextVar) {
+        $existingVariableName = '$(' + $defaultAuthContextVar + ')'
+        $newVariableName = '$(' + $configuredVariableName + ')'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        $existingVariableName = 'variables[''' + $defaultAuthContextVar + ''']'
+        $newVariableName = 'variables[''' + $configuredVariableName + ''']'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        OutputDebug "Replaced $defaultAuthContextVar with $configuredVariableName in workflow $workflowName"
+        $needsUpdate = $true
+    }
+
+    $configuredVariableName = $settings.BCDevOpsFlowsTrustedNuGetFeedVarName
+    if ($configuredVariableName -ne $defaultTrustedNuGetVar) {
+        $existingVariableName = '$(' + $defaultTrustedNuGetVar + ')'
+        $newVariableName = '$(' + $configuredVariableName + ')'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        $existingVariableName = 'variables[''' + $defaultTrustedNuGetVar + ''']'
+        $newVariableName = 'variables[''' + $configuredVariableName + ''']'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        OutputDebug "Replaced $defaultTrustedNuGetVar with $configuredVariableName in workflow $workflowName"
+        $needsUpdate = $true
+    }
+
+    if ($needsUpdate) {
+        Set-Content -Path $filePath -Value $yamlText
+        OutputDebug "Updated variable names in workflow file: $filePath"
+    }
+}
