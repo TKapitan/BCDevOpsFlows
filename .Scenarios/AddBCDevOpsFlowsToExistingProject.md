@@ -1,13 +1,13 @@
-# Create new BCDevOps Flows project
+# Add BCDevOps Flows to Existing Project
 
-Congratulation, you are ready to create your first BCDevOps Flows project!
+You are ready to add BCDevOps Flows to your existing project!
 
 1. Clone the template repository located here https://github.com/TKapitan/BCDevOpsFlowsTemplate
 1. Clone your own repository.
-1. Move all your files in your repository to **App** and **Test** folder. These apps should contain one AL project each.
-1. If you do not have Test app in your local repository, copy the **Test** folder from BCDevOps Flows folder.
-1. Copy **.azure-pipelines** folder.
-1. Copy .gitignore file. You may need to merge the file with your own .gitignore file if you have additional files excluded/included.
+1. Move all your AL app files in your repository to an **App** folder (and optionally **Test** folder for your test app). Each folder should contain one AL project.
+1. If you do not have a test app in your repository, copy the **Test** folder from the BCDevOpsFlows template repository.
+1. Copy the **.azure-pipelines** folder from the template repository to your repository.
+1. Copy the .gitignore file from the template repository. You may need to merge it with your own .gitignore file if you have additional files excluded/included.
 1. Push all changes to your Azure DevOps*
 
 NEXT STEP: [Configure Pipelines](./ConfigurePipelines.md)

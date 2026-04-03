@@ -81,7 +81,7 @@ try {
     }
 
     if ($noOfValidEnvironments -eq 0) {
-        throw "No valid environments found matching filter '$deployToEnvironmentsNameFilter'"
+        throw "No valid environments found matching filter '$environmentsNameFilter'"
     }
 }
 catch {
