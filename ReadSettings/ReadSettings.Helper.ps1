@@ -133,7 +133,7 @@ function ReadSettings {
         "BCDevOpsFlowsResourceRepositoryName"         = ""
         "BCDevOpsFlowsResourceRepositoryBranch"       = "main"
         "BCDevOpsFlowsServiceConnectionName"          = "BCDevOpsFlows"
-        "BCDevOpsFlowsVariableGroup"                  = "BCDevOpsFlows"
+        "BCDevOpsFlowsVariableGroups"                 = @("BCDevOpsFlows")
         "failPublishTestsOnFailureToPublishResults"   = $true
         "skipAppSourceCopMandatoryAffixesEnforcement" = $false
         "runWith"                                     = "BcContainerHelper"
