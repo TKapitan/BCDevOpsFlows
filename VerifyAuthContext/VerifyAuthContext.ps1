@@ -8,7 +8,17 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 try {
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_AUTHCONTEXTS_INTERNAL)) {
+        throw "AL_AUTHCONTEXTS_INTERNAL is required and must contain valid JSON."
+    }
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_SETTINGS)) {
+        throw "AL_SETTINGS is required; run ReadSettings first."
+    }
+    if ([string]::IsNullOrWhiteSpace($ENV:AL_ENVIRONMENTS)) {
+        throw "AL_ENVIRONMENTS is required and must contain valid JSON."
+    }
     $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
+    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
     $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
     if ($matchingEnvironments.Count -eq 0) {
@@ -36,9 +46,16 @@ try {
         }
         try {
             $authContext = $authContexts."$authContextVariableName"
-            $bcAuthContext = New-BcAuthContext -tenantID $authContext.tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
+            $tenantID = $authContext.tenantID
+            if ([string]::IsNullOrWhiteSpace($tenantID)) {
+                $tenantID = $settings.tenantID
+            }
+            if ([string]::IsNullOrWhiteSpace($tenantID)) {
+                throw "No tenant ID found for environment ($environmentName)."
+            }
+            $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
             if ($null -eq $bcAuthContext) {
-                throw "Authentication failed"
+                throw "Authentication failed for environment '$environmentName' in tenant '$tenantID' using client ID '$($authContext.clientID)'."
             }
         }
         catch {
@@ -49,7 +66,7 @@ try {
             throw "Authentication failed. See previous lines for details."
         }
 
-        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
+        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
         Write-Host "EnvironmentUrl: $environmentUrl"
         $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
         if ($response.Status -eq "DoesNotExist") {
