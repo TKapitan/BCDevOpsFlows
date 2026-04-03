@@ -410,7 +410,7 @@ function ReplaceVariableNamesInWorkflow {
     }
 
     if ($needsUpdate) {
-        Set-Content -Path $filePath -Value $yamlText -NoNewline
+        Set-Content -Path $filePath -Value $yamlText
         OutputDebug "Updated variable names in workflow file: $filePath"
     }
 }

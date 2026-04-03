@@ -1,4 +1,4 @@
-# Run Pipeline
+# Setup Pipelines
 
 Setup Pipelines in Azure DevOps (update yaml files and create pipelines in Azure DevOps Pipelines)
 

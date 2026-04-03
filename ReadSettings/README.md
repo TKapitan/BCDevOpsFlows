@@ -1,6 +1,6 @@
-# Read settings
+# Read Settings
 
-Allows to store the generated app file in local (or shared) folder for usage in other pipelines as dependencies or as steps of other pipelines.
+Reads and resolves BCDevOps Flows settings from repository and project configuration files. Applies versioning strategy, analyzes the repository structure, and sets environment variables required by subsequent pipeline steps.
 
 ## INPUT Parameters
 
@@ -28,4 +28,5 @@ Allows to store the generated app file in local (or shared) folder for usage in 
 | AL_BCMAJORVERSION    | Specifies the major version of the used platform. |
 | AL_BCMINORVERSION    | Specifies the minor version of the used platform. |
 | AL_ARTIFACT | The ArtifactUrl to use for the build |
+| AL_APPJSONARTIFACT | Specifies whether the requested artifact was requested as an appjson artifact. AppJson artifact allows to use artifact (application and platform) based on the application version from the app.json file. |
 
