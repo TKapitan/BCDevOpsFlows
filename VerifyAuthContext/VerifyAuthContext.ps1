@@ -37,10 +37,10 @@ try {
         try {
             $authContext = $authContexts."$authContextVariableName"
             $tenantID = $authContext.tenantID
-            if ($tenantID -eq '') {
+             if ([string]::IsNullOrWhiteSpace($tenantID)) {
                 $tenantID = $settings.tenantID
             }
-            if ($tenantID -eq '') {
+            if ([string]::IsNullOrWhiteSpace($tenantID)) {
                 throw "No tenant ID found for environment ($environmentName)."
             }
             $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
