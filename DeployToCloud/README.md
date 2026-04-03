@@ -7,7 +7,7 @@ Use existing artifact and deploy the app to the cloud environment
 | Name                  | Required  | Description                                                                                       | Default value         |
 | :--                   | :-:       | :--                                                                                               | :--                   |
 | deployToEnvironmentsNameFilter       | Yes       | Name of environment to deploy to. You can also use RegEx to specify filter for environment names to deploy to.    |                       |
-| deploymentType        | No        | Type of delivery (CD or Release)                                                                  | CD                    |
+| deploymentType        | No        | Type of deployment (CD or Publish)                                                                  | CD                    |
 
 ## ENV INPUT variables
 
@@ -65,5 +65,5 @@ Use existing artifact and deploy the app to the cloud environment
 
 | Name                  | Description                                                                                                   |
 | :--                   | :--                                                                                                           |
-| AL_ENVIRONMENTURL     | The URL for the environment used for deployment                                                               |
+| AL_ENVIRONMENTURLS     | The URLs for all matching environments used for deployment (JSON object with environment names as keys and URLs as values)                                                               |
 | AL_BCCONTAINERHELPERPATH  | Path to used BC Container Helper module.  |

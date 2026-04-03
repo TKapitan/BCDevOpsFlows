@@ -38,14 +38,14 @@ This section describes how to set up BC DevOps Flows, Azure DevOps and Github. H
 
 The list of supported configuration is available in [Settings Overview](.Scenarios/SettingsOverview.md). Below is a list of the most important setting you should know about or that is different from AL-Go.
 
-- [country](/.Scenarios/SettingsOverview.md#country)
-- [artifact](/.Scenarios/SettingsOverview.md#artifact)
-- [versioningStrategy](/.Scenarios/SettingsOverview.md#versioningStrategy)
-- [writableFolderPath](/.Scenarios/SettingsOverview.md#writableFolderPath)
-- [artifactUrlCacheKeepHours](/.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
-- [preprocessorSymbols](/.Scenarios/SettingsOverview.md#preprocessorSymbols)
-- [removeInternalsVisibleTo](/.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
-- [overrideResourceExposurePolicy](/.Scenarios/SettingsOverview.md#overrideResourceExposurePolicy)
+- [country](.Scenarios/SettingsOverview.md#country)
+- [artifact](.Scenarios/SettingsOverview.md#artifact)
+- [versioningStrategy](.Scenarios/SettingsOverview.md#versioningStrategy)
+- [writableFolderPath](.Scenarios/SettingsOverview.md#writableFolderPath)
+- [artifactUrlCacheKeepHours](.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
+- [preprocessorSymbols](.Scenarios/SettingsOverview.md#preprocessorSymbols)
+- [removeInternalsVisibleTo](.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
+- [overrideResourceExposurePolicy](.Scenarios/SettingsOverview.md#overrideResourceExposurePolicy)
 
 ## Supported pipeline steps
 We strongly recommend to not change any of the standard pipeline or standard scripts. It's highly likely that customized scripts and/or pipelines will be broken in a future update.
@@ -58,9 +58,9 @@ You can use the following documentation of supported scripts to build your own p
 - [ReadSettings](./ReadSettings/README.md)
 - [VerifyAuthContext](./VerifyAuthContext/README.md)
 - [DeterminePackages](./DeterminePackages/README.md)
-- [IncreaseVersion](./IncreaseVersion/README.md)
+- [IncrementVersion](./IncrementVersion/README.md)
 - [Build](./Build/README.md)
-- [StoreAppLocally](./StoreAppLocally/README.md)
+- [DeliverAppFile](./DeliverAppFile/README.md)
 - [PushBackToRepo](./PushBackToRepo/README.md)
 - [DeployToCloud](./DeployToCloud/README.md)
 - [PipelineCleanup](./PipelineCleanup/README.md)
