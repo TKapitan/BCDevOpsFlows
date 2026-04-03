@@ -51,7 +51,14 @@ try {
         }
         try {
             $authContext = $authContexts."$authContextVariableName"
-            $bcAuthContext = New-BcAuthContext -tenantID $authContext.tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
+            $tenantID = $authContext.tenantID
+            if ($tenantID -eq '') {
+                $tenantID = $settings.tenantID
+            }
+            if ($tenantID -eq '') {
+                throw "No tenant ID found for environment ($environmentName)."
+            }
+            $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
             if ($null -eq $bcAuthContext) {
                 throw "Authentication failed"
             }
@@ -64,7 +71,7 @@ try {
             throw "Authentication failed. See previous lines for details."
         }
 
-        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($bcAuthContext.tenantId)/$($deploymentSettings.environmentName)"
+        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
     
         $environmentUrls | Add-Member -NotePropertyName $environmentName -NotePropertyValue $environmentUrl -Force
         OutputDebug -Message "Adding $environmentName with URL ($environmentUrl) to environmentUrls"

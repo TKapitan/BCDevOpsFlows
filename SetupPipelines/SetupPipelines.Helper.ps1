@@ -282,6 +282,8 @@ function Update-PipelineYMLFile {
     }
 
     Write-Yaml -FileName $filePath -Content $yamlContent
+
+    ReplaceVariableNamesInWorkflow -filePath $filePath -workflowName $workflowName -settings $settings
 }
 
 function ModifyBCDevOpsFlowsInWorkflows {
@@ -362,3 +364,53 @@ function ModifyRunnersAndVariablesInWorkflows {
     return $yamlContent
 }
     
+function ReplaceVariableNamesInWorkflow {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$filePath,
+        [Parameter(Mandatory = $true)]
+        [string]$workflowName,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings
+    )
+
+    $defaultAuthContextVar = 'AL_AUTHCONTEXT'
+    $defaultTrustedNuGetVar = 'AL_TRUSTEDNUGETFEEDS'
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsAuthContextVarName' -or $settings.BCDevOpsFlowsAuthContextVarName -eq '') {
+        throw "The BCDevOpsFlowsAuthContextVarName setting is required but was not provided."
+    }
+    if ($settings.Keys -notcontains 'BCDevOpsFlowsTrustedNuGetFeedVarName' -or $settings.BCDevOpsFlowsTrustedNuGetFeedVarName -eq '') {
+        throw "The BCDevOpsFlowsTrustedNuGetFeedVarName setting is required but was not provided."
+    }
+
+    $needsUpdate = $false
+    $yamlText = Get-Content -Path $filePath -Raw
+    $configuredVariableName = $settings.BCDevOpsFlowsAuthContextVarName
+    if ($configuredVariableName -ne $defaultAuthContextVar) {
+        $existingVariableName = '$(' + $defaultAuthContextVar + ')'
+        $newVariableName = '$(' + $configuredVariableName + ')'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        $existingVariableName = 'variables[''' + $defaultAuthContextVar + ''']'
+        $newVariableName = 'variables[''' + $configuredVariableName + ''']'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        OutputDebug "Replaced $defaultAuthContextVar with $configuredVariableName in workflow $workflowName"
+        $needsUpdate = $true
+    }
+
+    $configuredVariableName = $settings.BCDevOpsFlowsTrustedNuGetFeedVarName
+    if ($configuredVariableName -ne $defaultTrustedNuGetVar) {
+        $existingVariableName = '$(' + $defaultTrustedNuGetVar + ')'
+        $newVariableName = '$(' + $configuredVariableName + ')'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        $existingVariableName = 'variables[''' + $defaultTrustedNuGetVar + ''']'
+        $newVariableName = 'variables[''' + $configuredVariableName + ''']'
+        $yamlText = $yamlText -replace [regex]::Escape($existingVariableName), $newVariableName
+        OutputDebug "Replaced $defaultTrustedNuGetVar with $configuredVariableName in workflow $workflowName"
+        $needsUpdate = $true
+    }
+
+    if ($needsUpdate) {
+        Set-Content -Path $filePath -Value $yamlText -NoNewline
+        OutputDebug "Updated variable names in workflow file: $filePath"
+    }
+}
