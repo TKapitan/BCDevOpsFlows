@@ -153,8 +153,6 @@ function Get-BCCTrustedNuGetFeeds {
         $feedConfig = New-NuGetFeedConfig -name "MSAppsV2" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSAppsV2/nuget/v3/index.json"
         $requiredTrustedNuGetFeeds += @($feedConfig)
         if (-not $skipSymbolsFeeds) {
-            $feedConfig = New-NuGetFeedConfig -name "MSSymbolsV2" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/MSSymbolsV2/nuget/v3/index.json"
-            $requiredTrustedNuGetFeeds += @($feedConfig)
             $feedConfig = New-NuGetFeedConfig -name "AppSourceSymbols" -url "https://dynamicssmb2.pkgs.visualstudio.com/DynamicsBCPublicFeeds/_packaging/AppSourceSymbols/nuget/v3/index.json"
             $requiredTrustedNuGetFeeds += @($feedConfig)
         }
