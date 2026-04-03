@@ -40,7 +40,7 @@ function Move-CustomCodeCopsToBaseFolder {
         }
 
         $stagedCount++
-        $targetPath = Join-Path $stagedFolder (("{0:D2}-{1}" -f $stagedCount, (Split-Path $sourcePath -Leaf)))
+        $targetPath = Join-Path $stagedFolder $sourcePath
         Copy-Item -Path $sourcePath -Destination $targetPath -Force
         Write-Host "Staged customCodeCop to $targetPath"
         $stagedCustomCodeCops += $targetPath
