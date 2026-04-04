@@ -310,7 +310,6 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
-        -licenseFile $licenseFileUrl `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `
