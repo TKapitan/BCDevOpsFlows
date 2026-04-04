@@ -76,7 +76,7 @@ try {
     $installTestApps = $settings.installTestApps
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
-    
+
     $previousApps = @()
     if (!$settings.skipUpgrade) {
         if ($settings.previousRelease) {
@@ -310,7 +310,6 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
-        -sharedFolder $sharedFolder `
         -licenseFile $licenseFileUrl `
         -installApps $installApps `
         -installTestApps $installTestApps `
