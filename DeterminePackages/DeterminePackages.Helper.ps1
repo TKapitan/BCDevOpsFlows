@@ -205,9 +205,12 @@ function Update-ALCopsAnalyzers {
     $packageName = "ALCops.Analyzers"
     $alcopsVersion = $settings.alcopsVersion
     if (-not $alcopsVersion -or $alcopsVersion -eq "latest") {
-        $allowPrerelease = ($ENV:AL_ALLOWPRERELEASE -eq "true")
-        Write-Host "Resolving latest ALCops.Analyzers version (allowPrerelease: $allowPrerelease)"
-        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName -allowPrerelease:$allowPrerelease
+        Write-Host "Resolving latest stable ALCops.Analyzers version"
+        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName
+    }
+    elseif ($alcopsVersion -eq "preview") {
+        Write-Host "Resolving latest preview ALCops.Analyzers version"
+        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName -allowPrerelease
     }
     Write-Host "Using ALCops.Analyzers version: $alcopsVersion"
 
