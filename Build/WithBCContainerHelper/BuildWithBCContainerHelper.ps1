@@ -77,12 +77,6 @@ try {
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
 
-    if ($applicationInsightsConnectionString) {
-        $runAlPipelineParams += @{
-            "applicationInsightsConnectionString" = $applicationInsightsConnectionString
-        }
-    }
-
     $previousApps = @()
     if (!$settings.skipUpgrade) {
         if ($settings.previousRelease) {
@@ -316,8 +310,6 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
-        -sharedFolder $sharedFolder `
-        -licenseFile $licenseFileUrl `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `

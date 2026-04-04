@@ -1,6 +1,6 @@
 # Initialize Workflow
 
-Initialize the workflow and create a telemetry scope for tracking pipeline execution time. This step should be run as the first step in any pipeline.
+This workflow is used to initialize the environment for the other workflows. It can be used to set up any necessary resources, such as databases, storage accounts, or other services that are required for the other workflows to run.
 
 ## INPUT Parameters
 
@@ -8,12 +8,8 @@ No parameters.
 
 ## ENV INPUT variables
 
-| Name | Description |
-| :-- | :-- |
-| AL_DEBUG | If set to 'true', pipelines generate additional logs that provide better details. If requesting support, you must provide a log generated when this variable is enabled. |
+No environment input parameters.
 
 ## ENV OUTPUT variables
 
-| Name | Description |
-| :-- | :-- |
-| AL_TELEMETRYSCOPE | A telemetry scope JSON object that contains the workflow start time, used for tracking pipeline execution duration. |
+No environment output parameters.
