@@ -58,6 +58,7 @@ try {
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     $settings = Move-CustomCodeCopsToBaseFolder -settings $settings -baseFolder $baseFolder
+    $settings = Resolve-ExternalRulesetFiles -settings $settings -baseFolder $baseFolder
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         throw "Repository is empty (no app or test folders found)"
         exit
@@ -310,7 +311,7 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
-        -sharedFolder $sharedFolder `
+        -sharedFolder $bcContainerHelperConfig.hostHelperFolder `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `
