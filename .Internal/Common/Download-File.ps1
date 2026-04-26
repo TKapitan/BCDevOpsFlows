@@ -95,6 +95,10 @@ function Download-File {
     if ($replaceUrls.ContainsKey($sourceUrl)) {
         $sourceUrl = $replaceUrls[$sourceUrl]
     }
+    # Enforce HTTPS - reject plaintext HTTP downloads to prevent MITM attacks
+    if ($sourceUrl -like 'http://*' -and $sourceUrl -notlike 'https://*') {
+        throw "Download-File: Insecure HTTP URL is not allowed. Use HTTPS instead: $sourceUrl"
+    }
 
     # Enforce HTTPS - reject plaintext HTTP downloads to prevent MITM attacks
     if ($sourceUrl -like 'http://*' -and $sourceUrl -notlike 'https://*') {

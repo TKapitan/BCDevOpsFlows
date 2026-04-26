@@ -303,7 +303,6 @@ try {
         -accept_insiderEula `
         -pipelinename $workflowName `
         -containerName $containerName `
-        -sharedFolder $bcContainerHelperConfig.hostHelperFolder `
         -imageName $settings.cacheImageName `
         -bcAuthContext $authContext `
         -environment $environmentName `
@@ -312,6 +311,7 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
+        -sharedFolder $bcContainerHelperConfig.hostHelperFolder `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `

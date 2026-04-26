@@ -76,7 +76,7 @@ function GetArtifactUrlFromCache {
     }
     catch {
         $artifactUrlCacheContent = $null
-    }
+    }   
     if (!$artifactUrlCacheContent) { 
         OutputDebug -Message "Artifact URL cache file is empty"
         return

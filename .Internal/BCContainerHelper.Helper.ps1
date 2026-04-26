@@ -31,7 +31,7 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
                 throw "Setting BcContainerHelperVersion to a URL in settings is not allowed."
             }
             if ($bcContainerHelperVersion -like "http://*") {
-                throw "Setting BcContainerHelperVersion to an insecure HTTP URL is not allowed."
+                throw "Setting BcContainerHelperVersion to a URL in settings is not allowed."
             }
             if ($bcContainerHelperVersion -ne 'latest' -and $bcContainerHelperVersion -ne 'preview') {
                 Write-Host "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."
