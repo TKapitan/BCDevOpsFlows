@@ -77,12 +77,6 @@ try {
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
 
-    if ($applicationInsightsConnectionString) {
-        $runAlPipelineParams += @{
-            "applicationInsightsConnectionString" = $applicationInsightsConnectionString
-        }
-    }
-
     $previousApps = @()
     if (!$settings.skipUpgrade) {
         if ($settings.previousRelease) {
