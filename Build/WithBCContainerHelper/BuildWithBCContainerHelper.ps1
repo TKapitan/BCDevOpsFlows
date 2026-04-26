@@ -311,7 +311,6 @@ try {
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
         -sharedFolder $sharedFolder `
-        -licenseFile $licenseFileUrl `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `
