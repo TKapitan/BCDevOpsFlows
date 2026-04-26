@@ -95,6 +95,10 @@ function Download-File {
     if ($replaceUrls.ContainsKey($sourceUrl)) {
         $sourceUrl = $replaceUrls[$sourceUrl]
     }
+    # Enforce HTTPS - reject plaintext HTTP downloads to prevent MITM attacks
+    if ($sourceUrl -like 'http://*' -and $sourceUrl -notlike 'https://*') {
+        throw "Download-File: Insecure HTTP URL is not allowed. Use HTTPS instead: $sourceUrl"
+    }
 
     # If DropBox URL with dl=0 - replace with dl=1 (direct download = common mistake)
     if ($sourceUrl.StartsWith("https://www.dropbox.com/", "InvariantCultureIgnoreCase") -and $sourceUrl.EndsWith("?dl=0", "InvariantCultureIgnoreCase")) {

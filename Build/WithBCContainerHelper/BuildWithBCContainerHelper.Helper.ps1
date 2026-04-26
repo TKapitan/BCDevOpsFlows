@@ -1,5 +1,5 @@
 function GetContainerName() {
-    "bc-$($ENV:BUILD_REPOSITORY_NAME -replace "[^a-z0-9]")-$ENV:BUILD_BUILDID"
+    "bc-$($ENV:BUILD_REPOSITORY_NAME -replace "[^a-z0-9]")-$($ENV:BUILD_BUILDID -replace "[^a-z0-9]")"
 }
 
 function Move-CustomCodeCopsToBaseFolder {
@@ -23,6 +23,9 @@ function Move-CustomCodeCopsToBaseFolder {
         if ([string]::IsNullOrWhiteSpace($customCodeCop) -or $customCodeCop -like 'https://*') {
             $stagedCustomCodeCops += $customCodeCop
             continue
+        }
+        if ($customCodeCop -like 'http://*') {
+            throw "Custom code cop URL must use HTTPS. Insecure HTTP URL is not allowed: $customCodeCop"
         }
 
         $sourcePath = [System.IO.Path]::GetFullPath($customCodeCop)
