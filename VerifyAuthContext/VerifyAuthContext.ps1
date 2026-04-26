@@ -20,6 +20,13 @@ try {
     $authContexts = $ENV:AL_AUTHCONTEXTS_INTERNAL | ConvertFrom-Json
     $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
     $deploymentEnvironments = $ENV:AL_ENVIRONMENTS | ConvertFrom-Json | ConvertTo-HashTable -recurse
+    # Validate regex filter to prevent ReDoS attacks
+    try {
+        [regex]::new($environmentsNameFilter, [System.Text.RegularExpressions.RegexOptions]::None, [TimeSpan]::FromSeconds(5)) | Out-Null
+    }
+    catch {
+        throw "Invalid regex pattern in environmentsNameFilter: $environmentsNameFilter"
+    }
     $matchingEnvironments = @($deploymentEnvironments.GetEnumerator() | Where-Object { $_.Key -match $environmentsNameFilter } | Select-Object -ExpandProperty Key)
     if ($matchingEnvironments.Count -eq 0) {
         throw "No environments found matching filter '$environmentsNameFilter'"

@@ -58,6 +58,7 @@ try {
     $appBuild = $settings.appBuild
     $appRevision = $settings.appRevision
     $settings = Move-CustomCodeCopsToBaseFolder -settings $settings -baseFolder $baseFolder
+    $settings = Resolve-ExternalRulesetFiles -settings $settings -baseFolder $baseFolder
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         throw "Repository is empty (no app or test folders found)"
         exit
@@ -76,12 +77,6 @@ try {
     $installTestApps = $settings.installTestApps
     $installTestApps += $settings.testDependencies
     Write-Host "InstallTestApps: $installTestApps"
-
-    if ($applicationInsightsConnectionString) {
-        $runAlPipelineParams += @{
-            "applicationInsightsConnectionString" = $applicationInsightsConnectionString
-        }
-    }
 
     $previousApps = @()
     if (!$settings.skipUpgrade) {
@@ -316,8 +311,7 @@ try {
         -companyName $settings.companyName `
         -memoryLimit $settings.memoryLimit `
         -baseFolder $baseFolder `
-        -sharedFolder $sharedFolder `
-        -licenseFile $licenseFileUrl `
+        -sharedFolder $bcContainerHelperConfig.hostHelperFolder `
         -installApps $installApps `
         -installTestApps $installTestApps `
         -installOnlyReferencedApps:$settings.installOnlyReferencedApps `
