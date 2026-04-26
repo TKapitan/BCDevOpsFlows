@@ -59,8 +59,6 @@ function Resolve-RulesetIncludes {
         [string] $filePath,
         [Parameter(Mandatory = $true)]
         [string] $hostStagingFolder,
-        [Parameter(Mandatory = $true)]
-        [string] $containerStagingFolder,
         [Parameter(Mandatory = $false)]
         [System.Collections.Generic.HashSet[string]] $resolvedUrls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     )
@@ -86,11 +84,10 @@ function Resolve-RulesetIncludes {
                     $resolvedUrls.Add($entryPath) | Out-Null
                     OutputDebug -Message "Downloading external ruleset include: $entryPath -> $hostDestinationFile"
                     Download-File -SourceUrl $entryPath -destinationFile $hostDestinationFile
-                    Resolve-RulesetIncludes -filePath $hostDestinationFile -hostStagingFolder $hostStagingFolder -containerStagingFolder $containerStagingFolder -resolvedUrls $resolvedUrls | Out-Null
+                    Resolve-RulesetIncludes -filePath $hostDestinationFile -hostStagingFolder $hostStagingFolder -resolvedUrls $resolvedUrls | Out-Null
                 }
 
-                # Use container-side path so alc.exe inside the container can resolve it
-                $entry.path = Join-Path $containerStagingFolder $fileName
+                $entry.path = Join-Path $hostStagingFolder $fileName
                 $hasChanges = $true
             }
             else {
@@ -137,10 +134,7 @@ function Resolve-ExternalRulesetFiles {
         throw "Ruleset file URL must use HTTPS. Insecure HTTP URL is not allowed: $rulesetValue"
     }
 
-    # hostStagingFolder: where we write files from the host (outside the container)
-    # containerStagingFolder: the same location as seen from inside the container
     $hostStagingFolder = Join-Path $bcContainerHelperConfig.hostHelperFolder 'ExternalRulesets'
-    $containerStagingFolder = Join-Path $bcContainerHelperConfig.containerHelperFolder 'ExternalRulesets'
     if (-not (Test-Path $hostStagingFolder)) {
         New-Item -Path $hostStagingFolder -ItemType Directory | Out-Null
     }
@@ -160,19 +154,19 @@ function Resolve-ExternalRulesetFiles {
         }
     }
 
-    $resolvedHostPath = Resolve-RulesetIncludes -filePath $rulesetFilePath -hostStagingFolder $hostStagingFolder -containerStagingFolder $containerStagingFolder
+    $resolvedHostPath = Resolve-RulesetIncludes -filePath $rulesetFilePath -hostStagingFolder $hostStagingFolder
 
     if ($resolvedHostPath -ne $rulesetFilePath) {
-        # A staging copy with modified includes was created; provide the container-side path
-        $containerPath = Join-Path $containerStagingFolder (Split-Path $resolvedHostPath -Leaf)
-        Write-Host "Ruleset staged to BCC shared folder (host: $resolvedHostPath, container: $containerPath)"
-        $settings.rulesetFile = $containerPath
+        # A staging copy with modified includes was created;
+        $newRulesetPath = Join-Path $hostStagingFolder (Split-Path $resolvedHostPath -Leaf)
+        Write-Host "Ruleset staged to BCC shared folder ($resolvedHostPath)"
+        $settings.rulesetFile = $newRulesetPath
     }
     elseif ($rulesetValue -like 'https://*') {
-        # Downloaded external ruleset with no include changes; provide the container-side path
-        $containerPath = Join-Path $containerStagingFolder (Split-Path $rulesetFilePath -Leaf)
-        Write-Host "External ruleset downloaded to BCC shared folder (host: $rulesetFilePath, container: $containerPath)"
-        $settings.rulesetFile = $containerPath
+        # Downloaded external ruleset with no include changes;
+        $newRulesetPath = Join-Path $hostStagingFolder (Split-Path $rulesetFilePath -Leaf)
+        Write-Host "External ruleset downloaded to BCC shared folder ($rulesetFilePath)"
+        $settings.rulesetFile = $newRulesetPath
     }
     # else: local file with no external includes - settings.rulesetFile remains unchanged
 

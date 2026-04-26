@@ -303,7 +303,7 @@ try {
         -accept_insiderEula `
         -pipelinename $workflowName `
         -containerName $containerName `
-        -sharedFolder $bcContainerHelperConfig.containerHelperFolder `
+        -sharedFolder $bcContainerHelperConfig.hostHelperFolder `
         -imageName $settings.cacheImageName `
         -bcAuthContext $authContext `
         -environment $environmentName `
