@@ -71,7 +71,12 @@ function GetArtifactUrlFromCache {
         return
     }
 
-    $artifactUrlCacheContent = Get-Content $artifactUrlCacheFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+    try {
+        $artifactUrlCacheContent = Get-Content $artifactUrlCacheFile -Raw | ConvertFrom-Json
+    }
+    catch {
+        $artifactUrlCacheContent = $null
+    }
     if (!$artifactUrlCacheContent) { 
         OutputDebug -Message "Artifact URL cache file is empty"
         return

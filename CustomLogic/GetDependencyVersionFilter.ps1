@@ -25,7 +25,7 @@ function GetDependencyVersionFilter {
     $versionParts = $appJson.application.Split('.')
     if ($ENV:AL_PIPELINENAME -eq "TestNextMajor") {
         Write-Host "Calculating next major version for dependency $($dependency.name)."
-        $versionParts[0] = $ENV:AL_BCMAJORVERSION + 1
+        $versionParts[0] = [int]$ENV:AL_BCMAJORVERSION + 1
         $versionParts[1] = '01'
     }
     elseif ($ENV:AL_PIPELINENAME -eq "TestNextMinor") {
