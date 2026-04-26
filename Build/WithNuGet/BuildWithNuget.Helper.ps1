@@ -72,6 +72,9 @@ function Get-BuildParameters {
                 $copPath = Join-Path $ENV:AL_BCDEVTOOLSFOLDER $(Split-Path $_ -Leaf)
                 Download-File -SourceUrl $_ -destinationFile $copPath
             }
+            elseif ($_ -like 'http://*') {
+                throw "Custom code cop URL must use HTTPS. Insecure HTTP URL is not allowed: $_"
+            }
             $alcParameters += @("/analyzer:$copPath")
         }
     }

@@ -205,9 +205,12 @@ function Update-ALCopsAnalyzers {
     $packageName = "ALCops.Analyzers"
     $alcopsVersion = $settings.alcopsVersion
     if (-not $alcopsVersion -or $alcopsVersion -eq "latest") {
-        $allowPrerelease = ($ENV:AL_ALLOWPRERELEASE -eq "true")
-        Write-Host "Resolving latest ALCops.Analyzers version (allowPrerelease: $allowPrerelease)"
-        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName -allowPrerelease:$allowPrerelease
+        Write-Host "Resolving latest stable ALCops.Analyzers version"
+        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName
+    }
+    elseif ($alcopsVersion -eq "preview") {
+        Write-Host "Resolving latest preview ALCops.Analyzers version"
+        $alcopsVersion = Get-LatestNuGetPackageVersion -packageName $packageName -allowPrerelease
     }
     Write-Host "Using ALCops.Analyzers version: $alcopsVersion"
 
@@ -215,10 +218,10 @@ function Update-ALCopsAnalyzers {
 
     # Determine target framework based on BC major version
     # AL Language extension v16.0+ uses net8.0, below uses netstandard2.1
-    # BC 28+ ships with AL Language extension v16+
+    # BC 27+ ships with AL Language extension v16+
     $bcMajorVersion = [int]$ENV:AL_BCMAJORVERSION
     $targetFramework = "net8.0"
-    if ($bcMajorVersion -lt 28) {
+    if ($bcMajorVersion -lt 27 -and $settings.vsixFile.ToLowerInvariant() -ne 'latest' -and $settings.vsixFile.ToLowerInvariant() -ne 'preview') {
         $targetFramework = "netstandard2.1"
     }
     Write-Host "Using ALCops target framework: $targetFramework (BC version: $bcMajorVersion)"
