@@ -30,6 +30,9 @@ function DownloadAndImportBcContainerHelper([string] $baseFolder = ("$ENV:PIPELI
             if ($bcContainerHelperVersion -like "https://*") {
                 throw "Setting BcContainerHelperVersion to a URL in settings is not allowed."
             }
+            if ($bcContainerHelperVersion -like "http://*") {
+                throw "Setting BcContainerHelperVersion to a URL in settings is not allowed."
+            }
             if ($bcContainerHelperVersion -ne 'latest' -and $bcContainerHelperVersion -ne 'preview') {
                 Write-Host "::Warning::Using a specific version of BcContainerHelper is not recommended and will lead to build failures in the future. Consider removing the setting."
             }
@@ -86,25 +89,25 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
             New-Item -Path $bcContainerHelperRootFolder -ItemType Directory | Out-Null
         }
 
-        $webclient = New-Object System.Net.WebClient
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
         if ($bcContainerHelperVersion -like "https://*") {
             # Use temp space for private versions
             $tempName = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
             Write-Host "Downloading BcContainerHelper developer version from $bcContainerHelperVersion"
             try {
-                $webclient.DownloadFile($bcContainerHelperVersion, "$tempName.zip")
+                Invoke-WebRequest -UseBasicParsing -Uri $bcContainerHelperVersion -OutFile "$tempName.zip"
             }
             catch {
                 $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
                 $bcContainerHelperVersion = "preview"
                 Write-Host "Download failed, downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
-                $webclient.DownloadFile("https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip", "$tempName.zip")
+                Invoke-WebRequest -UseBasicParsing -Uri "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip" -OutFile "$tempName.zip"
             }
         }
         else {
             $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
             Write-Host "Downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
-            $webclient.DownloadFile("https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip", "$tempName.zip")
+            Invoke-WebRequest -UseBasicParsing -Uri "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip" -OutFile "$tempName.zip"
         }
         Expand-7zipArchive -Path "$tempName.zip" -DestinationPath $tempName
         $bcContainerHelperPath = (Get-Item -Path (Join-Path $tempName "*\BcContainerHelper.ps1")).FullName
@@ -169,9 +172,7 @@ function Expand-7zipArchive {
 
     if ($use7zip) {
         OutputDebug -Message "Using 7zip"
-        Set-Alias -Name 7z -Value $7zipPath
-        $command = '7z x "{0}" -o"{1}" -aoa -r' -f $Path, $DestinationPath
-        Invoke-Expression -Command $command | Out-Null
+        & $7zipPath x $Path "-o$DestinationPath" -aoa -r | Out-Null
     }
     else {
         OutputDebug -Message "Using Expand-Archive"

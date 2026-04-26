@@ -159,8 +159,8 @@ function ReadSettings {
     $settingsObjects = @()
     # Read settings from external settings file (if specified)
     if ($externalSettingLink -ne "") {
-        if (-not $externalSettingLink.StartsWith("http")) {
-            throw "External settings link must start with http/https"
+        if (-not $externalSettingLink.StartsWith("https://")) {
+            throw "External settings link must use HTTPS (start with https://)"
         }
         try {
             OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
