@@ -80,6 +80,7 @@ if (!(Test-Path $dependenciesPackageCachePath)) {
     New-Item -Path $dependenciesPackageCachePath -ItemType Directory | Out-Null
 }
 $trustedNuGetFeedsThirdParties = Get-BCCTrustedNuGetFeeds -fromTrustedNuGetFeeds $ENV:AL_TRUSTEDNUGETFEEDS_INTERNAL
+$downloadedApps = @()
 foreach ($dependency in $appJsonContent.dependencies) {
     if ($dependency.id -eq $mainAppId) {
         Write-Host "Skipping dependency $($dependency.name) with id $($dependency.id) as it is the main app"
@@ -129,6 +130,18 @@ foreach ($dependency in $appJsonContent.dependencies) {
         }
     }
 
+    # Skip the download when a previously processed dependency already pulled this app (as a transitive
+    # dependency) in a version that satisfies the requested version range - the app file is already in
+    # the dependencies folder. Version resolution semantics are unchanged: the same range check is applied.
+    $requestedVersion = '0.0.0.0'
+    if ($parameters.ContainsKey('version')) {
+        $requestedVersion = $parameters.version
+    }
+    if (Test-BCDevOpsFlowsDependencyDownloaded -downloadedApps $downloadedApps -appId $dependency.id -version $requestedVersion) {
+        Write-Host "Skipping dependency $($dependency.name) with id $($dependency.id) - already downloaded in this run"
+        continue
+    }
+
     $packageName = Get-BCDevOpsFlowsNuGetPackageId -id $dependency.id -name $dependency.name -publisher $dependency.publisher
     Write-Host "Getting $($dependency.name) using name $($dependency.id)"
     $downloadedPackage = Get-BCDevOpsFlowsNuGetPackageToFolder -packageName $packageName -originalAppJsonContent $appJsonContent @parameters
@@ -136,6 +149,7 @@ foreach ($dependency in $appJsonContent.dependencies) {
     if (!$downloadedPackage -or $downloadedPackage.Count -eq 0) {
         throw "No package found for dependency $($dependency.name) with id $($dependency.id) and version $($dependency.version)."
     }
+    $downloadedApps += @($downloadedPackage | Where-Object { $_ })
 }
 
 $appDependencies = @()

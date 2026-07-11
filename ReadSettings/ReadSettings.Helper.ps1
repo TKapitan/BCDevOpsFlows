@@ -127,6 +127,7 @@ function ReadSettings {
         "writableFolderPath"                          = ""
         "trustMicrosoftNuGetFeeds"                    = $true
         "artifactUrlCacheKeepHours"                   = 6
+        "nugetPackageCacheKeepDays"                   = 14
         "overrideResourceExposurePolicy"              = $false
         "previousRelease"                             = ""
         "deliveryTarget"                              = "AzureDevOps"

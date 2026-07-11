@@ -66,6 +66,76 @@ function GetNugetPackagePath() {
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     return $nugetPackagePath
 }
+function Remove-ExpiredBCDevOpsFlowsPackageCache {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $settings
+    )
+
+    try {
+        if (!$settings.writableFolderPath) {
+            return
+        }
+        $keepDays = 14
+        if ($settings.Keys -contains 'nugetPackageCacheKeepDays') {
+            $keepDays = [int]$settings.nugetPackageCacheKeepDays
+        }
+        if ($keepDays -le 0) {
+            return
+        }
+        $cacheRoot = Join-Path $settings.writableFolderPath '.nuget/bcpackages'
+        if (!(Test-Path $cacheRoot)) {
+            return
+        }
+        $cutoff = [DateTime]::UtcNow.AddDays(-$keepDays)
+        # Cache structure is {feedHash}/{packageId}/{version}; version folders (and abandoned staging
+        # folders next to them) are removed when unused for longer than nugetPackageCacheKeepDays
+        foreach ($feedFolder in (Get-ChildItem -Path $cacheRoot -Directory)) {
+            foreach ($packageFolder in (Get-ChildItem -Path $feedFolder.FullName -Directory)) {
+                foreach ($versionFolder in (Get-ChildItem -Path $packageFolder.FullName -Directory | Where-Object { $_.LastWriteTimeUtc -lt $cutoff })) {
+                    Write-Host "Removing expired cached NuGet package $($versionFolder.FullName)"
+                    try {
+                        Remove-Item -Path $versionFolder.FullName -Recurse -Force
+                    }
+                    catch {
+                        Write-Host "WARNING: Could not remove expired cached NuGet package $($versionFolder.FullName): $($_.Exception.Message)"
+                    }
+                }
+                if (!(Get-ChildItem -Path $packageFolder.FullName -Force)) {
+                    Remove-Item -Path $packageFolder.FullName -Force -ErrorAction SilentlyContinue
+                }
+            }
+            if (!(Get-ChildItem -Path $feedFolder.FullName -Force)) {
+                Remove-Item -Path $feedFolder.FullName -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+    catch {
+        Write-Host "WARNING: Could not prune NuGet package cache: $($_.Exception.Message)"
+    }
+}
+function Test-BCDevOpsFlowsDependencyDownloaded {
+    Param(
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject[]] $downloadedApps = @(),
+        [Parameter(Mandatory = $true)]
+        [string] $appId,
+        [Parameter(Mandatory = $false)]
+        [string] $version = '0.0.0.0'
+    )
+
+    # Mirrors the "already available" check in Get-BCDevOpsFlowsNuGetPackageToFolder:
+    # the highest already-downloaded version of the app is checked against the requested version range
+    $downloadedApp = $downloadedApps |
+        Where-Object { $_ -and $_.id -and $_.id -eq $appId } |
+        Sort-Object -Property @{ "Expression" = { [System.Version]($_.Version -replace '-.+$') } } -Descending |
+        Select-Object -First 1
+    if ($downloadedApp -and ([BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($downloadedApp.Version, $version))) {
+        Write-Host "$($downloadedApp.Name) from $($downloadedApp.Publisher) version $($downloadedApp.Version) is already downloaded (AppId=$($downloadedApp.id))"
+        return $true
+    }
+    return $false
+}
 function Remove-AllNugetPackageSources() {
     Param()
 
