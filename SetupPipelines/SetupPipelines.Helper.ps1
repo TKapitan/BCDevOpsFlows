@@ -1,4 +1,4 @@
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\ReadSettings\ReadSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Yaml.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
@@ -191,7 +191,6 @@ function Update-PipelineYMLFiles {
         $pipelineFile = Join-Path -Path $pipelineFolderPath -ChildPath $templateFile.Name
         if (-not (Test-Path -Path $pipelineFile)) {
             throw "Pipeline YML file does not exist: $pipelineFile"
-            continue
         }
         Update-PipelineYMLFile -filePath $pipelineFile
     }
