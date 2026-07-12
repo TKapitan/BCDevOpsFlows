@@ -259,7 +259,8 @@ class BcDevOpsFlowsNuGetFeed {
             # add a 'z' to the version to make sure that 5.1.0 is greater than 5.1.0-beta
             # Tags are sorted alphabetically (alpha, beta, rc, etc.), even though this shouldn't matter
             # New prerelease versions will always have a new version number
-            return [string]::Compare("$($version1)z", "$($version2)z")
+            # [string]::Compare can return any integer; callers compare against -1/0/1, so normalize
+            return [Math]::Sign([string]::Compare("$($version1)z", "$($version2)z"))
         }
         elseif ($ver1 -gt $ver2) {
             return 1
@@ -547,21 +548,21 @@ class BcDevOpsFlowsNuGetFeed {
             Invoke-RestMethod -UseBasicParsing -Uri $this.packagePublishUrl -ContentType "multipart/form-data; boundary=$boundary" -Method Put -Headers $headers -inFile $tmpFile | Out-Host
             Write-Host -ForegroundColor Green "NuGet package successfully submitted"
         }
-        catch [System.Net.WebException] {
-            if ($_.Exception.Status -eq "ProtocolError" -and $_.Exception.Response -is [System.Net.HttpWebResponse]) {
-                $response = [System.Net.HttpWebResponse]($_.Exception.Response)
-                if ($response.StatusCode -eq [System.Net.HttpStatusCode]::Conflict) {
-                    Write-Host -ForegroundColor Yellow "NuGet package already exists"
+        catch {
+            # Windows PowerShell raises System.Net.WebException, PowerShell 7+ raises
+            # Microsoft.PowerShell.Commands.HttpResponseException; both expose the HTTP status
+            # through $_.Exception.Response.StatusCode
+            $statusCode = $null
+            try {
+                if ($_.Exception.Response) {
+                    $statusCode = [int]$_.Exception.Response.StatusCode
                 }
-                else {
-                    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
-                    Write-Host $_.ScriptStackTrace
-                    if ($_.PSMessageDetails) {
-                        Write-Host $_.PSMessageDetails
-                    }
-                    Write-Host "##vso[task.complete result=Failed]"
-                    throw ($_.Exception.Message)
-                }
+            }
+            catch {
+                $statusCode = $null
+            }
+            if ($statusCode -eq 409) {
+                Write-Host -ForegroundColor Yellow "NuGet package already exists"
             }
             else {
                 Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
@@ -572,15 +573,6 @@ class BcDevOpsFlowsNuGetFeed {
                 Write-Host "##vso[task.complete result=Failed]"
                 throw ($_.Exception.Message)
             }
-        }
-        catch {
-            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
-            Write-Host $_.ScriptStackTrace
-            if ($_.PSMessageDetails) {
-                Write-Host $_.PSMessageDetails
-            }
-            Write-Host "##vso[task.complete result=Failed]"
-            throw ($_.Exception.Message)
         }
         finally {
             Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
