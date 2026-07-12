@@ -1,5 +1,6 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Invoke-HttpWithRetry.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
@@ -165,7 +166,7 @@ function ReadSettings {
         }
         try {
             OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
-            $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
+            $response = Invoke-WebRequestWithRetry -parameters @{ "Uri" = $externalSettingLink; "UseBasicParsing" = $true }
             $externalSettingsObject = $response.Content | ConvertFrom-Json
             $settingsObjects += @($externalSettingsObject)
         }

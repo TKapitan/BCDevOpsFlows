@@ -30,7 +30,7 @@ function DownloadNugetPackage() {
             Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
             New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
             OutputDebug -Message "Downloading Nuget package $nugetUrl to $nugetPackagePath/$packageName.$packageVersion.zip"
-            Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
+            Invoke-WebRequestWithRetry -parameters @{ "Uri" = $nugetUrl; "OutFile" = "$nugetPackagePath/$packageName.$packageVersion.zip" }
 
             # Unzip the package
             try {

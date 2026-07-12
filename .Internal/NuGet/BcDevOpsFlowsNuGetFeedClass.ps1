@@ -35,7 +35,7 @@ class BcDevOpsFlowsNuGetFeed {
 
         try {
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-            $capabilities = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $this.url
+            $capabilities = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $this.url }
             $global:ProgressPreference = $prev
             $this.searchQueryServiceUrl = $capabilities.resources | Where-Object { $_.'@type' -eq 'SearchQueryService' } | Select-Object -ExpandProperty '@id' | Select-Object -First 1
             if (!$this.searchQueryServiceUrl) {
@@ -111,7 +111,7 @@ class BcDevOpsFlowsNuGetFeed {
                 }
             }
             if (-not $this.orgType.ContainsKey($organization)) {
-                $orgMetadata = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/users/$organization"
+                $orgMetadata = Invoke-RestMethodWithRetry -parameters @{ "Method" = 'GET'; "Headers" = $headers; "Uri" = "https://api.github.com/users/$organization" }
                 if ($orgMetadata.type -eq 'Organization') {
                     $this.orgType[$organization] = 'orgs'
                 }
@@ -124,7 +124,7 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host -ForegroundColor Yellow "Search package using $queryUrl$page"
             $matching = @()
             while ($true) {
-                $result = Invoke-RestMethod -Method GET -Headers $headers -Uri "$queryUrl$page"
+                $result = Invoke-RestMethodWithRetry -parameters @{ "Method" = 'GET'; "Headers" = $headers; "Uri" = "$queryUrl$page" }
                 if ($result.Count -eq 0) {
                     break
                 }
@@ -142,7 +142,7 @@ class BcDevOpsFlowsNuGetFeed {
             try {
                 Write-Host -ForegroundColor Yellow "Search package using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-                $searchResult = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+                $searchResult = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
                 $global:ProgressPreference = $prev
             }
             catch {
@@ -191,7 +191,7 @@ class BcDevOpsFlowsNuGetFeed {
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
             try {
                 Write-Host -ForegroundColor Yellow "Get exact package using $queryUrl"
-                $versions = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+                $versions = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
                 if ($versions -and $versions.versions) {
                     Write-Host "Exact match found for $packageId"
                     $result += @{ "id" = $packageId; "versions" = @($versions.versions) }
@@ -220,7 +220,7 @@ class BcDevOpsFlowsNuGetFeed {
             try {
                 Write-Host -ForegroundColor Yellow "Get versions using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-                $versions = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+                $versions = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
                 $global:ProgressPreference = $prev
             }
             catch {
@@ -369,7 +369,7 @@ class BcDevOpsFlowsNuGetFeed {
         try {
             Write-Host "Download nuspec using $queryUrl"
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-            $nuspec = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+            $nuspec = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
             $global:ProgressPreference = $prev
         }
         catch {
@@ -500,7 +500,7 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host -ForegroundColor Green "Download package using $queryUrl"
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
             $filename = "$tmpFolder.zip"
-            Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl -OutFile $filename
+            Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl; "OutFile" = $filename }
             if ($this.fingerprints) {
                 $arguments = @("nuget", "verify", $filename)
                 if ($this.fingerprints.Count -eq 1 -and $this.fingerprints[0] -eq '*') {
@@ -566,22 +566,12 @@ class BcDevOpsFlowsNuGetFeed {
         
         Write-Host "Submitting NuGet package"
         try {
-            Invoke-RestMethod -UseBasicParsing -Uri $this.packagePublishUrl -ContentType "multipart/form-data; boundary=$boundary" -Method Put -Headers $headers -inFile $tmpFile | Out-Host
+            Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Uri" = $this.packagePublishUrl; "ContentType" = "multipart/form-data; boundary=$boundary"; "Method" = 'Put'; "Headers" = $headers; "InFile" = $tmpFile } | Out-Host
             Write-Host -ForegroundColor Green "NuGet package successfully submitted"
         }
         catch {
-            # Windows PowerShell raises System.Net.WebException, PowerShell 7+ raises
-            # Microsoft.PowerShell.Commands.HttpResponseException; both expose the HTTP status
-            # through $_.Exception.Response.StatusCode
-            $statusCode = $null
-            try {
-                if ($_.Exception.Response) {
-                    $statusCode = [int]$_.Exception.Response.StatusCode
-                }
-            }
-            catch {
-                $statusCode = $null
-            }
+            # A 409 conflict means the package version already exists on the feed
+            $statusCode = Get-BCDevOpsFlowsHttpStatusCode -errorRecord $_
             if ($statusCode -eq 409) {
                 Write-Host -ForegroundColor Yellow "NuGet package already exists"
             }

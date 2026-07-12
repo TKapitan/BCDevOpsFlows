@@ -108,7 +108,7 @@ try {
         OutputDebug -Message "Adding $environmentName with URL ($environmentUrl) to environmentUrls"
     
         Write-Host "EnvironmentUrl: $environmentUrl"
-        $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
+        $response = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'Get'; "Uri" = "$environmentUrl/deployment/url" }
         if ($response.Status -eq "DoesNotExist") {
             Write-Warning "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context. Skipping..."
             continue

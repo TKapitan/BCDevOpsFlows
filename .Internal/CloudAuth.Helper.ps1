@@ -1,4 +1,5 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Common\Invoke-HttpWithRetry.ps1" -Resolve)
 
 # Container-free replacements for the BcContainerHelper auth functionality used by cloud-only steps.
 # Steps that talk to Business Central online only need an OAuth token and the public base URL;
@@ -29,6 +30,6 @@ function Get-BCDevOpsFlowsAuthToken {
         "scope"         = $scopes
     }
     OutputDebug -Message "Requesting client credentials token for client $clientID in tenant $tenantID with scope $scopes"
-    $response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$tenantID/oauth2/v2.0/token" -Body $body
+    $response = Invoke-RestMethodWithRetry -parameters @{ "Method" = 'Post'; "Uri" = "https://login.microsoftonline.com/$tenantID/oauth2/v2.0/token"; "Body" = $body }
     return $response.access_token
 }

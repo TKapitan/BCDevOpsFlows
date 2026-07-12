@@ -1,3 +1,4 @@
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\Common\Invoke-HttpWithRetry.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "BcDevOpsFlowsNuGetFeedClass.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "Find-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "Get-BCDevOpsFlowsNuGetPackage.ps1" -Resolve)
