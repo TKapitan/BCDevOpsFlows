@@ -18,6 +18,20 @@ try {
             Remove-Item $cleanUpPath -Recurse -Force
         }
     }
+
+    # Best effort: reclaim containers a previous canceled run may have left behind. Canceled runs
+    # skip later steps unless the pipeline marks them with condition: always(), so the cleanup step
+    # never ran for them. Only runs on Azure DevOps agents inside a BCDevOpsFlows workflow.
+    if ($ENV:TF_BUILD -eq 'True' -and $ENV:AL_PIPELINENAME -and (Get-Command docker -ErrorAction SilentlyContinue)) {
+        try {
+            . (Join-Path -Path $PSScriptRoot -ChildPath "..\CustomLogic\RunCustomCleanup.ps1" -Resolve)
+            Write-Host "Cleaning up containers left behind by previous runs"
+            RunCustomCleanup
+        }
+        catch {
+            Write-Host "::Warning::Could not clean up leftover containers: $($_.Exception.Message)"
+        }
+    }
 }
 catch {
     Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
