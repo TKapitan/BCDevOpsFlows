@@ -76,8 +76,7 @@ try {
                 $settings.appRevision = 0
             }
             default {
-                OutputError -Message "Unknown version strategy $versionStrategy"
-                exit
+                throw "Unknown version strategy $($settings.versioningStrategy)"
             }
         }
     }
