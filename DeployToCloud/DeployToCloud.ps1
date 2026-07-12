@@ -41,8 +41,23 @@ try {
     }
     Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
 
+    # Collect dependency app files once - the file set is identical for every environment and app folder
+    $allDependencies = @()
+    # NuGet dependencies
+    $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
+    if (Test-Path $dependenciesFolder) {
+        $allDependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
+            Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+        }
+    }
+    # BCContainerHelper dependencies
+    $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
+    if (Test-Path $dependenciesFolder) {
+        $allDependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+    }
+
     $noOfValidEnvironments = 0
-    $environmentUrls = @{} | ConvertTo-Json
+    $environmentUrls = [ordered]@{}
     foreach ($environmentName in $matchingEnvironments) {
         Write-Host "Processing environment: $environmentName"
 
@@ -88,8 +103,8 @@ try {
         }
 
         $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
-    
-        $environmentUrls | Add-Member -NotePropertyName $environmentName -NotePropertyValue $environmentUrl -Force
+
+        $environmentUrls[$environmentName] = $environmentUrl
         OutputDebug -Message "Adding $environmentName with URL ($environmentUrl) to environmentUrls"
     
         Write-Host "EnvironmentUrl: $environmentUrl"
@@ -116,18 +131,7 @@ try {
             Write-Host "- $([System.IO.Path]::GetFileName($appFilePath))"
 
             if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-                # NuGet dependencies
-                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
-                if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
-                        Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
-                    }
-                }
-                # BCContainerHelper dependencies
-                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
-                if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
-                }
+                $dependencies = $allDependencies
                 Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
                 if ($dependencies) {
                     $dependencies | ForEach-Object {
