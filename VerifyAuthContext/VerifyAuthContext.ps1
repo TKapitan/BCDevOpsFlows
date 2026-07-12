@@ -6,6 +6,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\CloudAuth.Helper.ps1" -Resolve)
 
 try {
     if ([string]::IsNullOrWhiteSpace($ENV:AL_AUTHCONTEXTS_INTERNAL)) {
@@ -60,8 +61,8 @@ try {
             if ([string]::IsNullOrWhiteSpace($tenantID)) {
                 throw "No tenant ID found for environment ($environmentName)."
             }
-            $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
-            if ($null -eq $bcAuthContext) {
+            $accessToken = Get-BCDevOpsFlowsAuthToken -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
+            if ([string]::IsNullOrWhiteSpace($accessToken)) {
                 throw "Authentication failed for environment '$environmentName' in tenant '$tenantID' using client ID '$($authContext.clientID)'."
             }
         }
@@ -69,11 +70,11 @@ try {
             Write-Host $_.Exception.Message -ForegroundColor Red
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
-    
+
             throw "Authentication failed. See previous lines for details."
         }
 
-        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
+        $environmentUrl = "$((Get-BCDevOpsFlowsBaseUrl).TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
         Write-Host "EnvironmentUrl: $environmentUrl"
         $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
         if ($response.Status -eq "DoesNotExist") {
