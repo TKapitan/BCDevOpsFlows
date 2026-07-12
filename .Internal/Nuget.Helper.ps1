@@ -58,7 +58,12 @@ function GetNugetPackagePath() {
         [string] $packageVersion
     )
 
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    # AL_SETTINGS is parsed once per content value; this function runs for every package download
+    if ("$ENV:AL_SETTINGS" -cne "$script:ParsedALSettingsJson") {
+        $script:ParsedALSettings = $ENV:AL_SETTINGS | ConvertFrom-Json
+        $script:ParsedALSettingsJson = "$ENV:AL_SETTINGS"
+    }
+    $settings = $script:ParsedALSettings
     $nugetPackageBasePath = $settings.writableFolderPath
     if (!$nugetPackageBasePath) {
         $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE

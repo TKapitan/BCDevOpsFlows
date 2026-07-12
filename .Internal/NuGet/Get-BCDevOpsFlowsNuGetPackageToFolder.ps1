@@ -1,6 +1,8 @@
 # Copy of NuGet class from BCContainerHelper, required changed to support Azure DevOps preview packages
 
-<# 
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
+
+<#
  .Description
   Download Apps from Business Central NuGet Package to folder
  .PARAMETER trustedNugetFeeds
@@ -185,9 +187,11 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                     $dependencyVersion = $dependency.Version
                     $dependencyId = $dependency.Id
                     $dependencyCountry = ''
+                    $dependencyName = $dependencyId
                     $downloadIt = $false
                     if ($dependencyId -match '^Microsoft\.Platform(\.symbols)?$') {
                         $dependencyPublisher = 'Microsoft'
+                        $dependencyName = 'Platform'
                         # Dependency is to the platform
                         if ($installedPlatform) {
                             if (!([BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($installedPlatform, $dependencyVersion))) {
@@ -204,6 +208,7 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                         # Dependency is to the application
                         $dependencyPublisher = $matches[1].TrimEnd('.')
                         $dependencyCountry = "$($matches[2])".TrimStart('.')
+                        $dependencyName = 'Application'
                         $installedApp = $installedApps | Where-Object { $_ -and $_.Name -eq 'Application' }
                         if ($installedApp) {
                             if (!([BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($installedApp.Version, $dependencyVersion))) {
@@ -220,11 +225,12 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                         if ($dependencyId -match '^([^\.]+)\.([^\.]+)(\.[^\.][^\.])?(\.symbols)?(\.[0-9A-Fa-f]{8}\-[0-9A-Fa-f]{4}\-[0-9A-Fa-f]{4}\-[0-9A-Fa-f]{4}\-[0-9A-Fa-f]{12})?$') {
                             # Matches publisher.name[.country][.symbols][.appId] format (country section is only for microsoft apps)
                             $dependencyPublisher = $matches[1]
+                            $dependencyName = $matches[2]
                             if ($dependencyPublisher -eq 'microsoft') {
                                 $dependencyCountry = "$($matches[3])".TrimStart('.')
                             }
                         }
-                        $installedApp = $installedApps | Where-Object { $_ -and $_.id -and $dependencyId -like "*$($_.id)*" }  | Sort-Object -Property @{ "Expression" = "[System.Version]Version" } -Descending | Select-Object -First 1
+                        $installedApp = $installedApps | Where-Object { $_ -and $_.id -and $dependencyId -like "*$($_.id)*" } | Sort-Object -Property @{ "Expression" = { [System.Version]("$($_.Version)" -replace '-.+$') } } -Descending | Select-Object -First 1
                         if ($installedApp) {
                             # Dependency is already installed, check version number
                             if (!([BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($installedApp.Version, $dependencyVersion))) {
@@ -269,10 +275,9 @@ Function Get-BCDevOpsFlowsNuGetPackageToFolder {
                         }
                     }
                     if ($downloadIt) {
-                        . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
                         $dependencyJsonContent = [PSCustomObject]@{
                             "publisher" = $dependencyPublisher
-                            "name"      = $matches[2]
+                            "name"      = $dependencyName
                             "version"   = $dependencyVersion
                         }
                         $customDependencyVersion = GetDependencyVersionFilter -appJson $originalAppJsonContent -dependency $dependencyJsonContent

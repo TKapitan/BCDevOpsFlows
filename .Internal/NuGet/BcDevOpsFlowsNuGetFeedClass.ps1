@@ -18,6 +18,10 @@ class BcDevOpsFlowsNuGetFeed {
     # the service index request in the constructor for every package lookup
     static [hashtable] $feedInstanceCache = @{}
 
+    # AL_SETTINGS is parsed once per content value instead of on every package download
+    static [string] $cachedSettingsJson = ''
+    static [object] $cachedSettings = $null
+
     BcDevOpsFlowsNuGetFeed([string] $nuGetServerUrl, [string] $nuGetToken, [string[]] $patterns, [string[]] $fingerprints) {
         $this.url = $nuGetServerUrl
         $this.token = $nuGetToken
@@ -173,7 +177,13 @@ class BcDevOpsFlowsNuGetFeed {
         if (!$this.packageBaseAddressUrl) {
             return $result
         }
-        foreach ($packageId in @($packageName, "$packageName.symbols")) {
+        $packageIds = @($packageName)
+        if (!$packageName.EndsWith('.symbols', [System.StringComparison]::OrdinalIgnoreCase)) {
+            # Only probe the .symbols variant when the name does not already end in .symbols -
+            # probing '<name>.symbols.symbols' is a guaranteed 404 round-trip
+            $packageIds += "$packageName.symbols"
+        }
+        foreach ($packageId in $packageIds) {
             if (!$this.IsTrusted($packageId)) {
                 continue
             }
@@ -359,10 +369,7 @@ class BcDevOpsFlowsNuGetFeed {
         try {
             Write-Host "Download nuspec using $queryUrl"
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-            $tmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([GUID]::NewGuid().ToString()).nuspec"
-            Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl -OutFile $tmpFile
-            $nuspec = Get-Content -Path $tmpfile -Encoding UTF8 -Raw
-            Remove-Item -Path $tmpFile -Force
+            $nuspec = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
             $global:ProgressPreference = $prev
         }
         catch {
@@ -373,6 +380,9 @@ class BcDevOpsFlowsNuGetFeed {
             }
             Write-Host "##vso[task.complete result=Failed]"
             throw ($_.Exception.Message)
+        }
+        if ($nuspec -is [System.Xml.XmlDocument]) {
+            return $nuspec
         }
         return [xml]$nuspec
     }
@@ -385,7 +395,11 @@ class BcDevOpsFlowsNuGetFeed {
             if (!$ENV:AL_SETTINGS) {
                 return ''
             }
-            $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+            if ([BcDevOpsFlowsNuGetFeed]::cachedSettingsJson -cne "$ENV:AL_SETTINGS") {
+                [BcDevOpsFlowsNuGetFeed]::cachedSettings = $ENV:AL_SETTINGS | ConvertFrom-Json
+                [BcDevOpsFlowsNuGetFeed]::cachedSettingsJson = "$ENV:AL_SETTINGS"
+            }
+            $settings = [BcDevOpsFlowsNuGetFeed]::cachedSettings
             if (!$settings.writableFolderPath) {
                 return ''
             }
@@ -498,7 +512,14 @@ class BcDevOpsFlowsNuGetFeed {
                 }
                 cmddo -command 'dotnet' -arguments $arguments -silent -messageIfCmdNotFound "dotnet not found. Please install it from https://dotnet.microsoft.com/download"
             }
-            Expand-Archive -Path $filename -DestinationPath $tmpFolder -Force
+            try {
+                # ZipFile is significantly faster than Expand-Archive; the destination folder is always new
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
+                [System.IO.Compression.ZipFile]::ExtractToDirectory($filename, $tmpFolder)
+            }
+            catch {
+                Expand-Archive -Path $filename -DestinationPath $tmpFolder -Force
+            }
             $global:ProgressPreference = $prev
             Remove-Item $filename -Force
             Write-Host "Package successfully downloaded"

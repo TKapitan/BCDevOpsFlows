@@ -9,6 +9,7 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Common\Import-Common.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\Nuget.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
 
 if (!$ENV:AL_NUGETINITIALIZED) {
     throw "Nuget not initialized - make sure that the InitNuget pipeline step is configured to run before this step."
@@ -115,7 +116,6 @@ foreach ($dependency in $appJsonContent.dependencies) {
         }
     }
     else {
-        . (Join-Path -Path $PSScriptRoot -ChildPath "..\..\CustomLogic\GetDependencyVersionFilter.ps1" -Resolve)
         $dependencyVersionFilter = GetDependencyVersionFilter -appJson $appJsonContent -dependency $dependency
         if ($dependencyVersionFilter -ne '') {
             OutputDebug -Message "Using custom dependency version filter '$dependencyVersionFilter' for dependency $($dependency.name)."
