@@ -141,46 +141,6 @@ function Test-BCDevOpsFlowsDependencyDownloaded {
     }
     return $false
 }
-function Remove-AllNugetPackageSources() {
-    Param()
-
-    OutputDebug -Message "Removing all existing NuGet package sources"
-    $sources = Get-PackageSource -ProviderName NuGet -WarningAction SilentlyContinue | Out-Null
-    if (!$sources) {
-        OutputDebug -Message "No NuGet package sources found"
-        return
-    }
-    foreach ($source in $sources) {
-        Remove-NugetPackageSource -sourceName $source.Name
-    }
-}
-function Add-NugetPackageSource() {
-    Param(
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$feed
-    )
-
-    if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
-        Write-Host "Adding Nuget source $($feed.name)"
-        nuget sources add -Name $feed.name -Source $feed.url
-    }
-    else {
-        OutputDebug -Message "Nuget source $($feed.name) already exists"
-    }
-}
-function Remove-NugetPackageSource() {
-    Param(
-        [string] $sourceName
-    )
-
-    if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue) {
-        Write-Host "Removing Nuget source $sourceName"
-        Unregister-PackageSource -Source $sourceName | Out-null
-    }
-    else {
-        OutputDebug -Message "Nuget source $sourceName not found"
-    }
-}
 function New-NuGetFeedConfig {
     param(
         [Parameter(Mandatory = $true)]
@@ -206,8 +166,6 @@ function Get-BCCTrustedNuGetFeeds {
         [switch] $includeMicrosoftNuGetFeeds,
         [switch] $skipSymbolsFeeds
     )
-
-    Remove-AllNugetPackageSources
 
     $requiredTrustedNuGetFeeds = @()
     if ($fromTrustedNuGetFeeds) {
