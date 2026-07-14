@@ -233,11 +233,13 @@ function ConvertTo-PipelineYamlWorkflowPatches {
         if ("$workflowName" -notlike $patchPipelineName) {
             continue
         }
+        # Generic patches are fleet-wide or user-provided: a patch that conflicts with one
+        # repository's YAML shape must not fail the whole run, so mark them continueOnError
         if ($patchDefinition['remove']) {
-            $patches += @{ path = $patchDefinition['path']; remove = $true }
+            $patches += @{ path = $patchDefinition['path']; remove = $true; continueOnError = $true }
         }
         else {
-            $patches += @{ path = $patchDefinition['path']; value = (ConvertTo-YamlCompatibleValue -value $patchDefinition['value']) }
+            $patches += @{ path = $patchDefinition['path']; value = (ConvertTo-YamlCompatibleValue -value $patchDefinition['value']); continueOnError = $true }
         }
     }
     # Emit the patches one by one; callers collect them with @(...)
@@ -423,22 +425,33 @@ function Update-PipelineYamlContentFromPatches {
     foreach ($patch in $patches) {
         # Use indexer access throughout: property access like .remove on a hashtable without
         # that key falls back to the .NET Remove method, which is truthy
-        if ($patch['remove']) {
-            if (Set-YamlValueByPath -yamlContent $yamlContent -path $patch['path'] -remove) {
-                OutputDebug "Removed '$($patch['path'])' from workflow"
-                $changed = $true
-            }
-            continue
-        }
-        if ($patch['onlyIfPresent']) {
-            $existing = Get-YamlValueByPath -yamlContent $yamlContent -path $patch['path']
-            if (-not $existing.found -or -not $existing.value) {
+        try {
+            if ($patch['remove']) {
+                if (Set-YamlValueByPath -yamlContent $yamlContent -path $patch['path'] -remove) {
+                    OutputDebug "Removed '$($patch['path'])' from workflow"
+                    $changed = $true
+                }
                 continue
             }
+            if ($patch['onlyIfPresent']) {
+                $existing = Get-YamlValueByPath -yamlContent $yamlContent -path $patch['path']
+                if (-not $existing.found -or -not $existing.value) {
+                    continue
+                }
+            }
+            if (Set-YamlValueByPath -yamlContent $yamlContent -path $patch['path'] -value $patch['value']) {
+                OutputDebug "Set '$($patch['path'])' in workflow"
+                $changed = $true
+            }
         }
-        if (Set-YamlValueByPath -yamlContent $yamlContent -path $patch['path'] -value $patch['value']) {
-            OutputDebug "Set '$($patch['path'])' in workflow"
-            $changed = $true
+        catch {
+            # Compiled settings patches must fail loudly - a misconfigured repository or template
+            # should surface. Generic patches skip with a warning so one incompatible repository
+            # does not break fleet-wide patch rollout.
+            if (-not $patch['continueOnError']) {
+                throw
+            }
+            Write-Warning "Could not apply pipeline YAML patch '$($patch['path'])': $($_.Exception.Message)"
         }
     }
     return $changed
