@@ -39,6 +39,7 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 | <a id="pipelineFolderStructure"></a>pipelineFolderStructure | Specifies the parent folder for pipelines in Azure DevOps. This settings is not a folder in repository, but folder in Azure DevOps Pipelines (Project -> Pipelines -> All -> folders). Allowed values: "Repository" - repository name is used as folder, "Pipeline" - pipeline name is used as folder, "Path" - manually specified path in "pipelineFolderPath" property (see below) | Repository |
 | <a id="pipelineFolderPath"></a>pipelineFolderPath | Specifies the folder path in Azure DevOps pipelines. Only applicable when pipelineFolderStructure is set to Path. Leave blank and set pipelineFolderStructure to Path if you do not want to use folders. |  |
 | <a id="pipelineSkipFirstRun"></a>pipelineSkipFirstRun | When a new pipeline is created in Azure DevOps, it's automatically run to test the setup and permissions. We recommend to always run the pipeline after it is created to verify setup and permissions. | $false |
+| <a id="pipelineYamlPatches"></a>pipelineYamlPatches | Specifies additional properties to set in (or remove from) the pipeline YAML files, applied by the SetupPipelines pipeline after the templates are restored. Each entry is a structure with **path** (dot-separated YAML path, array elements addressed as `name[0]`), either **value** or **remove** = true, and an optional **pipeline** name filter (wildcards supported, default `*`). Patches are never applied to the SetupPipelines pipeline itself. See example below. | [ ] |
 | <a id="BCDevOpsFlowsPoolName"></a>BCDevOpsFlowsPoolName | Name of the Azure DevOps Pool that hosts your self-hosted agents. The project must have access to the pool. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. | SelfHostedWindows |
 | <a id="BCDevOpsFlowsPoolNameCICD"></a>BCDevOpsFlowsPoolNameCICD | Name of the Azure DevOps Pool that hosts your self-hosted agents. This agent pool is used for CICD pipeline. If blank/not specified, the value from **BCDevOpsFlowsPoolName** is used instead. You can use different Agent Pool to have different pool approvals and check (e.g. business hours). See Microsoft Learn for more details https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass |  |
 | <a id="BCDevOpsFlowsPoolNamePublishToProd"></a>BCDevOpsFlowsPoolNamePublishToProd | Name of the Azure DevOps Pool that hosts your self-hosted agents. This agent pool is used for PublishToProduction pipeline. If blank/not specified, the value from **BCDevOpsFlowsPoolName** is used instead. You can use different Agent Pool to have different pool approvals and check (e.g. business hours). See Microsoft Learn for more details https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass |  |
@@ -90,6 +91,25 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
       ]
     }
   }
+```
+
+#### Example of "pipelineYamlPatches"
+
+Disables auto cancellation of in-progress runs when the pull request is updated (pr.autoCancel) for the PullRequest pipeline and sets a job timeout for the CICD pipeline:
+
+```json
+  "pipelineYamlPatches": [
+    {
+      "pipeline": "PullRequest",
+      "path": "pr.autoCancel",
+      "value": false
+    },
+    {
+      "pipeline": "CICD",
+      "path": "jobs[0].timeoutInMinutes",
+      "value": 120
+    }
+  ]
 ```
 
 #### Example of "workflowSchedule"

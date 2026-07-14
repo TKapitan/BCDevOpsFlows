@@ -136,6 +136,7 @@ function ReadSettings {
         "pipelineFolderStructure"                     = "Repository" # Repository | Pipeline | Path
         "pipelineFolderPath"                          = ""
         "pipelineSkipFirstRun"                        = $false
+        "pipelineYamlPatches"                         = @()
         "BCDevOpsFlowsPoolName"                       = "SelfHostedWindows"
         "BCDevOpsFlowsPoolNameCICD"                   = ""
         "BCDevOpsFlowsPoolNamePublishToProd"          = ""
