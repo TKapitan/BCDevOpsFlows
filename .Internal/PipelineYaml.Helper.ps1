@@ -480,15 +480,16 @@ function Update-PipelineYMLFile {
     return $changed
 }
 
-function Update-PipelineTemplateYMLFile {
+function Update-PipelineYMLFileFromPatchFile {
     param (
         [Parameter(Mandatory = $true)]
         [string]$filePath
     )
 
-    # Templates are the pristine source SetupPipelines restores from: placeholders must survive,
-    # so no settings are read or evaluated and no variable names are replaced here. The only
-    # changes templates ever receive are the central CustomLogic patch file entries.
+    # Applies ONLY the central CustomLogic patch file: no settings are read or evaluated and no
+    # variable names are replaced. Used for templates (the pristine source SetupPipelines
+    # restores from - placeholders must survive) and for self-healing, which never applies
+    # settings-derived changes. The file is not rewritten when no patch matches.
     $yamlContent = Get-AsYamlFromFile -FileName $filePath
     $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
     if ($criticalWorkflowNames -contains "$workflowName") {
@@ -525,7 +526,30 @@ function Update-PipelineYMLFiles {
         # entries - never settings-derived values or variable name replacements.
         $templateFile = Join-Path -Path $templateFolderPath -ChildPath $pipelineFile.Name
         if (Test-Path -Path $templateFile -PathType Leaf) {
-            $changed = Update-PipelineTemplateYMLFile -filePath $templateFile
+            $changed = Update-PipelineYMLFileFromPatchFile -filePath $templateFile
+            $anyChanged = $changed -or $anyChanged
+        }
+    }
+    return $anyChanged
+}
+
+function Update-PipelineYMLFilesFromPatchFile {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$templateFolderPath,
+        [Parameter(Mandatory = $true)]
+        [string]$pipelineFolderPath
+    )
+
+    $anyChanged = $false
+    $ymlFiles = Get-ChildItem -Path $pipelineFolderPath -Filter "*.yml" -File
+    foreach ($pipelineFile in $ymlFiles) {
+        $changed = Update-PipelineYMLFileFromPatchFile -filePath $pipelineFile.FullName
+        $anyChanged = $changed -or $anyChanged
+
+        $templateFile = Join-Path -Path $templateFolderPath -ChildPath $pipelineFile.Name
+        if (Test-Path -Path $templateFile -PathType Leaf) {
+            $changed = Update-PipelineYMLFileFromPatchFile -filePath $templateFile
             $anyChanged = $changed -or $anyChanged
         }
     }
@@ -597,6 +621,11 @@ function Invoke-PipelineYamlSelfHeal {
         OutputDebug "Skipping pipeline YAML self-healing for critical workflow $ENV:AL_PIPELINENAME"
         return
     }
+    # Self-healing applies ONLY the central CustomLogic patch file - nothing to do without it
+    if (-not (Test-Path -Path $pipelineYamlPatchesFilePath -PathType Leaf)) {
+        OutputDebug "Skipping pipeline YAML self-healing - no central patch file found at $pipelineYamlPatchesFilePath"
+        return
+    }
     $pipelineFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $scriptsFolderName
     $templateFolder = Join-Path -Path $pipelineFolder -ChildPath 'Templates'
     if (-not (Test-Path -Path (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $repoSettingsFile) -PathType Leaf)) {
@@ -608,7 +637,7 @@ function Invoke-PipelineYamlSelfHeal {
         return
     }
 
-    # Read with the same parameters SetupPipelines uses so healed content is identical to setup output
+    # Settings are only used for the guards below - self-healing never applies settings-derived changes
     $settings = ReadSettings -pipelineName "$ENV:AL_PIPELINENAME" -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
     if (-not $settings.pipelineSelfHealing) {
         OutputDebug "Skipping pipeline YAML self-healing - pipelineSelfHealing is not enabled"
@@ -630,13 +659,13 @@ function Invoke-PipelineYamlSelfHeal {
     Push-Location $ENV:BUILD_REPOSITORY_LOCALPATH
     try {
         Set-GitUser
-        $changed = Update-PipelineYMLFiles -templateFolderPath $templateFolder -pipelineFolderPath $pipelineFolder
+        $changed = Update-PipelineYMLFilesFromPatchFile -templateFolderPath $templateFolder -pipelineFolderPath $pipelineFolder
         if (-not $changed) {
-            Write-Host "Pipeline YAML files match settings - no self-healing needed"
+            Write-Host "Pipeline YAML files match the central patch file - no self-healing needed"
             return
         }
-        Write-Host "Pipeline YAML drift detected - self-healing pipeline files from settings"
-        Invoke-GitAddCommit -appFolderPath $pipelineFolder -commitMessage "Self-heal BCDevOpsFlows pipeline files from settings"
+        Write-Host "Pipeline YAML drift detected - applying central patch file changes"
+        Invoke-GitAddCommit -appFolderPath $pipelineFolder -commitMessage "Apply central BCDevOpsFlows pipeline YAML patches"
         Invoke-GitPush -targetBranch "HEAD:$($settings.pipelineBranch)"
     }
     finally {
