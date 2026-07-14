@@ -447,8 +447,7 @@ function Update-PipelineYamlContentFromPatches {
 function Update-PipelineYMLFile {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$filePath,
-        [switch]$skipVariableNameReplacement
+        [string]$filePath
     )
 
     # Get Yaml content and workflow name
@@ -464,8 +463,32 @@ function Update-PipelineYMLFile {
         Write-Yaml -FileName $filePath -Content $yamlContent
     }
 
-    if (-not $skipVariableNameReplacement) {
-        $changed = (ReplaceVariableNamesInWorkflow -filePath $filePath -workflowName $workflowName -settings $settings) -or $changed
+    $changed = (ReplaceVariableNamesInWorkflow -filePath $filePath -workflowName $workflowName -settings $settings) -or $changed
+    return $changed
+}
+
+function Update-PipelineTemplateYMLFile {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$filePath
+    )
+
+    # Templates are the pristine source SetupPipelines restores from: placeholders must survive,
+    # so no settings are read or evaluated and no variable names are replaced here. The only
+    # changes templates ever receive are the central CustomLogic patch file entries.
+    $yamlContent = Get-AsYamlFromFile -FileName $filePath
+    $workflowName = $yamlContent.jobs[0].variables.AL_PIPELINENAME
+    if ($criticalWorkflowNames -contains "$workflowName") {
+        return $false
+    }
+
+    $patches = @(Get-PipelineYamlPatchesFromFile -workflowName $workflowName)
+    if ($patches.Count -eq 0) {
+        return $false
+    }
+    $changed = Update-PipelineYamlContentFromPatches -yamlContent $yamlContent -patches $patches
+    if ($changed) {
+        Write-Yaml -FileName $filePath -Content $yamlContent
     }
     return $changed
 }
@@ -484,12 +507,12 @@ function Update-PipelineYMLFiles {
         $changed = Update-PipelineYMLFile -filePath $pipelineFile.FullName
         $anyChanged = $changed -or $anyChanged
 
-        # Keep the template converged so the next SetupPipelines restore does not undo the change.
-        # Variable name replacement must never run on templates: SetupPipelines relies on templates
-        # keeping the default variable names to be able to apply a rename after restore.
+        # Keep the template converged with the central patch file so the next SetupPipelines
+        # restore does not undo those changes. Templates receive ONLY the central patch file
+        # entries - never settings-derived values or variable name replacements.
         $templateFile = Join-Path -Path $templateFolderPath -ChildPath $pipelineFile.Name
         if (Test-Path -Path $templateFile -PathType Leaf) {
-            $changed = Update-PipelineYMLFile -filePath $templateFile -skipVariableNameReplacement
+            $changed = Update-PipelineTemplateYMLFile -filePath $templateFile
             $anyChanged = $changed -or $anyChanged
         }
     }
