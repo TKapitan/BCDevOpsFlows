@@ -43,6 +43,7 @@ The list of supported configuration is available in [Settings Overview](.Scenari
 - [versioningStrategy](.Scenarios/SettingsOverview.md#versioningStrategy)
 - [writableFolderPath](.Scenarios/SettingsOverview.md#writableFolderPath)
 - [artifactUrlCacheKeepHours](.Scenarios/SettingsOverview.md#artifactUrlCacheKeepHours)
+- [nugetPackageCacheKeepDays](.Scenarios/SettingsOverview.md#nugetPackageCacheKeepDays)
 - [preprocessorSymbols](.Scenarios/SettingsOverview.md#preprocessorSymbols)
 - [removeInternalsVisibleTo](.Scenarios/SettingsOverview.md#removeInternalsVisibleTo)
 - [overrideResourceExposurePolicy](.Scenarios/SettingsOverview.md#overrideResourceExposurePolicy)

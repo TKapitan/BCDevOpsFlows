@@ -1,4 +1,5 @@
 . (Join-Path $PSScriptRoot "CmdDo.ps1")
+. (Join-Path $PSScriptRoot "Invoke-HttpWithRetry.ps1")
 
 . (Join-Path $PSScriptRoot "Copy-HashTable.ps1")
 . (Join-Path $PSScriptRoot "ConvertTo-HashTable.ps1")

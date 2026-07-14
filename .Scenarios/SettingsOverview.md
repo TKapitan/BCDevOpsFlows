@@ -39,6 +39,8 @@ This setup is not applied until you run the **SetupPipelines** pipeline. **Setup
 | <a id="pipelineFolderStructure"></a>pipelineFolderStructure | Specifies the parent folder for pipelines in Azure DevOps. This settings is not a folder in repository, but folder in Azure DevOps Pipelines (Project -> Pipelines -> All -> folders). Allowed values: "Repository" - repository name is used as folder, "Pipeline" - pipeline name is used as folder, "Path" - manually specified path in "pipelineFolderPath" property (see below) | Repository |
 | <a id="pipelineFolderPath"></a>pipelineFolderPath | Specifies the folder path in Azure DevOps pipelines. Only applicable when pipelineFolderStructure is set to Path. Leave blank and set pipelineFolderStructure to Path if you do not want to use folders. |  |
 | <a id="pipelineSkipFirstRun"></a>pipelineSkipFirstRun | When a new pipeline is created in Azure DevOps, it's automatically run to test the setup and permissions. We recommend to always run the pipeline after it is created to verify setup and permissions. | $false |
+| <a id="pipelineSelfHealing"></a>pipelineSelfHealing | When enabled, every pipeline run (except pull request builds and runs on branches other than **pipelineBranch**) checks whether the pipeline YAML files and their templates already contain the changes from the central **CustomLogic/PipelineYamlPatches.json** file in your BCDevOpsFlows repository and, if not, commits and pushes the corrected files back to the repository. Self-healing applies ONLY the central patch file - it never applies settings-derived values (variable groups, triggers, schedules, pool names, the [pipelineYamlPatches](#pipelineYamlPatches) setting) or variable name replacements; those are applied by the SetupPipelines pipeline only. The commit is pushed with `[skip azurepipelines]` so it does not trigger new runs. | $false |
+| <a id="pipelineYamlPatches"></a>pipelineYamlPatches | Specifies additional properties to set in (or remove from) the pipeline YAML files, applied by the SetupPipelines pipeline after the templates are restored. Each entry is a structure with **path** (dot-separated YAML path, array elements addressed as `name[0]`), either **value** or **remove** = true, and an optional **pipeline** name filter (wildcards supported, default `*`). Patches are never applied to the SetupPipelines pipeline itself. Patches that should apply to every repository using your BCDevOpsFlows scripts belong in **CustomLogic/PipelineYamlPatches.json** in your BCDevOpsFlows repository (same entry structure); the central file is applied first, then this setting, so repository-specific patches win. Only the central file is applied to the pipeline templates and by self-healing (see [pipelineSelfHealing](#pipelineSelfHealing)) - this setting never modifies templates and is not applied by self-healing. See example below. | [ ] |
 | <a id="BCDevOpsFlowsPoolName"></a>BCDevOpsFlowsPoolName | Name of the Azure DevOps Pool that hosts your self-hosted agents. The project must have access to the pool. Once pipelines are created for the first time, you must allow access to the Pool in Azure DevOps. | SelfHostedWindows |
 | <a id="BCDevOpsFlowsPoolNameCICD"></a>BCDevOpsFlowsPoolNameCICD | Name of the Azure DevOps Pool that hosts your self-hosted agents. This agent pool is used for CICD pipeline. If blank/not specified, the value from **BCDevOpsFlowsPoolName** is used instead. You can use different Agent Pool to have different pool approvals and check (e.g. business hours). See Microsoft Learn for more details https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass |  |
 | <a id="BCDevOpsFlowsPoolNamePublishToProd"></a>BCDevOpsFlowsPoolNamePublishToProd | Name of the Azure DevOps Pool that hosts your self-hosted agents. This agent pool is used for PublishToProduction pipeline. If blank/not specified, the value from **BCDevOpsFlowsPoolName** is used instead. You can use different Agent Pool to have different pool approvals and check (e.g. business hours). See Microsoft Learn for more details https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass |  |
@@ -92,6 +94,25 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
   }
 ```
 
+#### Example of "pipelineYamlPatches"
+
+Disables auto cancellation of in-progress runs when the pull request is updated (pr.autoCancel) for the PullRequest pipeline and sets a job timeout for the CICD pipeline:
+
+```json
+  "pipelineYamlPatches": [
+    {
+      "pipeline": "PullRequest",
+      "path": "pr.autoCancel",
+      "value": false
+    },
+    {
+      "pipeline": "CICD",
+      "path": "jobs[0].timeoutInMinutes",
+      "value": 120
+    }
+  ]
+```
+
 #### Example of "workflowSchedule"
 
 ```json
@@ -123,6 +144,7 @@ Table below shows what functionality is currently supported in BCDevOps Flows by
 | <a id="ignoredPreprocessorSymbols"></a>ignoredPreprocessorSymbols | List of preprocessor symbols that should be ignored when building the apps. This setting affects symbols defined in `preprocessorSymbols` as well as symbols from app.json (when building with artifact ////appjson) | [ ] |
 | <a id="writableFolderPath"></a>writableFolderPath | Specifies a folder used by pipelines to store/cache build configuration, nuget packages or to build local app file library. Accounts configured to run DevOps agents must have write permissions to this folder. | [ ] |
 | <a id="artifactUrlCacheKeepHours"></a>artifactUrlCacheKeepHours | Specifies how long the artifact url cache is valid (in hours). If this value is different from 0, all requests for the same artifact (for example "**/Sandbox//au/latest**" (which is the same as "**////latest**" if you have country in settings set to AU)) will skip calling BcContainerHelper and will use the same artifactUrl. | 6 |
+| <a id="nugetPackageCacheKeepDays"></a>nugetPackageCacheKeepDays | Specifies how long downloaded NuGet package content (dependency apps, symbols) is kept in the package cache under [writableFolderPath](#writableFolderPath) (in days, based on last usage). The version of each package to use is always resolved online, so a newer published version is always picked up - only the download of an already-known package version is skipped. Set to 0 to disable the package cache. The cache is not used when writableFolderPath is not set. | 14 |
 | <a id="hybridDeploymentGitHubRepoSCId"></a>hybridDeploymentGitHubRepoSCId | Specifies the ID of the Service Connection that links the Azure DevOps with GitHub where the repository is located. This value is mandatory for hybrid deployments and ignored for standard, Azure DevOps only, deployments. |  |
 | <a id="appDeliverToType"></a>appDeliverToType | Specifies the name of the delivery target for app files to package repository. | Apps |
 | <a id="testDeliverToType"></a>testDeliverToType | Specifies the name of the delivery target for test files to package repository. | Tests |

@@ -38,4 +38,4 @@ if (Test-Path $dependenciesPackageCachePath) {
 
 $buildParameters = Get-BuildParameters -settings $settings -baseRepoFolder $baseRepoFolder -baseAppFolder $baseAppFolder -packageCachePath $buildCacheFolder -appJsonContent $(Get-AppJson -settings $settings)
 $alcOutput = Invoke-AlCompiler -Parameters $buildParameters
-Write-ALCOutput -alcOutput $alcOutput -failOn $settings.failOn
+Write-ALCOutput -alcOutput $alcOutput -failOn $settings.failOn -alcExitCode $script:AlcExitCode

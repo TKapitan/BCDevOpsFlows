@@ -1,5 +1,6 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Invoke-HttpWithRetry.ps1" -Resolve)
 
 # Read settings from the settings files
 # Settings are read from the following files:
@@ -127,6 +128,7 @@ function ReadSettings {
         "writableFolderPath"                          = ""
         "trustMicrosoftNuGetFeeds"                    = $true
         "artifactUrlCacheKeepHours"                   = 6
+        "nugetPackageCacheKeepDays"                   = 14
         "overrideResourceExposurePolicy"              = $false
         "previousRelease"                             = ""
         "deliveryTarget"                              = "AzureDevOps"
@@ -134,6 +136,8 @@ function ReadSettings {
         "pipelineFolderStructure"                     = "Repository" # Repository | Pipeline | Path
         "pipelineFolderPath"                          = ""
         "pipelineSkipFirstRun"                        = $false
+        "pipelineSelfHealing"                         = $false
+        "pipelineYamlPatches"                         = @()
         "BCDevOpsFlowsPoolName"                       = "SelfHostedWindows"
         "BCDevOpsFlowsPoolNameCICD"                   = ""
         "BCDevOpsFlowsPoolNamePublishToProd"          = ""
@@ -164,7 +168,7 @@ function ReadSettings {
         }
         try {
             OutputDebug "Applying settings from external (http/https) settings file $externalSettingLink"
-            $response = Invoke-WebRequest -Uri $externalSettingLink -UseBasicParsing
+            $response = Invoke-WebRequestWithRetry -parameters @{ "Uri" = $externalSettingLink; "UseBasicParsing" = $true }
             $externalSettingsObject = $response.Content | ConvertFrom-Json
             $settingsObjects += @($externalSettingsObject)
         }

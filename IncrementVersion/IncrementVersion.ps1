@@ -26,14 +26,16 @@ try {
         $versionNumber = $settings.updateVersionNumber
     }
 
+    # The repoVersion flag (bit 16) can be combined with any base strategy; only the base strategy matters here
+    $baseVersioningStrategy = $settings.versioningStrategy -band 15
     if ($versionNumber.StartsWith('+')) {
         # Handle incremental version number
         $allowedIncrementalVersionNumbers = @('+1', '+0.1')
-        if ($settings.versioningStrategy -in @(3, 10)) {
+        if ($baseVersioningStrategy -in @(3, 10)) {
             # Allow increment build
             $allowedIncrementalVersionNumbers += '+0.0.1'
         }
-        if ($settings.versioningStrategy -eq 10) {
+        if ($baseVersioningStrategy -eq 10) {
             $allowedIncrementalVersionNumbers += '+0.0.0.1'
         }
         if (-not $allowedIncrementalVersionNumbers.Contains($versionNumber)) {
@@ -44,11 +46,11 @@ try {
         # Handle absolute version number
         $versionNumberFormat = '^\d+\.\d+$' # Major.Minor
         $correctFormatMsg = 'Major.Minor (e.g. 1.0 or 1.2)'
-        if ($settings.versioningStrategy -in @(3, 10)) {
+        if ($baseVersioningStrategy -in @(3, 10)) {
             $versionNumberFormat = '^\d+\.\d+\.\d+$' # Major.Minor.Build
             $correctFormatMsg = 'Major.Minor.Build (e.g. 1.0, 1.2 or 1.2.3)'
         }
-        if ($settings.versioningStrategy -eq 10) {
+        if ($baseVersioningStrategy -eq 10) {
             $versionNumberFormat = '^\d+\.\d+\.\d+.\d+$' # Major.Minor.Build.Revision
             $correctFormatMsg = 'Major.Minor.Build.Revision (e.g. 1.0, 1.2 or 1.2.3 or 1.2.3.4)'
         }
@@ -88,14 +90,21 @@ try {
     # Set version in app manifests (app.json file)
     $newAppliedVersion = Set-VersionInAppManifests -appFilePath $appFilePath -settings $repositorySettings -newValue $versionNumber
 
-    # Update AppSourceCop json
+    # Update AppSourceCop json (the file is optional; PTE repos often do not have one)
     $appSourceCopJsonFilePath = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath "$($settings.appFolders[0])\AppSourceCop.json"
-    $originalAppSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
-    Invoke-RestoreUnstagedChanges -appFilePath $appSourceCopJsonFilePath
+    if (Test-Path $appSourceCopJsonFilePath) {
+        $originalAppSourceCopJson = Get-Content $appSourceCopJsonFilePath -Raw | ConvertFrom-Json
+        Invoke-RestoreUnstagedChanges -appFilePath $appSourceCopJsonFilePath
+    }
+    else {
+        $originalAppSourceCopJson = [PSCustomObject]@{}
+    }
     Update-AppSourceCopJson -appJsonFilePath $appFilePath -appSourceCopJsonFilePath $appSourceCopJsonFilePath -settings $settings
 
     # Commit changes
-    Invoke-GitAdd -appFilePath $appSourceCopJsonFilePath
+    if (Test-Path $appSourceCopJsonFilePath) {
+        Invoke-GitAdd -appFilePath $appSourceCopJsonFilePath
+    }
     Invoke-GitAdd -appFilePath $repositorySettingsPath
     Invoke-GitAddCommit -appFilePath $appFilePath -commitMessage "Updating version to $newAppliedVersion"
 

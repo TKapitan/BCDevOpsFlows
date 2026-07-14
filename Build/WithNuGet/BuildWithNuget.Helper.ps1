@@ -107,6 +107,7 @@ function Invoke-AlCompiler {
         Write-Host ".\alc.exe $([string]::Join(' ', $Parameters))"
         Set-Location $ENV:AL_BCDEVTOOLSFOLDER
         $result = & .\alc.exe $Parameters
+        $script:AlcExitCode = $LASTEXITCODE
     }
     finally {
         Pop-Location
@@ -121,6 +122,7 @@ function Write-ALCOutput {
         [Parameter(Position = 1)]
         [ValidateSet('none', 'error', 'warning')]
         [string] $failOn,
+        [int] $alcExitCode = 0,
         [scriptblock] $outputTo = { Param($line) Write-Host $line }
     )
 
@@ -132,4 +134,13 @@ function Write-ALCOutput {
     $devOpsResult = Convert-ALCOutputToAzureDevOps @Parameters
     $devOpsResult | ForEach-Object { $outputTo.Invoke($_) }
     $alcOutput | Where-Object { $_ -like "App generation failed*" } | ForEach-Object { throw $_ }
+    if ($alcExitCode -ne 0) {
+        # Recognized compile errors are already reported through Convert-ALCOutputToAzureDevOps and
+        # respect the failOn setting; a non-zero exit without any recognizable error line means the
+        # compiler crashed or could not run and must never pass silently.
+        $recognizedError = $alcOutput | Where-Object { $_ -match "error (\w{2,3}\d{4})" } | Select-Object -First 1
+        if (-not $recognizedError) {
+            throw "AL compiler exited with code $alcExitCode without reporting a recognizable error. See the build output above for details."
+        }
+    }
 }

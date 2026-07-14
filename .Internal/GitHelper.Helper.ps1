@@ -21,10 +21,10 @@ function Invoke-RestoreUnstagedChanges {
         invoke-git restore $appFilePath
     }
     else {
-        Get-ChildItem -Path $appFolderPath -Recurse -File | ForEach-Object {
-            OutputDebug -Message "Restoring unstaged changes for $($_.FullName)"
-            invoke-git restore $_.FullName
-        }
+        # One git call for the whole folder instead of one process per file; untracked files
+        # are ignored by git restore instead of failing the command
+        OutputDebug -Message "Restoring unstaged changes for $appFolderPath"
+        invoke-git restore -- $appFolderPath
     }
 }
 function Invoke-GitAdd {
@@ -43,10 +43,10 @@ function Invoke-GitAdd {
         invoke-git add $appFilePath
     }
     else {
-        Get-ChildItem -Path $appFolderPath -Recurse | ForEach-Object {
-            OutputDebug -Message "Staging changes for $($_.FullName)"
-            invoke-git add $_.FullName
-        }
+        # One git call for the whole folder instead of one process per file; also stages
+        # deletions, which the per-file enumeration could never see
+        OutputDebug -Message "Staging changes for $appFolderPath"
+        invoke-git add -- $appFolderPath
     }
 }
 function Invoke-GitCommit {
