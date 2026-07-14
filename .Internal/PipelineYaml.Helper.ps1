@@ -2,6 +2,7 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "Yaml.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteSettings.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "GitHelper.Helper.ps1" -Resolve)
 
 $workflowScheduleKey = "workflowSchedule"
 $workflowTriggerKey = "workflowTrigger"
@@ -516,4 +517,65 @@ function ReplaceVariableNamesInWorkflow {
         return $true
     }
     return $false
+}
+
+function Invoke-PipelineYamlSelfHeal {
+    Param()
+
+    # Never heal from a pull request build: the checkout is a transient merge commit and any push
+    # would either target a non-writable ref or complete the merge outside the PR process.
+    if ($ENV:BUILD_REASON -eq 'PullRequest') {
+        OutputDebug "Skipping pipeline YAML self-healing for pull request build"
+        return
+    }
+    # SetupPipelines performs the full template restore + update itself
+    if ($criticalWorkflowNames -contains "$ENV:AL_PIPELINENAME") {
+        OutputDebug "Skipping pipeline YAML self-healing for critical workflow $ENV:AL_PIPELINENAME"
+        return
+    }
+    $pipelineFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $scriptsFolderName
+    $templateFolder = Join-Path -Path $pipelineFolder -ChildPath 'Templates'
+    if (-not (Test-Path -Path (Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath $repoSettingsFile) -PathType Leaf)) {
+        OutputDebug "Skipping pipeline YAML self-healing - no repository settings file found"
+        return
+    }
+    if (-not (Test-Path -Path $pipelineFolder -PathType Container) -or -not (Get-ChildItem -Path $pipelineFolder -Filter *.yml -File)) {
+        OutputDebug "Skipping pipeline YAML self-healing - no pipeline YAML files found in $pipelineFolder"
+        return
+    }
+
+    # Read with the same parameters SetupPipelines uses so healed content is identical to setup output
+    $settings = ReadSettings -pipelineName "$ENV:AL_PIPELINENAME" -userReqForEmail '' -branchName '' | ConvertTo-HashTable -recurse
+    if (-not $settings.pipelineSelfHealing) {
+        OutputDebug "Skipping pipeline YAML self-healing - pipelineSelfHealing is not enabled"
+        return
+    }
+    if ([string]::IsNullOrEmpty($settings.pipelineBranch)) {
+        OutputDebug "Skipping pipeline YAML self-healing - settings.pipelineBranch is not set"
+        return
+    }
+    # Heal commits originate only on the pipeline branch; they reach test branches through the
+    # existing main -> test/preview push propagation. Healing other branches would make them
+    # diverge and break that fast-forward propagation.
+    $branchName = "$ENV:BUILD_SOURCEBRANCH" -replace '^refs/heads/', ''
+    if ($branchName -ne $settings.pipelineBranch) {
+        OutputDebug "Skipping pipeline YAML self-healing - branch $branchName is not the pipeline branch $($settings.pipelineBranch)"
+        return
+    }
+
+    Push-Location $ENV:BUILD_REPOSITORY_LOCALPATH
+    try {
+        Set-GitUser
+        $changed = Update-PipelineYMLFiles -templateFolderPath $templateFolder -pipelineFolderPath $pipelineFolder
+        if (-not $changed) {
+            Write-Host "Pipeline YAML files match settings - no self-healing needed"
+            return
+        }
+        Write-Host "Pipeline YAML drift detected - self-healing pipeline files from settings"
+        Invoke-GitAddCommit -appFolderPath $pipelineFolder -commitMessage "Self-heal BCDevOpsFlows pipeline files from settings"
+        Invoke-GitPush -targetBranch "HEAD:$($settings.pipelineBranch)"
+    }
+    finally {
+        Pop-Location
+    }
 }

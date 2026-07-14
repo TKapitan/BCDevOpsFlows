@@ -10,13 +10,17 @@ As part of initialization, it cleans up leftover build folders before the build,
 - `.buildartifacts\Apps`
 - `.output`
 
+When the `pipelineSelfHealing` setting is enabled, initialization also checks whether the pipeline YAML files (and their templates) in the repository still match the current settings. If they drifted, the corrected files are committed and pushed back to the pipeline branch with `[skip azurepipelines]`, so settings changes apply on the next run without re-running SetupPipelines. Self-healing is skipped for pull request builds, for runs on branches other than `pipelineBranch`, and for the SetupPipelines workflow itself; failures only log a warning and never fail the build.
+
 ## INPUT Parameters
 
 No parameters.
 
 ## ENV INPUT variables
 
-No environment input parameters.
+| Name                  | Description |
+| :--                   | :-- |
+| AL_PIPELINENAME       | Specifies the name of the pipeline. Used by self-healing to determine the pipeline-specific settings and to skip critical workflows. If not set, self-healing does not run. |
 
 ## ENV OUTPUT variables
 
