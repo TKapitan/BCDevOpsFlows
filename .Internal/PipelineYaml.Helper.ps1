@@ -8,6 +8,9 @@ $workflowScheduleKey = "workflowSchedule"
 $workflowTriggerKey = "workflowTrigger"
 $workflowPRTriggerKey = "workflowPRTrigger"
 $pipelineYamlPatchesKey = "pipelineYamlPatches"
+# Central patches shipped with the BCDevOpsFlows scripts - applied to every repository that
+# uses these scripts, before the repository's own pipelineYamlPatches setting
+$pipelineYamlPatchesFilePath = Join-Path -Path $PSScriptRoot -ChildPath "..\CustomLogic\PipelineYamlPatches.json"
 # Critical workflows may only run on allowed runners (windows-latest, or other specified in the template).
 # Their runner and variables are not configurable and generic YAML patches never apply to them.
 $criticalWorkflowNames = @('SetupPipelines')
@@ -241,6 +244,29 @@ function ConvertTo-PipelineYamlWorkflowPatches {
     return $patches
 }
 
+function Get-PipelineYamlPatchesFromFile {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string]$workflowName
+    )
+
+    if (-not (Test-Path -Path $pipelineYamlPatchesFilePath -PathType Leaf)) {
+        return @()
+    }
+    $fileContent = Get-Content -Path $pipelineYamlPatchesFilePath -Encoding UTF8 -Raw
+    if ([string]::IsNullOrWhiteSpace($fileContent)) {
+        return @()
+    }
+    try {
+        $patchDefinitions = @($fileContent | ConvertFrom-Json)
+    }
+    catch {
+        throw "Error reading $pipelineYamlPatchesFilePath. Error was $($_.Exception.Message)"
+    }
+    # Emit the patches one by one; callers collect them with @(...)
+    return @(ConvertTo-PipelineYamlWorkflowPatches -patchDefinitions $patchDefinitions -workflowName $workflowName -sourceDescription $pipelineYamlPatchesFilePath)
+}
+
 function Get-PipelineYamlPatchesFromSettings {
     param (
         [Parameter(Mandatory = $false)]
@@ -375,7 +401,9 @@ function Get-PipelineYamlPatchesFromSettings {
     }
     $patches += @{ path = 'variables'; value = $variableGroupValues }
 
-    # Generic user-defined patches (never applied to critical workflows)
+    # Generic patches (never applied to critical workflows): central patches shipped with the
+    # BCDevOpsFlows scripts first, then repository-specific patches from settings so they win
+    $patches += @(Get-PipelineYamlPatchesFromFile -workflowName $workflowName)
     if ($settings.Keys -contains $pipelineYamlPatchesKey -and $settings."$pipelineYamlPatchesKey") {
         $patches += @(ConvertTo-PipelineYamlWorkflowPatches -patchDefinitions @($settings."$pipelineYamlPatchesKey") -workflowName $workflowName -sourceDescription "the $pipelineYamlPatchesKey setting")
     }

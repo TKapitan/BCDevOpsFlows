@@ -1,0 +1,7 @@
+[
+  {
+    "pipeline": "PullRequest",
+    "path": "pr.autoCancel",
+    "remove": true
+  }
+]
