@@ -1,8 +1,6 @@
 
 # BCDevOps Flows for Microsoft Dynamics 365 Business Central
 
-<span style="color:red">The project is still in development. Please contact me if you want to contribute to this project. !!! UNTIL FIRST STABLE VERSION BREAKING CHANGES CAN HAPPEN WITHOUT ANY ANNOUNCEMENT !!! There won't be any change log or manuals available until the first stable version is released.</span>
-
 ## How to start
 
 This section describes most important points how to use and configure BCDevOps Flows.
@@ -67,8 +65,6 @@ You can use the following documentation of supported scripts to build your own p
 - [PipelineCleanup](./PipelineCleanup/README.md)
 
 ## Obsoletion
-
-<span style="color:red">This section describes future process. This IS NOT YET FOLLOWED and will be active once the project is in stable version.</span>
 
 We will try to not introduce any breaking changes without announcement. However, as the solution depends on external libraries (such as BCContainerHelper) we can not guarantee that there will not be breaking changes caused by other libraries.
 
