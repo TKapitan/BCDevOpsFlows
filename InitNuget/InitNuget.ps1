@@ -11,6 +11,9 @@ try {
         throw "Settings not found - make sure that the ReadSettings pipeline step is configured to run before this step."
     }
 
+    # Prune expired entries from the persistent NuGet package cache (best effort)
+    Remove-ExpiredBCDevOpsFlowsPackageCache -settings $settings
+
     $bcDevToolsPackageName = "Microsoft.Dynamics.BusinessCentral.Development.Tools"
     $params = @{ 
         "Source" = "https://api.nuget.org/v3/index.json"

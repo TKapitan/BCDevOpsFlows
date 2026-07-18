@@ -50,14 +50,14 @@ function InstallOrUpgradeApps {
     $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) ([GUID]::NewGuid().ToString())
     New-Item -ItemType Directory -Path $tempPath | Out-Null
     try {
-        Copy-AppFilesToFolder -appFiles $apps -folder $tempPath | Out-Null
+        Copy-BCDevOpsFlowsAppFilesToFolder -appFiles $apps -folder $tempPath | Out-Null
         $apps = @(Get-ChildItem -Path $tempPath -Filter *.app | ForEach-Object { $_.FullName })
-        $installedApps = Get-BcInstalledExtensions -bcAuthContext $bcAuthContext -environment $environment | Where-Object { $_.isInstalled }
+        $installedApps = Get-BCDevOpsFlowsInstalledExtensions -authContext $bcAuthContext -environment $environment | Where-Object { $_.isInstalled }
         $PTEsToInstall = @()
         # Run through all apps and install or upgrade AppSource apps first (and collect PTEs)
         foreach($app in $apps) {
             # Get AppJson (works for full .app files, symbol files and also runtime packages)
-            $appJson = Get-AppJsonFromAppFile -appFile $app
+            $appJson = Get-BCDevOpsFlowsAppManifest -appFile $app
             $isPTE = ($appjson.idRanges.from -lt 100000 -and $appjson.idRanges.from -ge 50000)
             $installedApp = $installedApps | Where-Object { $_.id -eq $appJson.id }
             $needsInstall, $needsUpgrade = CheckIfAppNeedsInstallOrUpgrade -appJson $appJson -installedApp $installedApp -installMode $installMode
@@ -72,15 +72,15 @@ function InstallOrUpgradeApps {
                     $PTEsToInstall += $app
                 }
                 else {
-                    Install-BcAppFromAppSource -bcAuthContext $bcAuthContext -environment $environment -appId $appJson.id -acceptIsvEula -installOrUpdateNeededDependencies
+                    Install-BCDevOpsFlowsAppFromAppSource -authContext $bcAuthContext -environment $environment -appId $appJson.id -acceptIsvEula -installOrUpdateNeededDependencies
                     # Update installed apps list as dependencies may have changed / been installed
-                    $installedApps = Get-BcInstalledExtensions -bcAuthContext $bcAuthContext -environment $environment | Where-Object { $_.isInstalled }
+                    $installedApps = Get-BCDevOpsFlowsInstalledExtensions -authContext $bcAuthContext -environment $environment | Where-Object { $_.isInstalled }
                 }
             }
         }
         if ($PTEsToInstall) {
             # Install or upgrade PTEs
-            Publish-PerTenantExtensionApps -bcAuthContext $bcAuthContext -environment $environment -appFiles $PTEsToInstall -SchemaSyncMode $schemaSyncMode
+            Publish-BCDevOpsFlowsPerTenantExtensionApps -authContext $bcAuthContext -environment $environment -appFiles $PTEsToInstall -schemaSyncMode $schemaSyncMode
         }
     }
     finally {

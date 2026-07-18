@@ -18,7 +18,7 @@ try {
 
     $yamlPipelineFolder = "$ENV:BUILD_REPOSITORY_LOCALPATH\$scriptsFolderName"
     $yamlPipelineTemplateFolder = "$yamlPipelineFolder\Templates"
-    if ($null -eq $yamlPipelineTemplateFolder -or $yamlPipelineTemplateFolder.Count -eq 0) {
+    if (-not (Test-Path -Path $yamlPipelineTemplateFolder -PathType Container) -or -not (Get-ChildItem -Path $yamlPipelineTemplateFolder -Filter *.yml -File)) {
         throw "No YAML files found in template folder $yamlPipelineTemplateFolder"
     }
     try {

@@ -14,7 +14,9 @@ function Set-ContentLF {
         else {
             $content = "$content".Replace("`r", "")
         }
-        Set-Content -Path $path -Value "$content`n"
+        # Write UTF-8 without BOM with an exact trailing LF on both PowerShell editions
+        # (Set-Content would use the ANSI code page on Windows PowerShell 5.1)
+        [System.IO.File]::WriteAllText($path, "$content`n", [System.Text.UTF8Encoding]::new($false))
     }
 }
 function Set-JsonContentLF {

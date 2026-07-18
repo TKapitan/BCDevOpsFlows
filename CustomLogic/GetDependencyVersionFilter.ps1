@@ -5,5 +5,6 @@ function GetDependencyVersionFilter {
         [Parameter(Mandatory = $true)]
         [PSCustomObject] $dependency
     )
-    return ""
+    
+    # Add your custom logic to filter dependency versions here
 }

@@ -1,4 +1,6 @@
-Install-Module -Name powershell-yaml -Force -Verbose -Scope CurrentUser
+if (-not (Get-Module -Name powershell-yaml -ListAvailable)) {
+    Install-Module -Name powershell-yaml -Force -Scope CurrentUser
+}
 Import-Module powershell-yaml
 
 function Get-AsYamlFromFile {
@@ -15,9 +17,7 @@ function Get-AsYaml {
         [string[]]$fileContent
     )
 
-    foreach ($line in $fileContent) { 
-        $content = $content + "`n" + $line 
-    }
+    $content = $fileContent -join "`n"
     $yml = ConvertFrom-YAML $content -Ordered
     return $yml
 }
@@ -28,5 +28,5 @@ function Write-Yaml {
         $Content
     )
     $result = ConvertTo-YAML $Content
-    Set-ContentLF -Path $filePath -Content $result
+    Set-ContentLF -Path $FileName -Content $result
 }

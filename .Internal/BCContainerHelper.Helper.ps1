@@ -1,5 +1,6 @@
 . (Join-Path -Path $PSScriptRoot -ChildPath "BCDevOpsFlows.Setup.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "WriteOutput.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "Common\Invoke-HttpWithRetry.ps1" -Resolve)
 
 #
 # Download and import the BcContainerHelper module based on repository settings
@@ -95,19 +96,19 @@ function GetBcContainerHelperPath([string] $bcContainerHelperVersion) {
             $tempName = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
             Write-Host "Downloading BcContainerHelper developer version from $bcContainerHelperVersion"
             try {
-                Invoke-WebRequest -UseBasicParsing -Uri $bcContainerHelperVersion -OutFile "$tempName.zip"
+                Invoke-WebRequestWithRetry -parameters @{ "UseBasicParsing" = $true; "Uri" = $bcContainerHelperVersion; "OutFile" = "$tempName.zip" }
             }
             catch {
                 $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
                 $bcContainerHelperVersion = "preview"
                 Write-Host "Download failed, downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
-                Invoke-WebRequest -UseBasicParsing -Uri "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip" -OutFile "$tempName.zip"
+                Invoke-WebRequestWithRetry -parameters @{ "UseBasicParsing" = $true; "Uri" = "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip"; "OutFile" = "$tempName.zip" }
             }
         }
         else {
             $tempName = Join-Path $bcContainerHelperRootFolder ([Guid]::NewGuid().ToString())
             Write-Host "Downloading BcContainerHelper $bcContainerHelperVersion version from Blob Storage"
-            Invoke-WebRequest -UseBasicParsing -Uri "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip" -OutFile "$tempName.zip"
+            Invoke-WebRequestWithRetry -parameters @{ "UseBasicParsing" = $true; "Uri" = "https://bccontainerhelper-addgd5gzaxf9fneh.b02.azurefd.net/public/$($bcContainerHelperVersion).zip"; "OutFile" = "$tempName.zip" }
         }
         Expand-7zipArchive -Path "$tempName.zip" -DestinationPath $tempName
         $bcContainerHelperPath = (Get-Item -Path (Join-Path $tempName "*\BcContainerHelper.ps1")).FullName
