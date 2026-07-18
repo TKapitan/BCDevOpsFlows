@@ -61,7 +61,6 @@ try {
     $settings = Resolve-ExternalRulesetFiles -settings $settings -baseFolder $baseFolder
     if ((-not $settings.appFolders) -and (-not $settings.testFolders) -and (-not $settings.bcptTestFolders)) {
         throw "Repository is empty (no app or test folders found)"
-        exit
     }
 
     # PS7 builds do not support (unstable) SSL for WinRM in some Azure VMs
@@ -292,9 +291,6 @@ try {
         $runAlPipelineParams["preprocessorsymbols"] = @($existingSymbols.Keys)
     }
 
-    if ($runAlPipelineParams.Keys -notcontains 'preprocessorsymbols') {
-        $runAlPipelineParams["preprocessorsymbols"] = @()
-    }
     $runAlPipelineParams += Get-BuildInfoParameters
 
     $workflowName = "$ENV:BUILD_TRIGGEREDBY_DEFINITIONNAME".Trim()
@@ -358,7 +354,9 @@ try {
 }
 finally {
     try {
-        if (Test-BcContainer -containerName $containerName) {
+        # $containerName/$containerEventLogFile may not be assigned yet when an early failure occurs;
+        # never throw from this finally block or the original build error would be replaced
+        if ($containerName -and $containerEventLogFile -and (Get-Command Test-BcContainer -ErrorAction SilentlyContinue) -and (Test-BcContainer -containerName $containerName)) {
             Write-Host "Get Event Log from container"
             $eventlogFile = Get-BcContainerEventLog -containerName $containerName -doNotOpen
             Copy-Item -Path $eventLogFile -Destination $containerEventLogFile
@@ -371,6 +369,5 @@ finally {
             Write-Host $_.PSMessageDetails
         }
         Write-Host "##vso[task.complete result=Failed]"
-        throw "Error getting event log from container: $($_.Exception.Message)"
     }
 }

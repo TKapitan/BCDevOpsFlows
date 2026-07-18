@@ -9,13 +9,11 @@ Param(
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\Common\Import-Common.ps1" -Resolve)
 
 . (Join-Path -Path $PSScriptRoot -ChildPath "DeployToCloud.Helper.ps1" -Resolve)
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BCContainerHelper.Helper.ps1" -Resolve)
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\BcCloud.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\FindDependencies.Helper.ps1" -Resolve)
 . (Join-Path -Path $PSScriptRoot -ChildPath "..\.Internal\WriteOutput.Helper.ps1" -Resolve)
 
 try {
-    DownloadAndImportBcContainerHelper
-
     if ([string]::IsNullOrWhiteSpace($ENV:AL_AUTHCONTEXTS_INTERNAL)) {
         throw "AL_AUTHCONTEXTS_INTERNAL is required and must contain valid JSON."
     }
@@ -41,8 +39,23 @@ try {
     }
     Write-Host "Found $($matchingEnvironments.Count) matching environments: $($matchingEnvironments -join ', ') for filter '$deployToEnvironmentsNameFilter'"
 
+    # Collect dependency app files once - the file set is identical for every environment and app folder
+    $allDependencies = @()
+    # NuGet dependencies
+    $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
+    if (Test-Path $dependenciesFolder) {
+        $allDependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
+            Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+        }
+    }
+    # BCContainerHelper dependencies
+    $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
+    if (Test-Path $dependenciesFolder) {
+        $allDependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
+    }
+
     $noOfValidEnvironments = 0
-    $environmentUrls = @{} | ConvertTo-Json
+    $environmentUrls = [ordered]@{}
     foreach ($environmentName in $matchingEnvironments) {
         Write-Host "Processing environment: $environmentName"
 
@@ -74,8 +87,8 @@ try {
             if ([string]::IsNullOrWhiteSpace($tenantID)) {
                 throw "No tenant ID found for environment ($environmentName)."
             }
-            $bcAuthContext = New-BcAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
-            if ($null -eq $bcAuthContext) {
+            $bcAuthContext = New-BCDevOpsFlowsAuthContext -tenantID $tenantID -clientID $authContext.clientID -clientSecret $authContext.clientSecret
+            if ($null -eq $bcAuthContext -or [string]::IsNullOrWhiteSpace($bcAuthContext.AccessToken)) {
                 throw "Authentication failed for environment '$environmentName' in tenant '$tenantID' using client ID '$($authContext.clientID)'."
             }
         }
@@ -83,17 +96,17 @@ try {
             Write-Host $_.Exception.Message -ForegroundColor Red
             Write-Host $_.ScriptStackTrace
             Write-Host $_.PSMessageDetails
-    
+
             throw "Authentication failed. See previous lines for details."
         }
 
-        $environmentUrl = "$($bcContainerHelperConfig.baseUrl.TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
-    
-        $environmentUrls | Add-Member -NotePropertyName $environmentName -NotePropertyValue $environmentUrl -Force
+        $environmentUrl = "$((Get-BCDevOpsFlowsBaseUrl).TrimEnd('/'))/$($tenantID)/$($deploymentSettings.environmentName)"
+
+        $environmentUrls[$environmentName] = $environmentUrl
         OutputDebug -Message "Adding $environmentName with URL ($environmentUrl) to environmentUrls"
     
         Write-Host "EnvironmentUrl: $environmentUrl"
-        $response = Invoke-RestMethod -UseBasicParsing -Method Get -Uri "$environmentUrl/deployment/url"
+        $response = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'Get'; "Uri" = "$environmentUrl/deployment/url" }
         if ($response.Status -eq "DoesNotExist") {
             Write-Warning "Environment with name $($deploymentSettings.environmentName) does not exist in the current authorization context. Skipping..."
             continue
@@ -116,18 +129,7 @@ try {
             Write-Host "- $([System.IO.Path]::GetFileName($appFilePath))"
 
             if ($deploymentSettings.dependencyInstallMode -ne "ignore") {
-                # NuGet dependencies
-                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildpackages"
-                if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Directory | Where-Object { $_.Name -notlike 'Microsoft.*' } | ForEach-Object {
-                        Get-ChildItem -Path $_.FullName -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
-                    }
-                }
-                # BCContainerHelper dependencies
-                $dependenciesFolder = Join-Path -Path $ENV:BUILD_REPOSITORY_LOCALPATH -ChildPath ".buildartifacts\Dependencies"
-                if (Test-Path $dependenciesFolder) {
-                    $dependencies += Get-ChildItem -Path $dependenciesFolder -Filter "*.app" -Recurse | Select-Object -ExpandProperty FullName
-                }
+                $dependencies = $allDependencies
                 Write-Host "Dependencies to $($deploymentSettings.dependencyInstallMode)"
                 if ($dependencies) {
                     $dependencies | ForEach-Object {
@@ -142,8 +144,8 @@ try {
             $sandboxEnvironment = ($response.environmentType -eq 1)
             $scope = $deploymentSettings.Scope
             if ($null -eq $scope) {
-                if ($settings.Type -eq 'AppSource App' -or ($sandboxEnvironment -and !($bcAuthContext.ClientSecret -or $bcAuthContext.ClientAssertion))) {
-                    # Sandbox and not S2S -> use dev endpoint (Publish-BcContainerApp)
+                if ($settings.Type -eq 'AppSource App' -or ($sandboxEnvironment -and !($bcAuthContext.clientSecret))) {
+                    # Sandbox and not S2S -> use dev endpoint
                     $scope = 'Dev'
                 }
                 else {
@@ -167,26 +169,26 @@ try {
                         throw "Scope Dev is only valid for sandbox environments"
                     }
                     $parameters = @{
-                        "bcAuthContext" = $bcAuthContext
-                        "environment"   = $deploymentSettings.environmentName
-                        "appFile"       = $appFilePath
+                        "authContext" = $bcAuthContext
+                        "environment" = $deploymentSettings.environmentName
+                        "appFile"     = $appFilePath
                     }
                     if ($deploymentSettings.SyncMode) {
                         if (@('Add', 'ForceSync', 'Clean', 'Development') -notcontains $deploymentSettings.SyncMode) {
                             throw "Invalid SyncMode $($deploymentSettings.SyncMode) when deploying using the development endpoint. Valid values are Add, ForceSync, Development and Clean."
                         }
                         Write-Host "Using $($deploymentSettings.SyncMode)"
-                        $parameters += @{ "SyncMode" = $deploymentSettings.SyncMode }
+                        $parameters += @{ "syncMode" = $deploymentSettings.SyncMode }
                     }
                     Write-Host "Publishing apps using development endpoint"
-                    Publish-BcContainerApp @parameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
+                    Publish-BCDevOpsFlowsDevEndpointApp @parameters -checkAlreadyInstalled
                 }
                 else {
-                    # Use automation API for production environments (Publish-PerTenantExtensionApps)
+                    # Use automation API for production environments
                     $parameters = @{
-                        "bcAuthContext" = $bcAuthContext
-                        "environment"   = $deploymentSettings.environmentName
-                        "appFiles"      = $appFilePath
+                        "authContext" = $bcAuthContext
+                        "environment" = $deploymentSettings.environmentName
+                        "appFiles"    = $appFilePath
                     }
                     if ($deploymentSettings.SyncMode) {
                         if (@('Add', 'ForceSync') -notcontains $deploymentSettings.SyncMode) {
@@ -195,10 +197,10 @@ try {
                         Write-Host "Using $($deploymentSettings.SyncMode)"
                         $syncMode = $deploymentSettings.SyncMode
                         if ($syncMode -eq 'ForceSync') { $syncMode = 'Force' }
-                        $parameters += @{ "SchemaSyncMode" = $syncMode }
+                        $parameters += @{ "schemaSyncMode" = $syncMode }
                     }
                     Write-Host "Publishing apps using automation API"
-                    Publish-PerTenantExtensionApps @parameters
+                    Publish-BCDevOpsFlowsPerTenantExtensionApps @parameters
                 }
             }
         }

@@ -30,7 +30,7 @@ function DownloadNugetPackage() {
             Write-Host "Downloading Nuget package $packageName $packageVersion from $nugetUrl..."
             New-Item -ItemType Directory -Path $nugetPackagePath | Out-Null
             OutputDebug -Message "Downloading Nuget package $nugetUrl to $nugetPackagePath/$packageName.$packageVersion.zip"
-            Invoke-WebRequest -Uri $nugetUrl -OutFile "$nugetPackagePath/$packageName.$packageVersion.zip"
+            Invoke-WebRequestWithRetry -parameters @{ "Uri" = $nugetUrl; "OutFile" = "$nugetPackagePath/$packageName.$packageVersion.zip" }
 
             # Unzip the package
             try {
@@ -58,7 +58,12 @@ function GetNugetPackagePath() {
         [string] $packageVersion
     )
 
-    $settings = $ENV:AL_SETTINGS | ConvertFrom-Json
+    # AL_SETTINGS is parsed once per content value; this function runs for every package download
+    if ("$ENV:AL_SETTINGS" -cne "$script:ParsedALSettingsJson") {
+        $script:ParsedALSettings = $ENV:AL_SETTINGS | ConvertFrom-Json
+        $script:ParsedALSettingsJson = "$ENV:AL_SETTINGS"
+    }
+    $settings = $script:ParsedALSettings
     $nugetPackageBasePath = $settings.writableFolderPath
     if (!$nugetPackageBasePath) {
         $nugetPackageBasePath = $ENV:PIPELINE_WORKSPACE
@@ -66,45 +71,75 @@ function GetNugetPackagePath() {
     $nugetPackagePath = Join-Path -Path $nugetPackageBasePath -ChildPath "/.nuget/packages/$packageName/$packageVersion/"
     return $nugetPackagePath
 }
-function Remove-AllNugetPackageSources() {
-    Param()
-
-    OutputDebug -Message "Removing all existing NuGet package sources"
-    $sources = Get-PackageSource -ProviderName NuGet -WarningAction SilentlyContinue | Out-Null
-    if (!$sources) {
-        OutputDebug -Message "No NuGet package sources found"
-        return
-    }
-    foreach ($source in $sources) {
-        Remove-NugetPackageSource -sourceName $source.Name
-    }
-}
-function Add-NugetPackageSource() {
+function Remove-ExpiredBCDevOpsFlowsPackageCache {
     Param(
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$feed
+        [hashtable] $settings
     )
 
-    if (!(Get-PackageSource -Name $feed.name -ProviderName NuGet -ErrorAction SilentlyContinue)) {
-        Write-Host "Adding Nuget source $($feed.name)"
-        nuget sources add -Name $feed.name -Source $feed.url
+    try {
+        if (!$settings.writableFolderPath) {
+            return
+        }
+        $keepDays = 14
+        if ($settings.Keys -contains 'nugetPackageCacheKeepDays') {
+            $keepDays = [int]$settings.nugetPackageCacheKeepDays
+        }
+        if ($keepDays -le 0) {
+            return
+        }
+        $cacheRoot = Join-Path $settings.writableFolderPath '.nuget/bcpackages'
+        if (!(Test-Path $cacheRoot)) {
+            return
+        }
+        $cutoff = [DateTime]::UtcNow.AddDays(-$keepDays)
+        # Cache structure is {feedHash}/{packageId}/{version}; version folders (and abandoned staging
+        # folders next to them) are removed when unused for longer than nugetPackageCacheKeepDays
+        foreach ($feedFolder in (Get-ChildItem -Path $cacheRoot -Directory)) {
+            foreach ($packageFolder in (Get-ChildItem -Path $feedFolder.FullName -Directory)) {
+                foreach ($versionFolder in (Get-ChildItem -Path $packageFolder.FullName -Directory | Where-Object { $_.LastWriteTimeUtc -lt $cutoff })) {
+                    Write-Host "Removing expired cached NuGet package $($versionFolder.FullName)"
+                    try {
+                        Remove-Item -Path $versionFolder.FullName -Recurse -Force
+                    }
+                    catch {
+                        Write-Host "WARNING: Could not remove expired cached NuGet package $($versionFolder.FullName): $($_.Exception.Message)"
+                    }
+                }
+                if (!(Get-ChildItem -Path $packageFolder.FullName -Force)) {
+                    Remove-Item -Path $packageFolder.FullName -Force -ErrorAction SilentlyContinue
+                }
+            }
+            if (!(Get-ChildItem -Path $feedFolder.FullName -Force)) {
+                Remove-Item -Path $feedFolder.FullName -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
-    else {
-        OutputDebug -Message "Nuget source $($feed.name) already exists"
+    catch {
+        Write-Host "WARNING: Could not prune NuGet package cache: $($_.Exception.Message)"
     }
 }
-function Remove-NugetPackageSource() {
+function Test-BCDevOpsFlowsDependencyDownloaded {
     Param(
-        [string] $sourceName
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject[]] $downloadedApps = @(),
+        [Parameter(Mandatory = $true)]
+        [string] $appId,
+        [Parameter(Mandatory = $false)]
+        [string] $version = '0.0.0.0'
     )
 
-    if (Get-PackageSource -Name $sourceName -ProviderName NuGet -ErrorAction SilentlyContinue) {
-        Write-Host "Removing Nuget source $sourceName"
-        Unregister-PackageSource -Source $sourceName | Out-null
+    # Mirrors the "already available" check in Get-BCDevOpsFlowsNuGetPackageToFolder:
+    # the highest already-downloaded version of the app is checked against the requested version range
+    $downloadedApp = $downloadedApps |
+        Where-Object { $_ -and $_.id -and $_.id -eq $appId } |
+        Sort-Object -Property @{ "Expression" = { [System.Version]($_.Version -replace '-.+$') } } -Descending |
+        Select-Object -First 1
+    if ($downloadedApp -and ([BcDevOpsFlowsNuGetFeed]::IsVersionIncludedInRange($downloadedApp.Version, $version))) {
+        Write-Host "$($downloadedApp.Name) from $($downloadedApp.Publisher) version $($downloadedApp.Version) is already downloaded (AppId=$($downloadedApp.id))"
+        return $true
     }
-    else {
-        OutputDebug -Message "Nuget source $sourceName not found"
-    }
+    return $false
 }
 function New-NuGetFeedConfig {
     param(
@@ -131,8 +166,6 @@ function Get-BCCTrustedNuGetFeeds {
         [switch] $includeMicrosoftNuGetFeeds,
         [switch] $skipSymbolsFeeds
     )
-
-    Remove-AllNugetPackageSources
 
     $requiredTrustedNuGetFeeds = @()
     if ($fromTrustedNuGetFeeds) {

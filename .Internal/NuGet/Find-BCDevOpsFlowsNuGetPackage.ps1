@@ -56,7 +56,15 @@ Function Find-BCDevOpsFlowsNuGetPackage {
             if (!($feed.PSObject.Properties.Name -eq 'Patterns')) { $feed | Add-Member -MemberType NoteProperty -Name 'Patterns' -Value @('*') }
             if (!($feed.PSObject.Properties.Name -eq 'Fingerprints')) { $feed | Add-Member -MemberType NoteProperty -Name 'Fingerprints' -Value @() }
             $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::Create($feed.Url, $feed.Token, $feed.Patterns, $feed.Fingerprints)
-            $packages = $nuGetFeed.Search($packageName, $allowPrerelease)
+            $packages = @()
+            if ($packageName -notmatch '[\*\?]') {
+                # Exact package ids resolve directly via the flat container API - much faster than the search service.
+                # If nothing resolves, fall back to search below to keep partial-name matching intact.
+                $packages = $nuGetFeed.GetExactPackages($packageName)
+            }
+            if (!$packages -or $packages.Count -eq 0) {
+                $packages = $nuGetFeed.Search($packageName, $allowPrerelease)
+            }
             if ($packages) {
                 foreach ($package in $packages) {
                     $packageId = $package.Id

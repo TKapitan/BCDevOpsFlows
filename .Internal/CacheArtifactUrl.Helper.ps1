@@ -89,11 +89,14 @@ function GetArtifactUrlFromCache {
     }
 
     try {
-        if ($PSVersionTable.PSVersion.Major -ge 6) {
-            $updatedAt = $cachedItem.updatedAt
+        # updatedAt is stored as UTC; normalize to a UTC DateTime regardless of how the JSON parser
+        # materialized it (PS7 returns a Local-kind DateTime, PS5.1 keeps the raw string)
+        $updatedAt = $cachedItem.updatedAt
+        if ($updatedAt -is [DateTime]) {
+            $updatedAt = $updatedAt.ToUniversalTime()
         }
         else {
-            $updatedAt = [DateTime]::ParseExact($cachedItem.updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture)
+            $updatedAt = [DateTime]::ParseExact($updatedAt, "yyyy-MM-ddTHH:mm:ssZ", [System.Globalization.CultureInfo]::InvariantCulture, ([System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal))
         }
         $expiryTime = $updatedAt.AddHours($settings.artifactUrlCacheKeepHours)
         

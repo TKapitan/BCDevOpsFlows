@@ -14,6 +14,14 @@ class BcDevOpsFlowsNuGetFeed {
 
     [hashtable] $orgType = @{}
 
+    # Feed instances are cached per (url, token, patterns, fingerprints) to avoid repeating
+    # the service index request in the constructor for every package lookup
+    static [hashtable] $feedInstanceCache = @{}
+
+    # AL_SETTINGS is parsed once per content value instead of on every package download
+    static [string] $cachedSettingsJson = ''
+    static [object] $cachedSettings = $null
+
     BcDevOpsFlowsNuGetFeed([string] $nuGetServerUrl, [string] $nuGetToken, [string[]] $patterns, [string[]] $fingerprints) {
         $this.url = $nuGetServerUrl
         $this.token = $nuGetToken
@@ -27,7 +35,7 @@ class BcDevOpsFlowsNuGetFeed {
 
         try {
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-            $capabilities = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $this.url
+            $capabilities = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $this.url }
             $global:ProgressPreference = $prev
             $this.searchQueryServiceUrl = $capabilities.resources | Where-Object { $_.'@type' -eq 'SearchQueryService' } | Select-Object -ExpandProperty '@id' | Select-Object -First 1
             if (!$this.searchQueryServiceUrl) {
@@ -57,7 +65,12 @@ class BcDevOpsFlowsNuGetFeed {
     }
 
     static [BcDevOpsFlowsNuGetFeed] Create([string] $nuGetServerUrl, [string] $nuGetToken, [string[]] $patterns, [string[]] $fingerprints) {
+        $cacheKey = "$nuGetServerUrl|$nuGetToken|$($patterns -join ',')|$($fingerprints -join ',')"
+        if ([BcDevOpsFlowsNuGetFeed]::feedInstanceCache.ContainsKey($cacheKey)) {
+            return [BcDevOpsFlowsNuGetFeed]::feedInstanceCache[$cacheKey]
+        }
         $nuGetFeed = [BcDevOpsFlowsNuGetFeed]::new($nuGetServerUrl, $nuGetToken, $patterns, $fingerprints)
+        [BcDevOpsFlowsNuGetFeed]::feedInstanceCache[$cacheKey] = $nuGetFeed
         return $nuGetFeed
     }
 
@@ -98,7 +111,7 @@ class BcDevOpsFlowsNuGetFeed {
                 }
             }
             if (-not $this.orgType.ContainsKey($organization)) {
-                $orgMetadata = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/users/$organization"
+                $orgMetadata = Invoke-RestMethodWithRetry -parameters @{ "Method" = 'GET'; "Headers" = $headers; "Uri" = "https://api.github.com/users/$organization" }
                 if ($orgMetadata.type -eq 'Organization') {
                     $this.orgType[$organization] = 'orgs'
                 }
@@ -111,7 +124,7 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host -ForegroundColor Yellow "Search package using $queryUrl$page"
             $matching = @()
             while ($true) {
-                $result = Invoke-RestMethod -Method GET -Headers $headers -Uri "$queryUrl$page"
+                $result = Invoke-RestMethodWithRetry -parameters @{ "Method" = 'GET'; "Headers" = $headers; "Uri" = "$queryUrl$page" }
                 if ($result.Count -eq 0) {
                     break
                 }
@@ -129,7 +142,7 @@ class BcDevOpsFlowsNuGetFeed {
             try {
                 Write-Host -ForegroundColor Yellow "Search package using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-                $searchResult = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+                $searchResult = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
                 $global:ProgressPreference = $prev
             }
             catch {
@@ -155,6 +168,46 @@ class BcDevOpsFlowsNuGetFeed {
         return $matching | ForEach-Object { Write-Host "- $($_.id)"; $_ }
     }
 
+    # Resolve exact package ids directly via the flat container API (PackageBaseAddress) instead of the
+    # search service. The search service is slow on Azure DevOps, unstable on GitHub and truncates results,
+    # so exact ids ($packageName and $packageName.symbols) are probed directly. Returns the same shape as
+    # Search(); an empty result means the caller must fall back to Search() to keep partial-name matching.
+    [hashtable[]] GetExactPackages([string] $packageName) {
+        $result = @()
+        if (!$this.packageBaseAddressUrl) {
+            return $result
+        }
+        $packageIds = @($packageName)
+        if (!$packageName.EndsWith('.symbols', [System.StringComparison]::OrdinalIgnoreCase)) {
+            # Only probe the .symbols variant when the name does not already end in .symbols -
+            # probing '<name>.symbols.symbols' is a guaranteed 404 round-trip
+            $packageIds += "$packageName.symbols"
+        }
+        foreach ($packageId in $packageIds) {
+            if (!$this.IsTrusted($packageId)) {
+                continue
+            }
+            $queryUrl = "$($this.packageBaseAddressUrl.TrimEnd('/'))/$($packageId.ToLowerInvariant())/index.json"
+            $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
+            try {
+                Write-Host -ForegroundColor Yellow "Get exact package using $queryUrl"
+                $versions = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
+                if ($versions -and $versions.versions) {
+                    Write-Host "Exact match found for $packageId"
+                    $result += @{ "id" = $packageId; "versions" = @($versions.versions) }
+                }
+            }
+            catch {
+                # 404 (or any other error) - the package id doesn't resolve on this feed; the caller falls back to search
+                Write-Verbose "Package $packageId not found using $queryUrl ($($_.Exception.Message))"
+            }
+            finally {
+                $global:ProgressPreference = $prev
+            }
+        }
+        return $result
+    }
+
     [string[]] GetVersions([hashtable] $package, [bool] $descending, [bool] $allowPrerelease) {
         if (!$this.IsTrusted($package.id)) {
             throw "Package $($package.id) is not trusted on $($this.url)"
@@ -167,7 +220,7 @@ class BcDevOpsFlowsNuGetFeed {
             try {
                 Write-Host -ForegroundColor Yellow "Get versions using $queryUrl"
                 $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-                $versions = Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl
+                $versions = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
                 $global:ProgressPreference = $prev
             }
             catch {
@@ -216,7 +269,8 @@ class BcDevOpsFlowsNuGetFeed {
             # add a 'z' to the version to make sure that 5.1.0 is greater than 5.1.0-beta
             # Tags are sorted alphabetically (alpha, beta, rc, etc.), even though this shouldn't matter
             # New prerelease versions will always have a new version number
-            return [string]::Compare("$($version1)z", "$($version2)z")
+            # [string]::Compare can return any integer; callers compare against -1/0/1, so normalize
+            return [Math]::Sign([string]::Compare("$($version1)z", "$($version2)z"))
         }
         elseif ($ver1 -gt $ver2) {
             return 1
@@ -315,10 +369,7 @@ class BcDevOpsFlowsNuGetFeed {
         try {
             Write-Host "Download nuspec using $queryUrl"
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
-            $tmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([GUID]::NewGuid().ToString()).nuspec"
-            Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl -OutFile $tmpFile
-            $nuspec = Get-Content -Path $tmpfile -Encoding UTF8 -Raw
-            Remove-Item -Path $tmpFile -Force
+            $nuspec = Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl }
             $global:ProgressPreference = $prev
         }
         catch {
@@ -330,20 +381,126 @@ class BcDevOpsFlowsNuGetFeed {
             Write-Host "##vso[task.complete result=Failed]"
             throw ($_.Exception.Message)
         }
+        if ($nuspec -is [System.Xml.XmlDocument]) {
+            return $nuspec
+        }
         return [xml]$nuspec
+    }
+
+    # Path to the persistent package content cache entry for a package version, or '' if caching is disabled.
+    # A package version's content is immutable, so cached content can be reused across runs without
+    # compromising version resolution - the version to use is always resolved online first.
+    hidden [string] GetPackageCacheFolder([string] $packageId, [string] $version) {
+        try {
+            if (!$ENV:AL_SETTINGS) {
+                return ''
+            }
+            if ([BcDevOpsFlowsNuGetFeed]::cachedSettingsJson -cne "$ENV:AL_SETTINGS") {
+                [BcDevOpsFlowsNuGetFeed]::cachedSettings = $ENV:AL_SETTINGS | ConvertFrom-Json
+                [BcDevOpsFlowsNuGetFeed]::cachedSettingsJson = "$ENV:AL_SETTINGS"
+            }
+            $settings = [BcDevOpsFlowsNuGetFeed]::cachedSettings
+            if (!$settings.writableFolderPath) {
+                return ''
+            }
+            if (($settings.PSObject.Properties.Name -contains 'nugetPackageCacheKeepDays') -and ([int]$settings.nugetPackageCacheKeepDays -eq 0)) {
+                return ''
+            }
+            # Cache is scoped per feed - the same package id/version from a different feed is verified and cached separately
+            $feedHash = [BcDevOpsFlowsNuGetFeed]::GetUrlHash($this.url)
+            return (Join-Path $settings.writableFolderPath ".nuget/bcpackages/$feedHash/$($packageId.ToLowerInvariant())/$($version.ToLowerInvariant())")
+        }
+        catch {
+            return ''
+        }
+    }
+
+    static [string] GetUrlHash([string] $url) {
+        $md5 = [System.Security.Cryptography.MD5]::Create()
+        try {
+            $hash = $md5.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($url.ToLowerInvariant()))
+            return [BitConverter]::ToString($hash).Replace('-', '').ToLowerInvariant().Substring(0, 12)
+        }
+        finally {
+            $md5.Dispose()
+        }
+    }
+
+    # Copy the extracted package content into the persistent cache. Best effort - a failure to cache
+    # must never fail the download. The marker file flags the entry as complete; content is staged in a
+    # temporary sibling folder and renamed into place so other processes never see a partial entry.
+    hidden [void] AddPackageToCache([string] $packageFolder, [string] $cacheFolder, [string] $packageId, [string] $version) {
+        $cacheMutex = New-Object System.Threading.Mutex($false, "BCDevOpsFlowsPackageCache-$($packageId.ToLowerInvariant())-$($version.ToLowerInvariant())")
+        try {
+            try {
+                if (!$cacheMutex.WaitOne(1000)) {
+                    Write-Host "Waiting for other process caching $packageId ($version)"
+                    $cacheMutex.WaitOne() | Out-Null
+                    Write-Host "Other process completed caching $packageId ($version)"
+                }
+            }
+            catch [System.Threading.AbandonedMutexException] {
+                Write-Host "Other process terminated abnormally"
+            }
+            if (Test-Path (Join-Path $cacheFolder '.bcdevopsflows.complete') -PathType Leaf) {
+                return
+            }
+            if (Test-Path $cacheFolder) {
+                # Incomplete cache entry (no marker file) - rebuild it
+                Remove-Item -Path $cacheFolder -Recurse -Force
+            }
+            $parentFolder = Split-Path $cacheFolder -Parent
+            if (!(Test-Path $parentFolder)) {
+                New-Item -Path $parentFolder -ItemType Directory -Force | Out-Null
+            }
+            $stagingFolder = "$cacheFolder-$([GUID]::NewGuid().ToString('N'))"
+            Copy-Item -Path $packageFolder -Destination $stagingFolder -Recurse -Force
+            Set-Content -Path (Join-Path $stagingFolder '.bcdevopsflows.complete') -Value ([DateTime]::UtcNow.ToString('o'))
+            try {
+                Rename-Item -Path $stagingFolder -NewName (Split-Path $cacheFolder -Leaf)
+                Write-Host "Cached package $packageId ($version) at $cacheFolder"
+            }
+            catch {
+                # Another process (on another machine) cached the package first
+                Remove-Item -Path $stagingFolder -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+        catch {
+            Write-Host "WARNING: Could not cache package $packageId ($version): $($_.Exception.Message)"
+        }
+        finally {
+            $cacheMutex.ReleaseMutex()
+            $cacheMutex.Close()
+        }
     }
 
     [string] DownloadPackage([string] $packageId, [string] $version) {
         if (!$this.IsTrusted($packageId)) {
             throw "Package $packageId is not trusted on $($this.url)"
         }
+        $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([GUID]::NewGuid().ToString())
+        $cacheFolder = $this.GetPackageCacheFolder($packageId, $version)
+        if ($cacheFolder -and (Test-Path (Join-Path $cacheFolder '.bcdevopsflows.complete') -PathType Leaf)) {
+            try {
+                Write-Host -ForegroundColor Green "Using cached package $packageId ($version) from $cacheFolder"
+                Copy-Item -Path $cacheFolder -Destination $tmpFolder -Recurse -Force
+                Remove-Item -Path (Join-Path $tmpFolder '.bcdevopsflows.complete') -Force
+                try { (Get-Item $cacheFolder).LastWriteTimeUtc = [DateTime]::UtcNow } catch { }
+                return $tmpFolder
+            }
+            catch {
+                Write-Host "WARNING: Failed to read cached package $packageId ($version): $($_.Exception.Message). Re-downloading."
+                if (Test-Path $tmpFolder) {
+                    Remove-Item -Path $tmpFolder -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
         $queryUrl = "$($this.packageBaseAddressUrl.TrimEnd('/'))/$($packageId.ToLowerInvariant())/$($version.ToLowerInvariant())/$($packageId.ToLowerInvariant()).$($version.ToLowerInvariant()).nupkg"
-        $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([GUID]::NewGuid().ToString())    
         try {
             Write-Host -ForegroundColor Green "Download package using $queryUrl"
             $prev = $global:ProgressPreference; $global:ProgressPreference = "SilentlyContinue"
             $filename = "$tmpFolder.zip"
-            Invoke-RestMethod -UseBasicParsing -Method GET -Headers ($this.GetHeaders()) -Uri $queryUrl -OutFile $filename
+            Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Method" = 'GET'; "Headers" = $this.GetHeaders(); "Uri" = $queryUrl; "OutFile" = $filename }
             if ($this.fingerprints) {
                 $arguments = @("nuget", "verify", $filename)
                 if ($this.fingerprints.Count -eq 1 -and $this.fingerprints[0] -eq '*') {
@@ -355,7 +512,14 @@ class BcDevOpsFlowsNuGetFeed {
                 }
                 cmddo -command 'dotnet' -arguments $arguments -silent -messageIfCmdNotFound "dotnet not found. Please install it from https://dotnet.microsoft.com/download"
             }
-            Expand-Archive -Path $filename -DestinationPath $tmpFolder -Force
+            try {
+                # ZipFile is significantly faster than Expand-Archive; the destination folder is always new
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
+                [System.IO.Compression.ZipFile]::ExtractToDirectory($filename, $tmpFolder)
+            }
+            catch {
+                Expand-Archive -Path $filename -DestinationPath $tmpFolder -Force
+            }
             $global:ProgressPreference = $prev
             Remove-Item $filename -Force
             Write-Host "Package successfully downloaded"
@@ -368,6 +532,9 @@ class BcDevOpsFlowsNuGetFeed {
             }
             Write-Host "##vso[task.complete result=Failed]"
             throw ($_.Exception.Message)
+        }
+        if ($cacheFolder) {
+            $this.AddPackageToCache($tmpFolder, $cacheFolder, $packageId, $version)
         }
         return $tmpFolder
     }
@@ -399,24 +566,14 @@ class BcDevOpsFlowsNuGetFeed {
         
         Write-Host "Submitting NuGet package"
         try {
-            Invoke-RestMethod -UseBasicParsing -Uri $this.packagePublishUrl -ContentType "multipart/form-data; boundary=$boundary" -Method Put -Headers $headers -inFile $tmpFile | Out-Host
+            Invoke-RestMethodWithRetry -parameters @{ "UseBasicParsing" = $true; "Uri" = $this.packagePublishUrl; "ContentType" = "multipart/form-data; boundary=$boundary"; "Method" = 'Put'; "Headers" = $headers; "InFile" = $tmpFile } | Out-Host
             Write-Host -ForegroundColor Green "NuGet package successfully submitted"
         }
-        catch [System.Net.WebException] {
-            if ($_.Exception.Status -eq "ProtocolError" -and $_.Exception.Response -is [System.Net.HttpWebResponse]) {
-                $response = [System.Net.HttpWebResponse]($_.Exception.Response)
-                if ($response.StatusCode -eq [System.Net.HttpStatusCode]::Conflict) {
-                    Write-Host -ForegroundColor Yellow "NuGet package already exists"
-                }
-                else {
-                    Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
-                    Write-Host $_.ScriptStackTrace
-                    if ($_.PSMessageDetails) {
-                        Write-Host $_.PSMessageDetails
-                    }
-                    Write-Host "##vso[task.complete result=Failed]"
-                    throw ($_.Exception.Message)
-                }
+        catch {
+            # A 409 conflict means the package version already exists on the feed
+            $statusCode = Get-BCDevOpsFlowsHttpStatusCode -errorRecord $_
+            if ($statusCode -eq 409) {
+                Write-Host -ForegroundColor Yellow "NuGet package already exists"
             }
             else {
                 Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
@@ -427,15 +584,6 @@ class BcDevOpsFlowsNuGetFeed {
                 Write-Host "##vso[task.complete result=Failed]"
                 throw ($_.Exception.Message)
             }
-        }
-        catch {
-            Write-Host "##vso[task.logissue type=error]$($_.Exception.Message)"
-            Write-Host $_.ScriptStackTrace
-            if ($_.PSMessageDetails) {
-                Write-Host $_.PSMessageDetails
-            }
-            Write-Host "##vso[task.complete result=Failed]"
-            throw ($_.Exception.Message)
         }
         finally {
             Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue

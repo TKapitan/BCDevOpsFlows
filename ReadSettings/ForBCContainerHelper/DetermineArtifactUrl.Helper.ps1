@@ -25,21 +25,23 @@ function DetermineArtifactUrl {
     }
 
     $artifact = AddArtifactDefaultValues -settings $settings -artifact $artifact
+    $artifactCacheMutex = $null
     try {
-        $artifactCacheMutexName = "ArtifactUrlCache-$artifact"
-        $artifactCacheMutex = New-Object System.Threading.Mutex($false, $artifactCacheMutexName)
         if ($artifact -ne "" -and $artifact -notlike "https://*") {
-            # Check if the artifact is in the cache
+            # The cache file is shared by all artifacts, so the mutex name must not be artifact-specific.
+            # The mutex is acquired once here and held until the cache is updated in this function.
+            $artifactCacheMutex = New-Object System.Threading.Mutex($false, "ArtifactUrlCache")
             try {
                 if (!$artifactCacheMutex.WaitOne(1000)) {
-                    Write-Host "Waiting for other process updating $artifact Artifact URL cache"
+                    Write-Host "Waiting for other process updating Artifact URL cache"
                     $artifactCacheMutex.WaitOne() | Out-Null
-                    Write-Host "Other process completed updating $artifact Artifact URL cache"
+                    Write-Host "Other process completed updating Artifact URL cache"
                 }
             }
             catch [System.Threading.AbandonedMutexException] {
                 Write-Host "Other process terminated abnormally"
             }
+            # Check if the artifact is in the cache
             $artifactUrlFromCacheUrl = GetArtifactUrlFromCache -settings $settings -artifact $artifact
             if ($artifactUrlFromCacheUrl) {
                 # If found, the value is https url
@@ -85,24 +87,17 @@ function DetermineArtifactUrl {
                 }
             }
 
-            try {
-                if (!$artifactCacheMutex.WaitOne(1000)) {
-                    Write-Host "Waiting for other process updating $artifact Artifact URL cache"
-                    $artifactCacheMutex.WaitOne() | Out-Null
-                    Write-Host "Other process completed updating $artifact Artifact URL cache"
-                }
-            }
-            catch [System.Threading.AbandonedMutexException] {
-                Write-Host "Other process terminated abnormally"
-            }
+            # The cache mutex acquired above is still held here
             AddArtifactUrlToCache -settings $settings -artifact $artifact -ArtifactUrl $artifactUrl
             $version = $artifactUrl.Split('/')[4]
             $storageAccount = $artifactUrl.Split('/')[2]
         }
     }
     finally {
-        $artifactCacheMutex.ReleaseMutex()
-        $artifactCacheMutex.Close()
+        if ($artifactCacheMutex) {
+            $artifactCacheMutex.ReleaseMutex()
+            $artifactCacheMutex.Close()
+        }
     }
 
     if ($settings.additionalCountries -or $country -ne $settings.country) {
