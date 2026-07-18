@@ -1,12 +1,1 @@
-[
-  {
-    "pipeline": "PullRequest",
-    "path": "pr.autoCancel",
-    "remove": true
-  },
-  {
-    "pipeline": "PullRequest",
-    "path": "pr.drafts",
-    "value": true
-  }
-]
+[]
